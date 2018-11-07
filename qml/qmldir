@@ -1,0 +1,2 @@
+module CustomStyles
+singleton MyTheme 1.0 AppTheme.qml

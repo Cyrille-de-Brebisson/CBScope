@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/AppTheme.qml</file>
+        <file>qml/qmldir</file>
+        <file>Resources/cbscope.ico</file>
+        <file>Resources/cbscope.png</file>
+        <file>qml/MyInput.qml</file>
+        <file>qml/MyProperty.qml</file>
+        <file>qml/MyInput2.qml</file>
+        <file>qml/MyProperty2.qml</file>
+    </qresource>
+</RCC>

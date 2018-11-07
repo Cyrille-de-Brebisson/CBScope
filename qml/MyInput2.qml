@@ -1,0 +1,75 @@
+import QtQuick 2.0
+
+Row {
+    id: r1
+    property alias caption1: t1.text
+    property alias text1: textField.text
+    property alias caption2: t2.text
+    property alias text2: textField2.text
+    property int fontSize: 17
+    signal t1Changed;
+    signal t2Changed;
+
+    width: parent.width
+    spacing: 20
+    Text { anchors.verticalCenter: parent.verticalCenter; id: t1; font.pointSize: r1.fontSize; }
+    Rectangle {
+        id: textField
+        width:  (r1.width-t1.width-r1.spacing-t2.width-r1.spacing)/2;
+        height: textInput.height * 1.8
+        clip: true
+        border.width: 3
+        border.color: "lightgrey"
+        radius: 4
+        smooth: true
+        property alias text: textInput.text
+        //signal textChanged(string text)
+        TextInput {
+            id: textInput
+            clip: true
+            width: parent.width - (2 * font.pointSize)
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.pointSize: r1.fontSize
+            color: "black"
+            onTextChanged: r1.t1Changed(text)
+            onFocusChanged: {
+                if(focus){
+                    textField.border.color = "#569ffd"
+                }else{
+                    textField.border.color = "lightgray"
+                }
+            }
+        }
+    }
+    Text { anchors.verticalCenter: parent.verticalCenter; id: t2; font.pointSize: r1.fontSize; }
+    Rectangle {
+        id: textField2
+        width:  textField.width
+        height: textInput.height * 1.8
+        clip: true
+        border.width: 3
+        border.color: "lightgrey"
+        radius: 4
+        smooth: true
+        property alias text: textInput2.text
+        //signal textChanged(string text)
+        TextInput {
+            id: textInput2
+            clip: true
+            width: parent.width - (2 * font.pointSize)
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.pointSize: r1.fontSize
+            color: "black"
+            onTextChanged: r1.t2Changed(text)
+            onFocusChanged: {
+                if(focus){
+                    textField2.border.color = "#569ffd"
+                }else{
+                    textField2.border.color = "lightgray"
+                }
+            }
+        }
+    }
+}
