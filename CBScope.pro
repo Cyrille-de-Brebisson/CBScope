@@ -157,4 +157,9 @@ DISTFILES += \
     qml/MyProperty2.qml \
     qml/MyInput2.qml \
     qml/MyInput2.qml \
-    qml/MyProperty2.qml
+    qml/MyProperty2.qml \
+    qml/MyMultiText.qml
+
+HEADERS +=
+
+SOURCES +=

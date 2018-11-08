@@ -9,5 +9,7 @@
         <file>qml/MyProperty.qml</file>
         <file>qml/MyInput2.qml</file>
         <file>qml/MyProperty2.qml</file>
+        <file>qml/MyText.qml</file>
+        <file>qml/MyMultiText.qml</file>
     </qresource>
 </RCC>

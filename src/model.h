@@ -1,3 +1,8 @@
+// Move input with round to a component
+// same with output
+// add delete in row with comments and time in parabolizing
+// indicate ROC offset and allow to fix other parabolization on that offset!
+
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
 
@@ -84,7 +89,7 @@ public:
     // assumes that j.property is an array of object of type T. load said array in list d
     template <typename T> bool loadList(QQmlObjectListModel<T> *d, char const *property, QJsonObject *j)
     {
-        for (int i=d->count(); --i>=0;) delete d->at(i); d->clear();        // clear current list content
+        d->clear();        // clear current list content
         QJsonValue v= j->take(property); if (v.isUndefined()) return false; // find data in json
         QJsonArray a= v.toArray();
         for (int i=0; i<a.count(); i++)          // for all object in the json property
@@ -171,6 +176,7 @@ double forwardOffsetForSecondary(double diagMinorAxis, double diagToEyeDistance)
 
 class CBSModelScope;
 double getScopeDiameter(CBSModelScope *scope); // deported to .cpp file to access inner stuff...
+double getScopeSpherometerLegDistances(CBSModelScope *scope); // deported to .cpp file to access inner stuff...
 double getScopeFocal(CBSModelScope *scope); // deported to .cpp file to access inner stuff...
 class CBSModelScope;
 class CBSModelParabolizingWork;
@@ -201,7 +207,7 @@ public:
     CBSProp(QString, comments, Comments)
     CBSPropDE(double, time, Time, emit hogSpeedChanged())
     CBSPropDE(double, startSphere, StartSphere, emit hogSpeedChanged())
-    CBSPropDE(double, endSphere, EndSphere, emit hogSpeedChanged(); emit endSagitaChanged())
+    CBSPropDE(double, endSphere, EndSphere, emit hogSpeedChanged(); emit endSagitaChanged(); emit endSphereSpherometerChanged(); )
     CBSPropD(double, grit, Grit) // TODO: notify at higher level when average speed will change!!!
     Q_PROPERTY(double hogSpeed READ getHogSpeed NOTIFY hogSpeedChanged)
     Q_PROPERTY(double endSagita READ getEndSagita NOTIFY endSagitaChanged)
@@ -217,6 +223,7 @@ Q_SIGNALS:
     void hogSpeedChanged();
     void endSagitaChanged();
     void scopeChanged();
+    void endSphereSpherometerChanged();
 public:
     CBSModelHoggingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _startSphere(0.0), _endSphere(0.0), _grit(0.0), _scope(nullptr) { }
     double getEndSagita() { if (_scope==nullptr) return 0.0; return sagita(_endSphere, getScopeDiameter(_scope)); }
@@ -229,6 +236,16 @@ public:
         return (v2-v1)/_time;
     }
     QList<QString> Ignored() { QList<QString> l; l.append("scope"); return l; }
+    Q_INVOKABLE void setEndSphereSpherometer(double v)
+    {
+        if (_scope==nullptr) return;
+        double s= v/2.0 + getScopeSpherometerLegDistances(_scope)*getScopeSpherometerLegDistances(_scope)/(6.0*v);
+        QString out;
+        QStringList l= _comments.split("\n");
+        for (int i=0; i<l.count(); i++) if (!l.at(i).startsWith("value from sperometer reading")) out= out+l.at(i)+"\n";
+        setComments(out+"value from sperometer reading of: "+QString::number(v));
+        setEndSphere(floor(s));
+    }
 };
 
 class CBSDouble : public CBSSaveLoadObject {
@@ -261,7 +278,7 @@ public:
     CBSModelScope *scope;
     CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), scope(nullptr),
       iNbZone(0), _surf(nullptr), _profil(nullptr), _deltaC(nullptr), _lf1000(nullptr), _mesc(nullptr), _Hz(nullptr), _Hm4F(nullptr), _RelativeSurface(nullptr),
-      _Std(0.0), _Lambda(0.0), _GlassMax(0.0), _WeightedLambdaRms(0.0), _WeightedStrehl(0.0), _LfRoMax(0.0), _glassToRemove(0.0)
+      _Std(0.0), _Lambda(0.0), _GlassMax(0.0), _WeightedLambdaRms(0.0), _WeightedStrehl(0.0), _LfRoMax(0.0), _glassToRemove(0.0), _focale(0.0)
     { m_mesures= new QQmlObjectListModel<CBSDouble>(this); }
     ~CBSModelParabolizingWork()
     {
@@ -308,6 +325,7 @@ private:
     double _WeightedStrehl;
     double _LfRoMax;
     double _glassToRemove;
+    double _focale;
 };
 
 class CBSModelEP : public CBSSaveLoadObject {
@@ -358,6 +376,7 @@ public:
     Q_PROPERTY(double leftToHog READ getLeftToHog NOTIFY leftToHogChanged)
     Q_PROPERTY(double toHog READ getToHog NOTIFY toHogChanged)
     Q_PROPERTY(double sagita READ getSagita NOTIFY sagitaChanged)
+    Q_PROPERTY(double hogTimeWithGrit READ getHogTimeWithGrit NOTIFY hogTimeWithGritChanged)
     Q_PROPERTY(double nbZones READ getNbZones WRITE setNbZones NOTIFY nbZonesChanged)
     CBSProp(bool, slitIsMoving, SlitIsMoving)
     QML_OBJMODEL_PROPERTY(CBSModelHoggingWork, hoggings)
@@ -402,28 +421,24 @@ public:
         delete m_zones;
         delete m_eps;
     }
-    Q_INVOKABLE int addSpherometer(double time, double reading, bool realSphere, double grit)
+    Q_INVOKABLE int addSpherometer() //double time, double reading, bool realSphere, double grit)
     {
         CBSModelHoggingWork *t= new CBSModelHoggingWork(m_hoggings);
-        t->_time= time;
-        if (m_hoggings->count()!=0) t->_startSphere= m_hoggings->last()->_endSphere;
-        t->_grit= grit;
-        if (realSphere) t->_endSphere= reading;
-        else {
-            t->_endSphere= reading/2.0 + _spherometerLegDistances*_spherometerLegDistances/(6.0*reading);
-            t->_comments= "value from sperometer reading of: "+QString::number(reading);
-        }
+        if (m_hoggings->count()!=0) { t->_startSphere= m_hoggings->last()->_endSphere; t->_grit= m_hoggings->last()->_grit; }
         m_hoggings->append(t);
         t->setScope(this);
         emit hogTimeWithGritChanged();
         return m_hoggings->count()-1;
     }
-    Q_INVOKABLE int removeSpherometer()
+    Q_INVOKABLE void removeSpherometer(int i)
     {
-        if (m_hoggings->count()==0) return -1;
-        m_hoggings->remove(m_hoggings->count()-1);
+        if (i<0 || i>=m_hoggings->count()) return;
+        m_hoggings->remove(i);
         emit hogTimeWithGritChanged();
-        return m_hoggings->count()-1;
+    }
+    Q_INVOKABLE CBSModelHoggingWork *getSpherometer(int i)
+    {
+        if (i<0 || i>=m_hoggings->count()) return nullptr;  return m_hoggings->at(i);
     }
     Q_INVOKABLE int addEp(QString name, double focal, double angle)
     {
@@ -431,9 +446,10 @@ public:
         return m_eps->count()-1;
     }
     Q_INVOKABLE int deleteEp(int index) { if (index<0 || index>=m_eps->count()) return index; m_eps->remove(index); emit epsChanged(); return m_eps->count()-1; }
-    Q_INVOKABLE double getHogTimeWithGrit(double grit)
+    Q_INVOKABLE double getHogTimeWithGrit()
     {
         if (m_hoggings->count()==0) return 0.0;
+        double grit= m_hoggings->last()->_grit;
         int counts= 0; double sum= 0.0;
         for (int i=0; i<m_hoggings->count(); i++)
             if (doubleEq(grit, m_hoggings->at(i)->_grit))
@@ -507,6 +523,7 @@ public:
     }
     Q_INVOKABLE CBSModelParabolizingWork *getParabolizing(int index)
     { if (index<0 || index>=m_parabolizings->count()) return nullptr; return m_parabolizings->at(index); }
+    Q_INVOKABLE void removeMesure(int i) { m_parabolizings->remove(i); }
     bool subLoad(QJsonObject *o)
     {
         loadList(m_hoggings, "hoggings", o);

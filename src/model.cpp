@@ -2,21 +2,11 @@
 #include <QPainter>
 #include <QColor>
 
-void CBSModelParabolizingWork::checkNbMesures()
-{
-    if (scope==nullptr) return;
-    while (m_mesures->count()>scope->getNbZones()) m_mesures->remove(m_mesures->count()-1);
-    while (m_mesures->count()<scope->getNbZones())
-    {
-        CBSDouble *d= new CBSDouble(m_mesures); m_mesures->append(d);
-        connect(d, SIGNAL(valChanged()), this, SLOT(doCalculations()));
-    }
-}
-
 CBSModel *CBSModel::singleton= nullptr;
 
 double getScopeDiameter(CBSModelScope *scope) { return scope->getDiametre(); }
 double getScopeFocal(CBSModelScope *scope) { return scope->getFocal(); }
+double getScopeSpherometerLegDistances(CBSModelScope *scope) { return scope->getSpherometerLegDistances(); }
 
 // adjusts offset for field diameter by using the diagonal to eye distance;
 // since diagToEyeDistance > diagToFocalPlaneDistance, the offset will shrink as the diagonal appears closer to the primary mirror;
@@ -169,7 +159,7 @@ void CBScopeMesure::paint(QPainter *painter)
         if (ypos>rh) break;
         QColor c;
         if (ypos<65.0) c= QColor(0, 255, 0);
-        else if (ypos<65.0) c= QColor(255, 255, 0);
+        else if (ypos<65.0*2) c= QColor(255, 255, 0);
         else c= QColor(255, 0, 0);
         painter->setPen(QPen(c));
         int y= getY(ypos); painter->drawLine(addx, y, w-addx, y);
@@ -193,15 +183,30 @@ void CBScopeMesure::paint(QPainter *painter)
                       " LambdaRms="+QString::number(_mesure->_WeightedLambdaRms, 'f', 2)+
                       " Lf/Ro="+QString::number(_mesure->_LfRoMax, 'f', 2)+
                       " Strehl="+QString::number(_mesure->_WeightedStrehl, 'f', 2)+
+                      " focale="+QString::number(_mesure->_focale*10.0, 'f', 2)+
                       " glass to remove="+QString::number(_mesure->_glassToRemove, 'f', 2)+"mm^3");
+
 
 }
 
+void CBSModelParabolizingWork::checkNbMesures()
+{
+    if (_scope==nullptr) return;
+    while (m_mesures->count()>_scope->getNbZones()) m_mesures->remove(m_mesures->count()-1);
+    while (m_mesures->count()<_scope->getNbZones())
+    {
+        CBSDouble *d= new CBSDouble(m_mesures); m_mesures->append(d);
+        connect(d, SIGNAL(valChanged()), this, SLOT(doCalculations()));
+    }
+}
+
 static double sqr(double v) { return v*v; }
+// Most of this code was lifted from Etienne de Foras "Foucault" program (with some slight changes)...
+// Thanks ETI... Hope you do not mind as I have not yet asked you for your permission :-(
 void CBSModelParabolizingWork::doCalculations()
 {
-    qDebug() << "Do Calculations (this, _scope)" << this << _scope;
-    double const greenWave= 560.0; //555.0;
+//    qDebug() << "Do Calculations (this, _scope)" << this << _scope;
+    double const greenWave= 555.0; // used to be 560
     _LfRoMax=-1e300;
     _Lambda=0.;
     _GlassMax=0.;
@@ -290,7 +295,7 @@ void CBSModelParabolizingWork::doCalculations()
     double dReso=1./(_Hz[iNbZone]*_Hz[iNbZone]);
 
     // compute conique qui minimise le rms
-    find_minimum(a,b,dReso,&(calc_less_rms));
+    _focale= find_minimum(a,b,dReso,&(calc_less_rms));
 
     // compute conique qui minimise le ptv
     find_minimum(a,b,dReso,&(calc_less_ptv));
@@ -312,7 +317,7 @@ void CBSModelParabolizingWork::doCalculations()
     {
         double a= _Hz[i], b= _Hz[i+1];
         double d=_surf[i]/1e6, f= _surf[i+1]/1e6;
-        double v= (-2*a*a*d*M_PI-a*a*f*M_PI+a*b*d*M_PI-a*b*f*M_PI+b*b*d*M_PI+2*b*b*f*M_PI)/3;
+        double v= (-2*a*a*d*M_PI-a*a*f*M_PI+a*b*d*M_PI-a*b*f*M_PI+b*b*d*M_PI+2*b*b*f*M_PI)/3; // Volume of a part of a cone from diamter a to b, starting at height d and ending up at f. Thanks to HP Prime cas for that!
         _glassToRemove+= v;
     }
 
