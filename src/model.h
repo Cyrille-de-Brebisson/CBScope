@@ -22,6 +22,7 @@
 #include <QJsonArray>
 #include <QStandardPaths>
 #include <QQuickPaintedItem>
+#include <QDesktopServices>
 #include "QQmlObjectListModel.h"
 
 // ********************************************************
@@ -159,7 +160,7 @@ double forwardOffsetForSecondary(double diagMinorAxis, double diagToEyeDistance)
             Q_PROPERTY(type name READ get##Name WRITE set##Name NOTIFY name##Changed) \
             type _##name; \
             public: type get##Name() const { return _##name; } \
-            void set##Name(type v) { if (_##name==v) return; _##name= v; emit name##Changed(); emits; }
+            void set##Name(type v) { if (_##name==v) return; _##name= v; emits; emit name##Changed(); }
 
         #define CBSPropD(type, name, Name) \
             Q_PROPERTY(type name READ get##Name WRITE set##Name NOTIFY name##Changed) \
@@ -258,12 +259,34 @@ public:
     CBSDouble(QObject *parent=nullptr): CBSSaveLoadObject(parent), _val(0.0) { }
 };
 
+class CBSQString : public CBSSaveLoadObject {
+    Q_OBJECT
+public:
+    CBSPropE(QString, val, Val, _doubleVal= NAN;)
+Q_SIGNALS:
+    void valChanged();
+public:
+    CBSQString(QObject *parent=nullptr): CBSSaveLoadObject(parent), _doubleVal(NAN) { }
+    double _doubleVal;
+    double asDouble()
+    {
+        if (!std::isnan(_doubleVal)) return _doubleVal;
+        QStringList l(_val.split(" "));
+        _doubleVal= 0.0; double nb= 0;
+        foreach(QString const &s, l)
+        {
+            bool ok; double t= s.toDouble(&ok); if (ok) { _doubleVal+= t; nb++; }
+        }
+        return _doubleVal/= nb;
+    }
+};
+
 class CBSModelParabolizingWork : public CBSSaveLoadObject {
     Q_OBJECT
 public:
     CBSPropD(double, time, Time)
     CBSProp(QString, comments, Comments)
-    QML_OBJMODEL_PROPERTY(CBSDouble, mesures)
+    QML_OBJMODEL_PROPERTY(CBSQString, mesures)
     CBSPropE(CBSModelScope*, scope, Scope, doCalculations(); QObject *v2= (QObject*)v;
                                            connect(v2, SIGNAL(diametreChanged()), this, SLOT(doCalculations()));
                                            connect(v2, SIGNAL(slitIsMovingChanged()), this, SLOT(doCalculations()));
@@ -279,7 +302,7 @@ public:
     CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), scope(nullptr),
       iNbZone(0), _surf(nullptr), _profil(nullptr), _deltaC(nullptr), _lf1000(nullptr), _mesc(nullptr), _Hz(nullptr), _Hm4F(nullptr), _RelativeSurface(nullptr),
       _Std(0.0), _Lambda(0.0), _GlassMax(0.0), _WeightedLambdaRms(0.0), _WeightedStrehl(0.0), _LfRoMax(0.0), _glassToRemove(0.0), _focale(0.0)
-    { m_mesures= new QQmlObjectListModel<CBSDouble>(this); }
+    { m_mesures= new QQmlObjectListModel<CBSQString>(this); }
     ~CBSModelParabolizingWork()
     {
         delete m_mesures;
@@ -546,6 +569,8 @@ public:
     double getConical() { return -1.0; }
 };
 
+QString getAppPath();
+
 class CBSModel : public CBSSaveLoadObject {
     Q_OBJECT
 public:
@@ -586,6 +611,10 @@ public:
     void saveFile() { CBSSaveLoadObject::saveFile(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/CBScopes.scopes"); }
     bool subLoad(QJsonObject *o) { return loadList(m_scopes, "scopes", o); }
     bool subSave(QJsonObject *o) { return saveList(m_scopes, "scopes", o); }
+    Q_INVOKABLE void help()
+    {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope help.odt"));
+    }
 };
 
 class CBScopeIlumination : public QQuickPaintedItem

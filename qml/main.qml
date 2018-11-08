@@ -34,8 +34,8 @@ ApplicationWindow {
             id: mainPageCol
             spacing: 10
             width: window.width
-            property alias editTextHeight: scopeNameEdit.height
-            Row { spacing: 10; id: scopeNameEdit;
+            property alias editTextHeight: scopeDiametreEdit.height
+            Row { spacing: 10;
                 width: parent.width
                 Text { id: scr11; y: (parent.height-height)/2; text: qsTr("scope Name") }
                 MyText { id: scr12; y: (parent.height-height)/2; text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
@@ -48,7 +48,10 @@ ApplicationWindow {
             }
             Text { text: qsTr("Comments") }
             MyMultiText { text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
-            MyInput { fontSize: window.fontSize; caption: "Diametre"; text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
+            Row { spacing: 10;  id: scopeDiametreEdit;
+                Text { y: (parent.height-height)/2; text: qsTr("Diametre") }
+                MyText { text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
+            }
             Row { spacing: 10;
                 Text { y: (parent.height-height)/2; text: qsTr("focal length") }
                 MyText { text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
@@ -278,7 +281,7 @@ ApplicationWindow {
                             ListView {
                                 model: mesures; orientation: Qt.Horizontal;
                                 width: parent.width; height: editTextHeight;
-                                delegate: MyText { text: val; onTextChanged: val= Number(text); }
+                                delegate: MyText { text: val; onTextChanged: val= text; }
                             }
                             Row {
                                 spacing: 10; width: parent.width
@@ -306,6 +309,7 @@ ApplicationWindow {
     // footer page
     //********************************
     footer: Row {
+        width: parent.width
             ComboBox { id: scopes
                 width: parent.width/5; height: parent.height
                 textRole: "name";
@@ -313,22 +317,28 @@ ApplicationWindow {
                 onCurrentIndexChanged: scopeView.model= CBSModel.getScope(scopes.currentIndex)
             }
             Button {
-                width: parent.width/8; height: parent.height
+                width: parent.width/8;
                 text: qsTr("add")
                 onClicked: scopes.currentIndex= CBSModel.addScope();
+            }
+            Button {
+                width: parent.width/8;
+                text: qsTr("help");
+                onClicked: CBSModel.help()
             }
 
             Rectangle { height: parent.height; width: 10; }
 
             TabBar {
-            id: tabBar
-            currentIndex: scopeView.currentIndex
-            TabButton { text: qsTr("Scope") }
-            TabButton { text: qsTr("EP") }
-            TabButton { text: qsTr("Secondary") }
-            TabButton { text: qsTr("Hogging") }
-            TabButton { text: qsTr("Parabolizing") }
-        }
+                width: parent.width-x
+                id: tabBar
+                currentIndex: scopeView.currentIndex
+                TabButton { text: qsTr("Scope") }
+                TabButton { text: qsTr("EP") }
+                TabButton { text: qsTr("Secondary") }
+                TabButton { text: qsTr("Hogging") }
+                TabButton { text: qsTr("Parabolizing") }
+            }
     }
 
 }

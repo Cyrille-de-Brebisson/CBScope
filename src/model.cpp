@@ -263,7 +263,7 @@ void CBSModelParabolizingWork::doCalculations()
     double a= 1e300, b= -1e300; // min and max
     for (int i=0;i<iNbZone;i++)
     {
-        _mesc[i]=(m_mesures->at(i)->_val-_Hm2R[i])*(_scope->getSlitIsMoving()?2.0:1.0);
+        _mesc[i]=(m_mesures->at(i)->asDouble()-_Hm2R[i])*(_scope->getSlitIsMoving()?2.0:1.0);
         if (a>_mesc[i]) a= _mesc[i]; if (b<_mesc[i]) b= _mesc[i];
     }
 
