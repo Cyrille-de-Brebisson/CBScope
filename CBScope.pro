@@ -1,4 +1,4 @@
-QT += quick svg quickcontrols2
+QT += quick svg quickcontrols2 printsupport
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -31,7 +31,6 @@ RESOURCES += \
 
 OTHER_FILES += \
     qml/main.qml \
-    qml/MyInput.qml \
     qml/AppTheme.qml \
 
 
@@ -151,13 +150,6 @@ OBJECTS_DIR = ./Intermediate/$$DESTDIR
 MOC_DIR= ./Intermediate/$$DESTDIR
 
 DISTFILES += \
-    qml/MyInput.qml \
-    qml/MyProperty.qml \
-    qml/MyProperty.qml \
-    qml/MyProperty2.qml \
-    qml/MyInput2.qml \
-    qml/MyInput2.qml \
-    qml/MyProperty2.qml \
     qml/MyMultiText.qml \
     qml/MyOText.qml
 

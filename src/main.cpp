@@ -1,4 +1,5 @@
-#include <QGuiApplication>
+//#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QIcon>
@@ -16,9 +17,9 @@ int main(int argc, char *argv[])
 
     QIcon iconApplication;
 #ifdef WINDOWS
-    iconApplication = readIcoFile(":/cbscope.ico");
+    iconApplication = readIcoFile("qrc:/Resources/cbscope.ico");
 #else
-    iconApplication.addFile(":/cbscope.icns");
+    iconApplication.addFile("qrc:/Resources/cbscope.icns");
 #endif
 
     qmlRegisterSingletonType<CBSModel>("CBSModel", 1, 0, "CBSModel", CBSModel::SingletonProvider);
@@ -27,8 +28,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<CBSModelScope>("CBSModelScope", 1, 0, "CBSModelScope");
     qmlRegisterType<CBScopeIlumination>("CBScopeIlumination", 1, 0, "CBScopeIlumination");
     qmlRegisterType<CBScopeMesure>("CBScopeMesure", 1, 0, "CBScopeMesure");
+    qmlRegisterType<CBScopeCouder>("CBScopeCouder", 1, 0, "CBScopeCouder");
 
-    QGuiApplication app(argc, argv); qtapp= &app;
+    QApplication app(argc, argv); qtapp= &app;
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

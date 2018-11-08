@@ -1,7 +1,10 @@
-// Move input with round to a component
-// same with output
-// add delete in row with comments and time in parabolizing
+// Add couder "my style"...
 // indicate ROC offset and allow to fix other parabolization on that offset!
+// Couder mask
+// Plop
+// find stroke that helped last time...
+// global font?
+// tab navigation
 
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
@@ -567,6 +570,8 @@ public:
         return true;
     }
     double getConical() { return -1.0; }
+    Q_INVOKABLE void printCouder();
+    void paintCouder(QPainter *painter, QPoint &c, double dpi);
 };
 
 QString getAppPath();
@@ -634,5 +639,17 @@ class CBScopeIlumination : public QQuickPaintedItem
     int getX(double x) { x+=rw/2.0; return addx+int(x/rw*0.8*w); }
     int getY(double y) { y= 1-y; return int(y*2.0*0.8*h)+addy; }
     QPoint getP(double x, double y) { return QPoint(getX(x), getY(y)); }
+};
+
+class CBScopeCouder : public QQuickPaintedItem
+{
+    Q_OBJECT
+    Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope)
+    public:
+    CBScopeCouder(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), scope(nullptr) { }
+    void paint(QPainter *painter);
+    CBSModelScope *scope;
+    CBSModelScope *getScope() { return scope; }
+    void setScope(CBSModelScope *scope) { this->scope= scope; }
 };
 #endif

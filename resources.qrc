@@ -5,10 +5,6 @@
         <file>qml/qmldir</file>
         <file>Resources/cbscope.ico</file>
         <file>Resources/cbscope.png</file>
-        <file>qml/MyInput.qml</file>
-        <file>qml/MyProperty.qml</file>
-        <file>qml/MyInput2.qml</file>
-        <file>qml/MyProperty2.qml</file>
         <file>qml/MyText.qml</file>
         <file>qml/MyMultiText.qml</file>
         <file>qml/MyOText.qml</file>

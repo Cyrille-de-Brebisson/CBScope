@@ -11,6 +11,7 @@ import CBSModelScope 1.0
 import QtQuick.Layouts 1.3
 import CBScopeIlumination 1.0
 import CBScopeMesure 1.0
+import CBScopeCouder 1.0
 
 ApplicationWindow {
     visible: true
@@ -250,6 +251,7 @@ ApplicationWindow {
                 MyText   { y: (parent.height-height)/2; text: scopeView.model.nbZones; onTextChanged: scopeView.model.nbZones= Number(text); }
                 Button   { y: (parent.height-height)/2; text: qsTr("Auto calc zones"); onPressed: popup.open() }
                 CheckBox { y: (parent.height-height)/2; text: "Slit is moving"; checked: scopeView.model.slitIsMoving; onCheckedChanged: scopeView.model.slitIsMoving= checked }
+                Button   { y: (parent.height-height)/2; text: qsTr("Couder Mask"); onPressed: scopeView.model.printCouder() }
             }
             Text { text: qsTr("Enter zones boundaries from 0 (or more if there is a hole) to mirror radius)") }
             Rectangle {
@@ -303,6 +305,23 @@ ApplicationWindow {
                 }
             }
         }
+
+        //********************************
+        // Couder page
+        //********************************
+        Column {
+            width: window.width; height: parent.height;
+            CBScopeCouder {
+                id: scopeCouder
+                width: parent.width; height: parent.height;
+                scope: scopeView.model
+            }
+            Connections {
+                target: scopeView.model
+                onDiametreChanged: { scopeCouder.update(); }
+                onNbZonesChanged: { scopeCouder.update(); }
+            }
+        }
     }
 
     //********************************
@@ -338,6 +357,7 @@ ApplicationWindow {
                 TabButton { text: qsTr("Secondary") }
                 TabButton { text: qsTr("Hogging") }
                 TabButton { text: qsTr("Parabolizing") }
+                TabButton { text: qsTr("Couder") }
             }
     }
 

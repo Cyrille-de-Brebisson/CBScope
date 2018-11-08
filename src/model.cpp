@@ -1,12 +1,94 @@
 #include "model.h"
 #include <QPainter>
 #include <QColor>
+#include <QPrinter>
+#include <QPrintDialog>
 
 CBSModel *CBSModel::singleton= nullptr;
 
 double getScopeDiameter(CBSModelScope *scope) { return scope->getDiametre(); }
 double getScopeFocal(CBSModelScope *scope) { return scope->getFocal(); }
 double getScopeSpherometerLegDistances(CBSModelScope *scope) { return scope->getSpherometerLegDistances(); }
+
+void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double y2, int dpi, int yflip)
+{
+    // x²+y²=r² -> y=sqrt(r²-x²), x=sqrt(r²-y²)
+    int const steps= 20;
+    double ystep= (y2-y1)/steps;
+    double y= y1;
+    QPoint pts[(steps+1)*2+1]; int pc= 0;
+    if (z1>1)
+    {   // normal zones
+        for (int i=0; i<steps; i++) // draw first arc going up
+        {
+            double x= sqrt(z1*z1-y*y);
+            pts[pc++]= QPoint(c.x()+int(x/25.4*dpi), c.y()+yflip*int(y/25.4*dpi));
+            y+= ystep;
+        }
+        for (int i=0; i<steps; i++) // draw second arc going down
+        {
+            y-= ystep;
+            double x= sqrt(z2*z2-y*y);
+            pts[pc++]= QPoint(c.x()+int(x/25.4*dpi), c.y()+yflip*int(y/25.4*dpi));
+        }
+        pts[pc++]= pts[0]; // join the ends
+        p->drawPolyline(pts, pc); // draw
+        for (int i=0; i<pc; i++) pts[i]= QPoint(c.x()-(pts[i].x()-c.x()), c.y()-(pts[i].y()-c.y())); // reverse
+        p->drawPolyline(pts, pc); // draw the 2nd part
+    } else { // center zone!
+        for (int i=0; i<steps; i++) // draw first arc going up
+        {
+            double x= sqrt(z2*z2-y*y);
+            pts[pc++]= QPoint(c.x()+int(x/25.4*dpi), c.y()+int(y/25.4*dpi));
+            y+= ystep;
+        }
+        y= y1;
+        for (int i=0; i<steps; i++) // draw first arc going up, but inverted
+        {
+            double x= sqrt(z2*z2-y*y);
+            pts[pc++]= QPoint(c.x()-int(x/25.4*dpi), c.y()-int(y/25.4*dpi));
+            y+= ystep;
+        }
+        pts[pc++]= pts[0]; // join the ends
+        p->drawPolyline(pts, pc); // draw
+    }
+}
+
+void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi)
+{
+    QBrush brush(QColor(0, 0, 0, 0));
+    painter->setBrush(brush);
+    painter->setRenderHint(QPainter::Antialiasing);
+#define circle(r) painter->drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
+    painter->setPen(QPen(QColor(0, 0, 0)));
+    circle(_diametre/2.0);
+    for (int i=0; i<m_zones->count(); i++) circle(m_zones->at(i)->_val);
+#undef circle
+    painter->setPen(QPen(QColor(255, 0, 0)));
+    double bot= 10;
+    if (m_zones->at(0)->_val<1) bot= m_zones->at(1)->_val*0.9;
+    else bot= m_zones->at(2)->_val*0.9;
+    for (int i=0; i<m_zones->count()-1; i++)
+      zone(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 2.5, bot, int(dpi), (i&1)==0?1:-1);
+}
+
+void CBSModelScope::printCouder()
+{
+    qDebug() << 1;
+    QPrinter printer(QPrinter::HighResolution);
+    QPrintDialog dialog(&printer, nullptr);
+    dialog.setWindowTitle(tr("Print couder mask"));
+    if (dialog.exec() != QDialog::Accepted) return;
+    printer.setOutputFileName("couder.ps");
+    QRect area(printer.pageRect());
+    int dpi= printer.resolution();
+    QPoint c= area.center();
+    QPainter painter;
+    painter.begin(&printer);
+    paintCouder(&painter, c, dpi);
+    painter.end();
+    qDebug() << 6;
+}
 
 // adjusts offset for field diameter by using the diagonal to eye distance;
 // since diagToEyeDistance > diagToFocalPlaneDistance, the offset will shrink as the diagonal appears closer to the primary mirror;
@@ -399,4 +481,20 @@ double CBSModelParabolizingWork::calc_lf1000(CBSModelParabolizingWork* pMes,doub
         if (maxl<pMes->_lf1000[i]) maxl= pMes->_lf1000[i];
     }
     return(maxl+minl);
+}
+
+void CBScopeCouder::paint(QPainter *painter)
+{
+    QBrush brush(QColor(200, 200, 200));
+    painter->setBrush(brush);
+    painter->setPen(QPen(QColor(0, 0, 0)));
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    QSizeF itemSize = size();
+    int w= int(itemSize.width());
+    int h= int(itemSize.height());
+    painter->drawRect(0, 0, w, h);
+    if (scope==nullptr) return;
+    QPoint c(w/2, h/2);
+    scope->paintCouder(painter, c, 96);
 }
