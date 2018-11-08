@@ -36,8 +36,15 @@ ApplicationWindow {
             width: window.width
             property alias editTextHeight: scopeNameEdit.height
             Row { spacing: 10; id: scopeNameEdit;
-                Text { y: (parent.height-height)/2; text: qsTr("scope Name") }
-                MyText { text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
+                width: parent.width
+                Text { id: scr11; y: (parent.height-height)/2; text: qsTr("scope Name") }
+                MyText { id: scr12; y: (parent.height-height)/2; text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
+                Rectangle { height: parent.height; width: parent.width-scr11.width-scr12.width-scr13.width-3*parent.spacing; }
+                Button { id: scr13;
+                    visible: CBSModel.scopes.count>1
+                    text: qsTr("Delete")
+                    onClicked: CBSModel.removeScope(scopes.currentIndex);
+                }
             }
             Text { text: qsTr("Comments") }
             MyMultiText { text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
@@ -49,7 +56,7 @@ ApplicationWindow {
                 MyText { text: scopeView.model.focal/scopeView.model.diametre; onTextChanged: scopeView.model.focal= Number(text)*scopeView.model.diametre; }
                 Text { y: (parent.height-height)/2; text: qsTr("Mirror ROC") }
                 MyText { text: scopeView.model.focal*2; onTextChanged: scopeView.model.focal= Number(text)/2; }
-                Text { y: (parent.height-height)/2; text: qsTr("sagita")+" "+scopeView.model.sagita.toFixed(1); }
+                MyOText { y: (parent.height-height)/2; caption: qsTr("sagita"); text: scopeView.model.sagita.toFixed(1); }
             }
             Row { spacing: 10;
                 Text { y: (parent.height-height)/2; text: qsTr("secondary small diametre") }
@@ -57,7 +64,7 @@ ApplicationWindow {
                 Text { y: (parent.height-height)/2; text: qsTr("secondary to focal plane") }
                 MyText { text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
             }
-            Text { text: qsTr("secondary offset toward primary")+" "+scopeView.model.secondaryOffset.toFixed(1); }
+            MyOText { caption: qsTr("secondary offset toward primary"); text: scopeView.model.secondaryOffset.toFixed(1); }
         }
 
         //********************************
@@ -101,9 +108,9 @@ ApplicationWindow {
                                     MyText { text: angle; onTextChanged: angle= Number(text); }
                                 }
                                 Row { spacing: 10; id: i14;
-                                    Text { y: (parent.height-height)/2; text: qsTr("field")+" "+field.toFixed(1); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("zoom")+" "+zoom.toFixed(0); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("view Angle")+" "+viewAngle.toFixed(2); }
+                                    MyOText { caption: qsTr("zoom");       text: zoom.toFixed(0); }
+                                    MyOText { caption: qsTr("view Angle"); text: viewAngle.toFixed(2)+"°"; }
+                                    MyOText { caption: qsTr("field radius");      text: field.toFixed(1); }
                                 }
                             }
                      }
@@ -189,8 +196,8 @@ ApplicationWindow {
                                         MyText { text: grit; onTextChanged: grit= Number(text); }
                                     }
                                     Row { spacing: 10; id: row4Hog;
-                                        Text { y: (parent.height-height)/2; text: qsTr("hog/time")+" "+hogSpeed.toFixed(1); }
-                                        Text { y: (parent.height-height)/2; text: qsTr("end sagita")+" "+endSagita.toFixed(2); }
+                                        MyOText { caption: qsTr("hog/time");   text: hogSpeed.toFixed(1); }
+                                        MyOText { caption: qsTr("end sagita"); text: endSagita.toFixed(2); }
                                     }
                                 }
                         }
@@ -206,8 +213,14 @@ ApplicationWindow {
                     clip: true
                     width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
                     height: sphColi4.height+sphColi5.height
-                    MyProperty2 { id: sphColi4; fontSize: window.fontSize; text1: scopeView.model.hogTimeWithGrit; caption1: qsTr("time to hog with current grit"); caption2: qsTr("%done"); text2: (1-scopeView.model.leftToHog/scopeView.model.toHog)*100; }
-                    MyProperty2 { id: sphColi5; fontSize: window.fontSize; text1: scopeView.model.toHog; caption1: qsTr("total to hog"); text2: scopeView.model.leftToHog; caption2: qsTr("left to hog");}
+                    Row { spacing: 10; id: sphColi4;
+                        MyOText { caption: qsTr("time to hog with current grit");   text: scopeView.model.hogTimeWithGrit.toFixed(2); }
+                        MyOText { caption: qsTr("%done"); text: ((1-scopeView.model.leftToHog/scopeView.model.toHog)*100).toFixed(2); }
+                    }
+                    Row { spacing: 10; id: sphColi5;
+                        MyOText { caption: qsTr("total to hog");   text: scopeView.model.toHog.toFixed(2); }
+                        MyOText { caption: qsTr("left to hog"); text: scopeView.model.leftToHog.toFixed(2); }
+                    }
                 }
             }
         }
@@ -293,29 +306,19 @@ ApplicationWindow {
     // footer page
     //********************************
     footer: Row {
-            ComboBox {
-                width: parent.width/5
-                height: parent.height
-                id: scopes
-                textRole: "name"
+            ComboBox { id: scopes
+                width: parent.width/5; height: parent.height
+                textRole: "name";
                 model: CBSModel.scopes
                 onCurrentIndexChanged: scopeView.model= CBSModel.getScope(scopes.currentIndex)
             }
             Button {
-                width: parent.width/8
-                height: parent.height
+                width: parent.width/8; height: parent.height
                 text: qsTr("add")
                 onClicked: scopes.currentIndex= CBSModel.addScope();
             }
-            Button {
-                width: parent.width/8
-                enabled: CBSModel.scopes.count!==1
-                height: parent.height
-                text: qsTr("Delete")
-                onClicked: { CBSModel.removeScope(scopes.currentIndex);  scopeView.model= CBSModel.getScope(scopes.currentIndex); }
-            }
 
-            Rectangle { height: parent.height; width: 10; color: "Blue" }
+            Rectangle { height: parent.height; width: 10; }
 
             TabBar {
             id: tabBar

@@ -11,5 +11,6 @@
         <file>qml/MyProperty2.qml</file>
         <file>qml/MyText.qml</file>
         <file>qml/MyMultiText.qml</file>
+        <file>qml/MyOText.qml</file>
     </qresource>
 </RCC>
