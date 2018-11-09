@@ -10,8 +10,8 @@ QtObject
     readonly property real refScreenWidth: 500
     readonly property real refScreenHeight: 600
 
-    readonly property real screenWidth: 500 //ScreenInfo.width
-    readonly property real screenHeight: 600 //ScreenInfo.height
+    readonly property real screenWidth: 800
+    readonly property real screenHeight: 800
 
     function hscale(size) {
         return Math.round(size * (screenWidth / refScreenWidth))

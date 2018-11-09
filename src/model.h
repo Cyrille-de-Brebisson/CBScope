@@ -1,10 +1,10 @@
-// Add couder "my style"...
 // indicate ROC offset and allow to fix other parabolization on that offset!
-// Couder mask
+// Couder mask print
 // Plop
 // find stroke that helped last time...
 // global font?
 // tab navigation
+// zone changes signals...
 
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
@@ -27,6 +27,7 @@
 #include <QQuickPaintedItem>
 #include <QDesktopServices>
 #include "QQmlObjectListModel.h"
+#include "mes.h"
 
 // ********************************************************
 // Most of our objects will derive from this savable object
@@ -392,6 +393,8 @@ public:
     CBSProp(QString, comments, Comments)
     CBSProp(QString, secondariesToConcider, SecondariesToConcider)
     CBSPropDE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
+    CBSPropD(double, thickness, Thickness)
+    CBSPropD(double, density, Density)
     CBSPropDE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); )
     CBSPropDE(double, secondary, Secondary, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSPropDE(double, secondaryToFocal, SecondaryToFocal, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
@@ -409,6 +412,7 @@ public:
     QML_OBJMODEL_PROPERTY(CBSModelParabolizingWork, parabolizings)
     QML_OBJMODEL_PROPERTY(CBSDouble, zones)
     QML_OBJMODEL_PROPERTY(CBSModelEP, eps)
+    CBSProp(int, cellType, CellType)
 Q_SIGNALS:
     void nameChanged();
     void commentsChanged();
@@ -428,13 +432,16 @@ Q_SIGNALS:
     void hogTimeWithGritChanged();
     void nbZonesChanged();
     void slitIsMovingChanged();
+    void cellTypeChanged();
+    void thicknessChanged();
+    void densityChanged();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
     void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); }
 public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
-                           _diametre(150), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
-                           _excludedAngle(2.0), _slitIsMoving(true)
+                           _diametre(150), _thickness(25), _density(2.8), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
+                           _excludedAngle(2.0), _slitIsMoving(true), _cellType(0)
     {
         m_hoggings= new QQmlObjectListModel<CBSModelHoggingWork>(this);
         m_parabolizings= new QQmlObjectListModel<CBSModelParabolizingWork>(this);
@@ -572,6 +579,10 @@ public:
     double getConical() { return -1.0; }
     Q_INVOKABLE void printCouder();
     void paintCouder(QPainter *painter, QPoint &c, double dpi);
+    Q_INVOKABLE void doMes();
+    Q_INVOKABLE void doMesSolve();
+    double thicnknessAt(double r) { return _thickness-sagita(_focal*2.0, (_diametre/2.0)-r); } // Thickness of the mirror at a given diametre
+    CMes mes;
 };
 
 QString getAppPath();
@@ -644,12 +655,22 @@ class CBScopeIlumination : public QQuickPaintedItem
 class CBScopeCouder : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope)
-    public:
-    CBScopeCouder(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), scope(nullptr) { }
+    CBSProp(CBSModelScope*, scope, Scope)
+Q_SIGNALS:
+    void scopeChanged();
+public:
+    CBScopeCouder(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr) { }
     void paint(QPainter *painter);
-    CBSModelScope *scope;
-    CBSModelScope *getScope() { return scope; }
-    void setScope(CBSModelScope *scope) { this->scope= scope; }
+};
+
+class CBScopeMes : public QQuickPaintedItem
+{
+    Q_OBJECT
+    CBSProp(CBSModelScope*, scope, Scope)
+Q_SIGNALS:
+    void scopeChanged();
+public:
+    CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr) { }
+    void paint(QPainter *painter);
 };
 #endif

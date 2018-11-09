@@ -12,6 +12,7 @@ import QtQuick.Layouts 1.3
 import CBScopeIlumination 1.0
 import CBScopeMesure 1.0
 import CBScopeCouder 1.0
+import CBScopeMes 1.0
 
 ApplicationWindow {
     visible: true
@@ -52,6 +53,8 @@ ApplicationWindow {
             Row { spacing: 10;  id: scopeDiametreEdit;
                 Text { y: (parent.height-height)/2; text: qsTr("Diametre") }
                 MyText { text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
+                Text { y: (parent.height-height)/2; text: qsTr("Thicnkess") }
+                MyText { text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
             }
             Row { spacing: 10;
                 Text { y: (parent.height-height)/2; text: qsTr("focal length") }
@@ -315,11 +318,31 @@ ApplicationWindow {
                 id: scopeCouder
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
+                onScopeChanged: update()
             }
             Connections {
                 target: scopeView.model
                 onDiametreChanged: { scopeCouder.update(); }
                 onNbZonesChanged: { scopeCouder.update(); }
+            }
+        }
+
+        //********************************
+        // Support page
+        //********************************
+        Column {
+            width: window.width; height: parent.height;
+            Button { text: "calc"; onClicked: scopeView.model.doMesSolve(); }
+            CBScopeMes {
+                id: scopeSupport
+                width: parent.width; height: parent.height;
+                scope: scopeView.model
+                onScopeChanged: update()
+            }
+            Connections {
+                target: scopeView.model
+                onDiametreChanged: { scopeSupport.update(); }
+                onNbZonesChanged: { scopeSupport.update(); }
             }
         }
     }
@@ -358,6 +381,7 @@ ApplicationWindow {
                 TabButton { text: qsTr("Hogging") }
                 TabButton { text: qsTr("Parabolizing") }
                 TabButton { text: qsTr("Couder") }
+                TabButton { text: qsTr("Support") }
             }
     }
 

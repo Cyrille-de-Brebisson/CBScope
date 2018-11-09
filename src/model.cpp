@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QPrinter>
 #include <QPrintDialog>
+#include "mes.h"
 
 CBSModel *CBSModel::singleton= nullptr;
 
@@ -10,8 +11,39 @@ double getScopeDiameter(CBSModelScope *scope) { return scope->getDiametre(); }
 double getScopeFocal(CBSModelScope *scope) { return scope->getFocal(); }
 double getScopeSpherometerLegDistances(CBSModelScope *scope) { return scope->getSpherometerLegDistances(); }
 
+void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, double a2, int dpi, int yflip)
+{
+    // x²+y²=r² -> y=sqrt(r²-x²), x=sqrt(r²-y²)
+    int const steps= 20;
+    a1= a1*M_PI/180.0;
+    a2= a2*M_PI/180.0;
+    double asteps= (a2-a1)/steps;
+    double a= a1;
+    QPoint pts[(steps+1)*2+1]; int pc= 0;
+    for (int i=0; i<steps; i++) // draw first arc going up
+    {
+        pts[pc++]= QPoint(c.x()+int(z1*sin(a)/25.4*dpi), c.y()+yflip*int(z1*cos(a)/25.4*dpi));
+        a+= asteps;
+    }
+    for (int i=0; i<steps; i++) // draw second arc going down
+    {
+        a-= asteps;
+        pts[pc++]= QPoint(c.x()+int(z2*sin(a)/25.4*dpi), c.y()+yflip*int(z2*cos(a)/25.4*dpi));
+    }
+    pts[pc++]= pts[0]; // join the ends
+    p->drawPolyline(pts, pc); // draw
+}
+
 void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double y2, int dpi, int yflip)
 {
+    if (z1>1.0 && z1<y2)
+    {
+        double a1= acos(y1/z2)*180.0/M_PI, a2= acos(y2/z2)*180.0/M_PI;
+        if (std::isnan(a2)) a2= 30.0;
+        zone2(p, z1, z2, c, a1, a2, dpi, yflip);
+        zone2(p, z1, z2, c, a1+180.0, a2+180.0, dpi, yflip);
+        return;
+    }
     // x²+y²=r² -> y=sqrt(r²-x²), x=sqrt(r²-y²)
     int const steps= 20;
     double ystep= (y2-y1)/steps;
@@ -54,22 +86,32 @@ void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double y2, in
     }
 }
 
+// Draw the Couder screen on the painter at DPI. c is the center of the mirror
 void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi)
 {
     QBrush brush(QColor(0, 0, 0, 0));
     painter->setBrush(brush);
     painter->setRenderHint(QPainter::Antialiasing);
+    // Paint in black the circles that correspond to the zone edges and full mirror (which should match zone(n)...)
 #define circle(r) painter->drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
     painter->setPen(QPen(QColor(0, 0, 0)));
-    circle(_diametre/2.0);
     for (int i=0; i<m_zones->count(); i++) circle(m_zones->at(i)->_val);
+    if (!doubleEq(_diametre, m_zones->at(m_zones->count()-1)->_val))
+        circle(_diametre/2.0); // full mirror, if needed
 #undef circle
+    // Paint in red the normal zones
     painter->setPen(QPen(QColor(255, 0, 0)));
-    double bot= 10;
+    double bot= 10; // find the "horizontal" cut line for the zones...
     if (m_zones->at(0)->_val<1) bot= m_zones->at(1)->_val*0.9;
     else bot= m_zones->at(2)->_val*0.9;
     for (int i=0; i<m_zones->count()-1; i++)
       zone(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 2.5, bot, int(dpi), (i&1)==0?1:-1);
+    // paint my zones in blue
+    painter->setPen(QPen(QColor(0, 0, 255)));
+    bot*= 0.8;
+    zone(painter, m_zones->at(0)->_val, m_zones->at(1)->_val, c, 2.5, bot, int(dpi), 1);
+    for (int i=1; i<m_zones->count()-1; i++)
+      zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, -30.0, 30.0, int(dpi), (i&1)==0?1:-1);
 }
 
 void CBSModelScope::printCouder()
@@ -173,8 +215,7 @@ void CBScopeIlumination::paint(QPainter *painter)
         double v= calcOffAxisIllumination(scope->_diametre, scope->_focal, sec, scope->_secondaryToFocal, 0);
         double loss= diagObstructionArea(scope->_diametre, sec);
         if (v==0.0) continue; // 0% at central point, no need to continue!
-        QPen p(colors[count%5]); p.setWidth(2);
-        painter->setPen(p);
+        QPen p(colors[count%5]); p.setWidth(2); painter->setPen(p);
         QPoint pts[53]; int cnt= 0;
         for (double fx= -rw/2.0; fx<rw/2.0; fx+= rw/53.0)
         {
@@ -280,6 +321,13 @@ void CBSModelParabolizingWork::checkNbMesures()
         CBSDouble *d= new CBSDouble(m_mesures); m_mesures->append(d);
         connect(d, SIGNAL(valChanged()), this, SLOT(doCalculations()));
     }
+}
+
+// Volume of a "ring" of a cone from of innder radius r1 (height h1) and outer radius r2 (height h2). Thanks to HP Prime cas for that!
+static double volumeRing(double r1, double r2, double h1, double h2)
+{
+    double a= r1, b= r2, d= h1, f= h2;
+    return (-2*a*a*d*M_PI-a*a*f*M_PI+a*b*d*M_PI-a*b*f*M_PI+b*b*d*M_PI+2*b*b*f*M_PI)/3;
 }
 
 static double sqr(double v) { return v*v; }
@@ -395,13 +443,7 @@ void CBSModelParabolizingWork::doCalculations()
     delete[] _Hm    ;
     delete[] _Hm2R  ;
     _glassToRemove= 0.0;
-    for (int i=0; i<iNbZone; i++)
-    {
-        double a= _Hz[i], b= _Hz[i+1];
-        double d=_surf[i]/1e6, f= _surf[i+1]/1e6;
-        double v= (-2*a*a*d*M_PI-a*a*f*M_PI+a*b*d*M_PI-a*b*f*M_PI+b*b*d*M_PI+2*b*b*f*M_PI)/3; // Volume of a part of a cone from diamter a to b, starting at height d and ending up at f. Thanks to HP Prime cas for that!
-        _glassToRemove+= v;
-    }
+    for (int i=0; i<iNbZone; i++) _glassToRemove+= volumeRing(_Hz[i], _Hz[i+1], _surf[i]/1e6, _surf[i+1]/1e6);
 
     emit mesuresChanged();
 //    qDebug() << "  done Do Calculations (this, _scope)" << this << _scope;
@@ -494,7 +536,209 @@ void CBScopeCouder::paint(QPainter *painter)
     int w= int(itemSize.width());
     int h= int(itemSize.height());
     painter->drawRect(0, 0, w, h);
-    if (scope==nullptr) return;
+    if (_scope==nullptr) return;
     QPoint c(w/2, h/2);
-    scope->paintCouder(painter, c, 96);
+    _scope->paintCouder(painter, c, 96);
+}
+
+void CBSModelScope::doMes()
+{
+    // cellType NbPoints NbSupportRings NbAnglularSegments NbMeshRings supportsPerRing
+    // 0        3        1              3                  8           3 @ n*120°
+    // 1        6        1              6                  8           6 @ n*60°
+    // 2        9        2              9                  12          3,6 @ n*120° n*60°+30°
+    // 3        18       2              18                 12          6,12 @ n*60°n*30°+15°
+    // 4        27       3              24                 16          6,9,12 @ n*60° n*40°+10° n*30°+15°
+    // 5        36       3              24                 16          6,12,18 @ n*60° n*30° n*20°
+    struct TSupportRingEq { int nbSupports, astep, offset; };
+    struct TCellTypeSupportDef { int nbRing; TSupportRingEq r[3]; };
+    TCellTypeSupportDef const cellDefs[6]={
+        {1, {{3, 120, 0 }} },
+        {1, {{6, 60, 0 }} },
+        {2, {{3, 120, 0 }, {6, 60, 30 }} },
+        {2, {{6, 60, 0 }, {12, 30, 15 }} },
+        {3, {{6, 60, 0 }, {9, 40, 10 }, {12, 30, 15}} },
+        {3, {{6, 60, 0 }, {12, 30, 0 }, {18, 20, 0}} }
+    };
+
+    // Calc nb of 'rings' which will depend on cell type...
+    int const nbRingsPerCell[6]= { 7, 11, 11, 19, 23};
+    int nbRings= nbRingsPerCell[_cellType];
+    int const pointsPerRing[24]= {1, 6, 12, 24, 24, 48, 48, 48, 48, 96, 96, 96, 96, 96, 96, 96, 96, 192, 192, 192, 192, 192, 192, 192 };
+    int nbPoints= 0; for (int i=0; i<=nbRings; i++) nbPoints+= pointsPerRing[i]; nbPoints*= 2;
+    mes.setNbPoints(nbPoints, true);
+    int nbSupRings= cellDefs[_cellType].nbRing;
+    double supRingRad[3]; for (int i=0; i<nbSupRings; i++) supRingRad[i]= _diametre/2.0/(nbSupRings+1.0)*(i+1);
+    double meshRingRads[17]; // radiis of the various mesh rings
+    for (int i=0; i<=nbRings; i++) meshRingRads[i]= i*_diametre/2.0/(nbRings);
+    // now, find closest meshRing to a support ring and move meshRing to that ring. Then, re-adjust internal rings...
+    int lastMeshRingDone= 0;
+    for (int sr= 0; sr<nbSupRings; sr++)
+    {
+        int r= lastMeshRingDone;
+        while (r<nbRings) if (supRingRad[sr]<(meshRingRads[r]+meshRingRads[r+1])/2) break; else r++;
+        meshRingRads[r]= supRingRad[sr];
+        for (int i= lastMeshRingDone+1; i<r; i++)
+            meshRingRads[i]= ((r-i)*meshRingRads[lastMeshRingDone]+(i-lastMeshRingDone)*meshRingRads[r])/(r-lastMeshRingDone);
+        lastMeshRingDone= r;
+    }
+    for (int i= lastMeshRingDone+1; i<nbSupRings; i++)
+        meshRingRads[i]= ((nbSupRings-i)*meshRingRads[lastMeshRingDone]+(i-lastMeshRingDone)*meshRingRads[nbSupRings])/(nbSupRings-lastMeshRingDone);
+
+    int ptsCount= 0;
+    mes.point_list[ptsCount++]= mes.pts(0.0, 0.0, 0.0);
+    mes.point_list[ptsCount++]= mes.pts(0.0, 0.0, thicnknessAt(0.0));
+    double v= volumeRing(0, meshRingRads[1]/2.0, thicnknessAt(0.0), thicnknessAt(meshRingRads[1]/2.0))*_density/1000.0; // force
+    mes.force_list[1]= mes.pts(0, 0, -v);
+
+    // 1 elements for centre + 7 elements for each of the 6 triangles= 1+7*6=43!
+    mes.setNbelement(43); int elCount= 0;
+    // Centre "post"
+    mes.element_list[elCount++]= mes.el(0,1);
+
+    double h= thicnknessAt(meshRingRads[1]);
+    int lastPointL= 12, lastPointH= 13;
+    int firstPointLastRing= ptsCount;
+    v= volumeRing(meshRingRads[1]/2.0, (meshRingRads[1]+meshRingRads[2])/2.0, thicnknessAt(meshRingRads[1]/2.0), thicnknessAt((meshRingRads[1]+meshRingRads[2])/2.0))*_density/1000.0/6.0; // force
+    for (int j=0; j<6; j++)
+    {
+        mes.point_list[ptsCount]= mes.pts(meshRingRads[1]*cos(j*M_PI/3.0), meshRingRads[1]*sin(j*M_PI/3.0), 0);
+        mes.force_list[ptsCount]= mes.pts(0, 0, -v);
+        mes.point_list[ptsCount+1]= mes.pts(meshRingRads[1]*cos(j*M_PI/3.0), meshRingRads[1]*sin(j*M_PI/3.0), h);
+        mes.element_list[elCount++]= mes.el(ptsCount,ptsCount+1);  // vertical between the points
+        mes.element_list[elCount++]= mes.el(0,ptsCount);           // center to point 1
+        mes.element_list[elCount++]= mes.el(1,ptsCount+1);         // center to point 2
+        mes.element_list[elCount++]= mes.el(0,ptsCount+1);         // center to point 2 (diag radial face)
+        mes.element_list[elCount++]= mes.el(lastPointL,ptsCount);  // lastPointL to point 1
+        mes.element_list[elCount++]= mes.el(lastPointH,ptsCount+1);// lastPointH to point 2
+        mes.element_list[elCount++]= mes.el(lastPointL,ptsCount+1);// lastPointL to point 2 (diag on outside face)
+        lastPointL= ptsCount++; lastPointH= ptsCount++;
+    }
+
+    for (int i=2; i<=nbRings; i++)
+    {
+        int firstPointThisRing= ptsCount, savedFirstPointLastRing= firstPointLastRing;
+        double a= 0.0, astep= M_PI*2.0/pointsPerRing[i];                     // Angle counter and stepps...
+        lastPointL= ptsCount+pointsPerRing[i]*2-2; lastPointH= lastPointL+1; // Index of the last points of this ring to link the first point with the last and points with the previous point
+        // add the appropriate number of elements for this ring (depends on if we increased the point count form last ring or not)
+        if (pointsPerRing[i]==pointsPerRing[i-1]) mes.setNbelement(int(mes.element_no)+10*pointsPerRing[i]);
+        else mes.setNbelement(int(mes.element_no)+17*pointsPerRing[i]/2);
+        // calculate the weight, per point in this ring. take 1/2 of the previous and next rings.
+        // except for last ring there only 1/2 of the previous ring is used...
+        if (i!=nbRings) v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, (meshRingRads[i]+meshRingRads[i+1])/2.0, thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt((meshRingRads[i]+meshRingRads[i+1])/2.0))*_density/1000.0/pointsPerRing[i]; // force
+        else v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, meshRingRads[i], thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt(meshRingRads[i]))*_density/1000.0/pointsPerRing[i]; // force
+        // thickness of the disk on the points here...
+        double h= thicnknessAt(meshRingRads[i]);
+        // find fix points!
+        for (int j=0; j<nbSupRings; j++)
+        {
+            if (doubleEq(supRingRad[j], meshRingRads[i]))
+            {
+                for (int k=0; k<cellDefs[_cellType].r[j].nbSupports; k++)
+                {
+                    int a= k*cellDefs[_cellType].r[j].astep+cellDefs[_cellType].r[j].offset;
+                    a= a*pointsPerRing[i]/360;
+                    mes.fix_list[ptsCount+a*2].z= true;
+                }
+            }
+        }
+        // now, calculate points in the mesh and create the mest itself!
+        for (int j=0; j<pointsPerRing[i]; j++) // for each point of the ring
+        {
+            mes.point_list[ptsCount]= mes.pts(meshRingRads[i]*cos(a), meshRingRads[i]*sin(a), 0.0);
+            mes.force_list[ptsCount]= mes.pts(0, 0, -v);
+            mes.point_list[ptsCount+1]= mes.pts(meshRingRads[i]*cos(a), meshRingRads[i]*sin(a), h);
+            if (pointsPerRing[i]==pointsPerRing[i-1])
+            {
+                mes.element_list[elCount++]= mes.el(ptsCount,ptsCount+1);  // vertical between the points
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount);           // center to point 1
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+1,ptsCount+1);         // center to point 2
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount+1);         // center to point 2 (diag radial face)
+                mes.element_list[elCount++]= mes.el(lastPointL,ptsCount);  // lastPointL to point 1
+                mes.element_list[elCount++]= mes.el(lastPointH,ptsCount+1);// lastPointH to point 2
+                mes.element_list[elCount++]= mes.el(lastPointL,ptsCount+1);// lastPointL to point 2 (diag on outside face)
+                firstPointLastRing+=2;
+                if (firstPointLastRing==firstPointThisRing) firstPointLastRing= savedFirstPointLastRing;
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount);           // center to point 1
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+1,ptsCount+1);         // center to point 2
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount+1);         // center to point 2 (diag radial face)
+            } else {
+                mes.element_list[elCount++]= mes.el(ptsCount,ptsCount+1);  // vertical between the points
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount);           // center to point 1
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+1,ptsCount+1);         // center to point 2
+                mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount+1);         // center to point 2 (diag radial face)
+                mes.element_list[elCount++]= mes.el(lastPointL,ptsCount);  // lastPointL to point 1
+                mes.element_list[elCount++]= mes.el(lastPointH,ptsCount+1);// lastPointH to point 2
+                mes.element_list[elCount++]= mes.el(lastPointL,ptsCount+1);// lastPointL to point 2 (diag on outside face)
+                if ((j&1)==1)
+                {
+                    firstPointLastRing+=2;
+                    if (firstPointLastRing==firstPointThisRing) firstPointLastRing= savedFirstPointLastRing;
+                    mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount);           // center to point 1
+                    mes.element_list[elCount++]= mes.el(firstPointLastRing+1,ptsCount+1);         // center to point 2
+                    mes.element_list[elCount++]= mes.el(firstPointLastRing+0,ptsCount+1);         // center to point 2 (diag radial face)
+                }
+            }
+            lastPointL= ptsCount++; lastPointH= ptsCount++;
+            a+= astep;
+        }
+        firstPointLastRing= firstPointThisRing;
+    }
+}
+
+void CBSModelScope::doMesSolve()
+{
+    qDebug() << mes.point_no << " points " << mes.element_no << " elements";
+    QDateTime t(QDateTime::currentDateTime());
+    mes.calc();
+    QDateTime t2(QDateTime::currentDateTime());
+    qDebug() << t2.toMSecsSinceEpoch()-t.toMSecsSinceEpoch() << " ms";
+}
+
+void CBScopeMes::paint(QPainter *painter)
+{
+    QBrush brush(QColor(200, 200, 200));
+    painter->setBrush(brush);
+    painter->setPen(QPen(QColor(0, 0, 0)));
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    QSizeF itemSize = size();
+    int w= int(itemSize.width());
+    int h= int(itemSize.height());
+    painter->drawRect(0, 0, w, h);
+    if (_scope==nullptr) return;
+    _scope->doMes();
+    QPoint c(w/2, h/2);
+    int dpi= 96;
+    for (unsigned int i=0; i<_scope->mes.element_no; i++)
+        if ((_scope->mes.element_list[i].p1&1)==0 && (_scope->mes.element_list[i].p2&1)==0)
+            painter->drawLine(QPoint(c.x()+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].x/25.4*dpi), c.y()+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].y/25.4*dpi)),
+                              QPoint(c.x()+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].x/25.4*dpi), c.y()+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].y/25.4*dpi)));
+int const offset= 10;
+    painter->setPen(QPen(QColor(255,0,0)));
+    for (unsigned int i=0; i<_scope->mes.element_no; i++)
+        if ((_scope->mes.element_list[i].p1&1)==1 && (_scope->mes.element_list[i].p2&1)==1)
+            painter->drawLine(QPoint(c.x()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].x/25.4*dpi), c.y()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].y/25.4*dpi)),
+                              QPoint(c.x()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].x/25.4*dpi), c.y()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].y/25.4*dpi)));
+    painter->setPen(QPen(QColor(0,0,255)));
+    for (unsigned int i=0; i<_scope->mes.element_no; i++)
+        if ((_scope->mes.element_list[i].p1&1)==0 && (_scope->mes.element_list[i].p2&1)==1)
+            painter->drawLine(QPoint(c.x()+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].x/25.4*dpi), c.y()+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].y/25.4*dpi)),
+                              QPoint(c.x()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].x/25.4*dpi), c.y()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].y/25.4*dpi)));
+    for (unsigned int i=0; i<_scope->mes.element_no; i++)
+        if ((_scope->mes.element_list[i].p1&1)==1 && (_scope->mes.element_list[i].p2&1)==0)
+            painter->drawLine(QPoint(c.x()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].x/25.4*dpi), c.y()+offset+int(_scope->mes.point_list[_scope->mes.element_list[i].p1].y/25.4*dpi)),
+                              QPoint(c.x()+0+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].x/25.4*dpi), c.y()+0+int(_scope->mes.point_list[_scope->mes.element_list[i].p2].y/25.4*dpi)));
+return;
+    painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
+    for (unsigned int i=0; i<_scope->mes.point_no; i+= 2)
+    {
+        QPen p(QColor(255,0,0)); p.setWidth(3); painter->setPen(p);
+        painter->drawPoint(QPoint(c.x()+int(_scope->mes.point_list[i].x/25.4*dpi), c.y()+int(_scope->mes.point_list[i].y/25.4*dpi)));
+        if (_scope->mes.fix_list[i].z)
+        {
+          QPen p(QColor(0,0,255)); p.setWidth(1); painter->setPen(p);
+          painter->drawEllipse(c.x()-5+int(_scope->mes.point_list[i].x/25.4*dpi), c.y()-5+int(_scope->mes.point_list[i].y/25.4*dpi), 10, 10);
+        }
+    }
 }

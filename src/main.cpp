@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<CBScopeIlumination>("CBScopeIlumination", 1, 0, "CBScopeIlumination");
     qmlRegisterType<CBScopeMesure>("CBScopeMesure", 1, 0, "CBScopeMesure");
     qmlRegisterType<CBScopeCouder>("CBScopeCouder", 1, 0, "CBScopeCouder");
+    qmlRegisterType<CBScopeMes>("CBScopeMes", 1, 0, "CBScopeMes");
 
     QApplication app(argc, argv); qtapp= &app;
 
