@@ -1,5 +1,6 @@
 #include "mes.h"
 #include <math.h>
+#include <QDebug>
 
 void CMes::populate_equation()
 {
@@ -134,6 +135,7 @@ void CMes::calculate_equation()
     // find L, U where L * U = K
     for(unsigned int i1 = 0; i1 < dof_no; i1++)
     {
+        qDebug() << i1 << " out of " << dof_no;
         double acc = 0.0;
         for(unsigned int i2 = 0; i2 < dof_no; i2++)
             acc += l(i1,i2) * u(i2,i1);

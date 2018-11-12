@@ -19,10 +19,65 @@ ApplicationWindow {
     width: AppTheme.mainPageWidth
     height: AppTheme.mainPageHeight
     id: window
-    property int fontSize: 10
     property alias editTextHeight: scopeView.editTextHeight
+    property int fontSize: CBSModel.windowsFont
+    property bool fontBold: CBSModel.windowsFontBold
 
-    SwipeView {
+    function setFont(parentElement) {
+        for (var i = 0; i < parentElement.children.length; ++i)
+        {
+            if (parentElement.children[i].font)
+            {
+                parentElement.children[i].font.bold = Qt.binding(function() { return window.fontBold })
+                parentElement.children[i].font.pixelSize = Qt.binding(function() { return window.fontSize })
+            }
+            setFont(parentElement.children[i]);
+        }
+    }
+    Component.onCompleted: {
+        setFont(footer);
+        setFont(scopeView);
+    }
+
+    // Popup asking if the user wants to recalc zones...
+    Popup { id: popup; x: 100; y: 100; width: parent.width-200; height: parent.height-200; modal: true; focus: true; clip: true;
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+            ColumnLayout {
+                Text { Layout.fillWidth: true; text: qsTr("Are you sure you want to change your zones?") }
+                RowLayout {
+                    Layout.fillWidth: true;
+                    Button { text: qsTr("Yes!"); onPressed: { scopeView.model.autoZones(); popup.close(); } }
+                    Button { text: qsTr("NO! ABORT!"); onPressed: popup.close(); }
+                }
+            }
+    }
+
+    header: Row {
+        width: parent.width; height: headerCb.height*1.5; spacing: 10
+        ComboBox { id: scopes
+            textRole: "name";
+            model: CBSModel.scopes
+            onCurrentIndexChanged: scopeView.model= CBSModel.scopes.get(scopes.currentIndex)
+        }
+        Button {
+            text: qsTr("New Scope")
+            onClicked: scopes.currentIndex= CBSModel.addScope();
+        }
+        Button {
+            text: qsTr("Help");
+            onClicked: CBSModel.help()
+        }
+        ComboBox {
+            textRole: "text";
+            model: ListModel { ListElement { text: "font 10"; } ListElement { text: "font 11"; } ListElement { text: "font 12"; } ListElement { text: "font 13"; } ListElement { text: "font 14"; } ListElement { text: "font 15"; } ListElement { text: "font 16"; } }
+            currentIndex: window.fontSize-10
+            onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
+        }
+        CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
+    }
+
+    // The main control. A list of pages with all we need...
+    StackLayout {
         id: scopeView
         property CBSModelScope model
         anchors.fill: parent
@@ -45,7 +100,7 @@ ApplicationWindow {
                 Button { id: scr13;
                     visible: CBSModel.scopes.count>1
                     text: qsTr("Delete")
-                    onClicked: CBSModel.removeScope(scopes.currentIndex);
+                    onClicked: CBSModel.scopes.remove(scopes.currentIndex);
                 }
             }
             Text { text: qsTr("Comments") }
@@ -92,34 +147,35 @@ ApplicationWindow {
                     width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width
                     x: parent.border.width; y: parent.border.width
                     delegate: Rectangle {
-                            width: parent.width
-                            border.width: 3; radius: 2; border.color: "Black"
-                            height: col2.height+3*border.width
-                            Column {
-                                id: col2
-                                clip: true
-                                x: parent.border.width*1.5; y: parent.border.width*1.5
-                                width: parent.width-3*parent.border.width
-                                height: i12.height+i13.height+i14.height
-                                Row {
-                                    spacing: 10; width: parent.width; id: i12;
-                                    Text   { id: rowEp1; y: (parent.height-height)/2; text: qsTr("name"); }
-                                    MyText { id: rowEp2; y: (parent.height-height)/2; text: name; onTextChanged: name= text; }
-                                    Rectangle { height: parent.height; width: parent.width-rowEp1.width-rowEp2.width-rowEp5.width-3*parent.spacing; }
-                                    Button { id: rowEp5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.deleteEp(index); }
-                                }
-                                Row { spacing: 10; id: i13;
-                                    Text { y: (parent.height-height)/2; text: qsTr("focal") }
-                                    MyText { text: focal; onTextChanged: focal= Number(text); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("angle") }
-                                    MyText { text: angle; onTextChanged: angle= Number(text); }
-                                }
-                                Row { spacing: 10; id: i14;
-                                    MyOText { caption: qsTr("zoom");       text: zoom.toFixed(0); }
-                                    MyOText { caption: qsTr("view Angle"); text: viewAngle.toFixed(2)+"°"; }
-                                    MyOText { caption: qsTr("field radius");      text: field.toFixed(1); }
-                                }
+                        Component.onCompleted: setFont(this)
+                        width: parent.width
+                        border.width: 3; radius: 2; border.color: "Black"
+                        height: col2.height+3*border.width
+                        Column {
+                            id: col2
+                            clip: true
+                            x: parent.border.width*1.5; y: parent.border.width*1.5
+                            width: parent.width-3*parent.border.width
+                            height: i12.height+i13.height+i14.height
+                            Row {
+                                spacing: 10; width: parent.width; id: i12;
+                                Text   { id: rowEp1; y: (parent.height-height)/2; text: qsTr("name"); }
+                                MyText { id: rowEp2; y: (parent.height-height)/2; text: name; onTextChanged: name= text; }
+                                Rectangle { height: parent.height; width: parent.width-rowEp1.width-rowEp2.width-rowEp5.width-3*parent.spacing; }
+                                Button { id: rowEp5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.eps.remove(index); }
                             }
+                            Row { spacing: 10; id: i13;
+                                Text { y: (parent.height-height)/2; text: qsTr("focal") }
+                                MyText { text: focal; onTextChanged: focal= Number(text); }
+                                Text { y: (parent.height-height)/2; text: qsTr("angle") }
+                                MyText { text: angle; onTextChanged: angle= Number(text); }
+                            }
+                            Row { spacing: 10; id: i14;
+                                MyOText { caption: qsTr("zoom");       text: zoom.toFixed(0); }
+                                MyOText { caption: qsTr("view Angle"); text: viewAngle.toFixed(2)+"°"; }
+                                MyOText { caption: qsTr("field radius");      text: field.toFixed(1); }
+                            }
+                        }
                      }
                 }
             }
@@ -173,40 +229,41 @@ ApplicationWindow {
                         model: scopeView.model.hoggings
                         width: parent.width; height: parent.height;
                         delegate:  Rectangle {
-                                width: parent.width
-                                border.width: 3; radius: 4; border.color: "Black";
-                                height: col.height+2*border.width
-                                Column {
-                                    id: col
-                                    clip: true
-                                    width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
-                                    height: row1Hog.height+row2Hog.height+row3Hog.height+row4Hog.height
-                                    Row {
-                                        spacing: 10; width: parent.width; id: row1Hog;
-                                        Text   { id: rowHog1; y: (parent.height-height)/2; text: qsTr("comments"); }
-                                        MyMultiText { id: rowHog2; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
-                                        Rectangle { height: parent.height; width: parent.width-rowHog1.width-rowHog2.width-rowHog5.width-3*parent.spacing; }
-                                        Button { id: rowHog5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.deleteEp(index); }
-                                    }
-                                    Row { spacing: 10; id: row2Hog;
-                                        Text { y: (parent.height-height)/2; text: qsTr("start ROC") }
-                                        MyText { text: startSphere; onTextChanged: startSphere= Number(text); }
-                                        Text { y: (parent.height-height)/2; text: qsTr("end ROC") }
-                                        MyText { text: endSphere; onTextChanged: endSphere= Number(text); }
-                                        Text { y: (parent.height-height)/2; text: qsTr("end ROC spherometer") }
-                                        MyText { onTextChanged: { if (text!=="") scopeView.model.getSpherometer(index).setEndSphereSpherometer(Number(text)); } }
-                                    }
-                                    Row { spacing: 10; id: row3Hog;
-                                        Text { y: (parent.height-height)/2; text: qsTr("time") }
-                                        MyText { text: time; onTextChanged: time= Number(text); }
-                                        Text { y: (parent.height-height)/2; text: qsTr("grit") }
-                                        MyText { text: grit; onTextChanged: grit= Number(text); }
-                                    }
-                                    Row { spacing: 10; id: row4Hog;
-                                        MyOText { caption: qsTr("hog/time");   text: hogSpeed.toFixed(1); }
-                                        MyOText { caption: qsTr("end sagita"); text: endSagita.toFixed(2); }
-                                    }
+                            Component.onCompleted: setFont(this)
+                            width: parent.width
+                            border.width: 3; radius: 4; border.color: "Black";
+                            height: col.height+2*border.width
+                            Column {
+                                id: col
+                                clip: true
+                                width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
+                                height: row1Hog.height+row2Hog.height+row3Hog.height+row4Hog.height
+                                Row {
+                                    spacing: 10; width: parent.width; id: row1Hog;
+                                    Text   { id: rowHog1; y: (parent.height-height)/2; text: qsTr("comments"); }
+                                    MyMultiText { id: rowHog2; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
+                                    Rectangle { height: parent.height; width: parent.width-rowHog1.width-rowHog2.width-rowHog5.width-3*parent.spacing; }
+                                    Button { id: rowHog5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.deleteEp(index); }
                                 }
+                                Row { spacing: 10; id: row2Hog;
+                                    Text { y: (parent.height-height)/2; text: qsTr("start ROC") }
+                                    MyText { text: startSphere; onTextChanged: startSphere= Number(text); }
+                                    Text { y: (parent.height-height)/2; text: qsTr("end ROC") }
+                                    MyText { text: endSphere; onTextChanged: endSphere= Number(text); }
+                                    Text { y: (parent.height-height)/2; text: qsTr("end ROC spherometer") }
+                                    MyText { onTextChanged: { if (text!=="") scopeView.model.hoggings.get(index).setEndSphereSpherometer(Number(text)); } }
+                                }
+                                Row { spacing: 10; id: row3Hog;
+                                    Text { y: (parent.height-height)/2; text: qsTr("time") }
+                                    MyText { text: time; onTextChanged: time= Number(text); }
+                                    Text { y: (parent.height-height)/2; text: qsTr("grit") }
+                                    MyText { text: grit; onTextChanged: grit= Number(text); }
+                                }
+                                Row { spacing: 10; id: row4Hog;
+                                    MyOText { caption: qsTr("hog/time");   text: hogSpeed.toFixed(1); }
+                                    MyOText { caption: qsTr("end sagita"); text: endSagita.toFixed(2); }
+                                }
+                            }
                         }
                     }
                 }
@@ -236,25 +293,12 @@ ApplicationWindow {
         // parabolizing page
         //********************************
         Column { spacing: 5
-            // Popup asking if the user wants to recalc zones...
-            Popup { id: popup; x: 100; y: 100; width: parent.width-200; height: parent.height-200; modal: true; focus: true; clip: true;
-                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-                    ColumnLayout {
-                        Text { Layout.fillWidth: true; text: qsTr("Are you sure you want to change your zones?") }
-                        RowLayout {
-                            Layout.fillWidth: true;
-                            Button { text: qsTr("Yes!"); onPressed: { scopeView.model.autoZones(); popup.close(); } }
-                            Button { text: qsTr("NO! ABORT!"); onPressed: popup.close(); }
-                        }
-                    }
-                  }
             Row {
                 spacing: 10
                 Text     { y: (parent.height-height)/2; text: qsTr("nb zones (")+scopeView.model.nbZonesSuggested+qsTr(" suggested)"); }
                 MyText   { y: (parent.height-height)/2; text: scopeView.model.nbZones; onTextChanged: scopeView.model.nbZones= Number(text); }
                 Button   { y: (parent.height-height)/2; text: qsTr("Auto calc zones"); onPressed: popup.open() }
                 CheckBox { y: (parent.height-height)/2; text: "Slit is moving"; checked: scopeView.model.slitIsMoving; onCheckedChanged: scopeView.model.slitIsMoving= checked }
-                Button   { y: (parent.height-height)/2; text: qsTr("Couder Mask"); onPressed: scopeView.model.printCouder() }
             }
             Text { text: qsTr("Enter zones boundaries from 0 (or more if there is a hole) to mirror radius)") }
             Rectangle {
@@ -264,7 +308,10 @@ ApplicationWindow {
                 ListView {
                     id: zones; model: scopeView.model.zones; orientation: Qt.Horizontal;
                     width: parent.width-2*parent.border.width; height: editTextHeight; x: parent.border.width; y: parent.border.width;
-                    delegate: MyText { text: val; onTextChanged: val= Number(text); }
+                    delegate: MyText {
+                        Component.onCompleted: setFont(this)
+                        text: val; onTextChanged: val= Number(text);
+                    }
                 }
             }
             Rectangle {
@@ -278,6 +325,7 @@ ApplicationWindow {
                     x: parent.border.width; y: parent.border.width+addMesBut.height;
                     width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width-addMesBut.height;
                     delegate: Rectangle {
+                        Component.onCompleted: setFont(this)
                         border.width: 3; radius: 4; border.color: "Blue";
                         width: parent.width; height: 180;
                         Column {
@@ -295,11 +343,11 @@ ApplicationWindow {
                                 Text   { id: rowMes3; y: (parent.height-height)/2; text: qsTr("Comments"); }
                                 MyText { id: rowMes4; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
                                 Rectangle { height: parent.height; width: parent.width-rowMes1.width-rowMes2.width-rowMes3.width-rowMes4.width-rowMes5.width-5*parent.spacing; }
-                                Button { id: rowMes5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.removeMesure(index); }
+                                Button { id: rowMes5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.parabolizings.remove(index); }
                             }
                             CBScopeMesure {
                                 id: couderDisplay
-                                scope: scopeView.model; mesure: scopeView.model.getParabolizing(index);
+                                scope: scopeView.model; mesure: scopeView.model.parabolizings.get(index);
                                 width: parent.width; height: parent.height-y;
                             }
                             Connections { target: couderDisplay.mesure; onMesuresChanged: couderDisplay.update(); } // redraw when mesure change...
@@ -312,13 +360,23 @@ ApplicationWindow {
         //********************************
         // Couder page
         //********************************
-        Column {
+        Rectangle {
             width: window.width; height: parent.height;
             CBScopeCouder {
                 id: scopeCouder
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
                 onScopeChanged: update()
+                onShowRedChanged: update()
+                onShowBlueChanged: update()
+                onZoomChanged: update()
+            }
+            Row {
+                spacing: 10; y: 1;
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Red Zones"); checked: scopeCouder.showRed; onCheckedChanged: scopeCouder.showRed= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Blue Zones"); checked: scopeCouder.showBlue; onCheckedChanged: scopeCouder.showBlue= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("zoom/2"); checked: scopeCouder.zoom; onCheckedChanged: scopeCouder.zoom= checked }
+                Button   { y: (parent.height-height)/2; text: qsTr("Print Couder Mask"); onPressed: scopeView.model.printCouder() }
             }
             Connections {
                 target: scopeView.model
@@ -330,19 +388,26 @@ ApplicationWindow {
         //********************************
         // Support page
         //********************************
-        Column {
+        Rectangle {
             width: window.width; height: parent.height;
-            Button { text: "calc"; onClicked: scopeView.model.doMesSolve(); }
             CBScopeMes {
                 id: scopeSupport
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
                 onScopeChanged: update()
+                onShow3DChanged: { scopeSupport.update(); }
+                onShowForcesChanged: { scopeSupport.update(); }
             }
             Connections {
                 target: scopeView.model
                 onDiametreChanged: { scopeSupport.update(); }
                 onNbZonesChanged: { scopeSupport.update(); }
+            }
+            Row {
+                spacing: 10; y:1;
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show 3D"); checked: scopeSupport.show3D; onCheckedChanged: scopeSupport.show3D= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Forces"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
+                Button { text: "Calc"; onClicked: scopeView.model.doMesSolve(); }
             }
         }
     }
@@ -350,29 +415,9 @@ ApplicationWindow {
     //********************************
     // footer page
     //********************************
-    footer: Row {
-        width: parent.width
-            ComboBox { id: scopes
-                width: parent.width/5; height: parent.height
-                textRole: "name";
-                model: CBSModel.scopes
-                onCurrentIndexChanged: scopeView.model= CBSModel.getScope(scopes.currentIndex)
-            }
-            Button {
-                width: parent.width/8;
-                text: qsTr("add")
-                onClicked: scopes.currentIndex= CBSModel.addScope();
-            }
-            Button {
-                width: parent.width/8;
-                text: qsTr("help");
-                onClicked: CBSModel.help()
-            }
-
-            Rectangle { height: parent.height; width: 10; }
-
+    footer: Row { id: footer
             TabBar {
-                width: parent.width-x
+                width: parent.width
                 id: tabBar
                 currentIndex: scopeView.currentIndex
                 TabButton { text: qsTr("Scope") }
@@ -384,5 +429,4 @@ ApplicationWindow {
                 TabButton { text: qsTr("Support") }
             }
     }
-
 }

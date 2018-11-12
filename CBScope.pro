@@ -144,7 +144,8 @@ mac {
 
 }
 
-QMAKE_CXXFLAGS_WARN_OFF+= -Wno-padded
+#QMAKE_CXXFLAGS_WARN_OFF+= -Wpadded
+#QMAKE_CFLAGS_WARN_OFF+= -Wpadded
 
 OBJECTS_DIR = ./Intermediate/$$DESTDIR
 MOC_DIR= ./Intermediate/$$DESTDIR

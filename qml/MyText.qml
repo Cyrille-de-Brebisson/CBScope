@@ -12,7 +12,6 @@ Rectangle {
         id: textInput
         clip: true
         x: parent.border.width*2; y: parent.border.width*2;
-//        font.pointSize: r1.fontSize
         width: Math.max(20,contentWidth)
         color: "black"
         onTextChanged: textField.textChanged(text)

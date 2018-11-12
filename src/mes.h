@@ -4,20 +4,21 @@
 class CMes
 {
 public:
-    CMes(): young(6000), point_list(nullptr), force_list(nullptr), output_list(nullptr), fix_list(nullptr), element_list(nullptr), point_no(0), element_no(0) { }
+    bool hasCalculated;
+    CMes(): hasCalculated(false), young(6000), point_list(nullptr), force_list(nullptr), output_list(nullptr), fix_list(nullptr), element_list(nullptr), point_no(0), element_no(0) { }
     ~CMes() { setNbPoints(0); setNbelement(0); }
     double young;                             // young elasticity number
     struct Point3D { double x, y, z; };       // x,y,z coordinates, used for a number of things
     Point3D pts(double x, double y, double z) { Point3D r= {x, y, z}; return r; } // helper function
     struct Bool3D { bool x, y, z; };          // 3 booleans. Used to fix points...
-    struct Element { unsigned int p1, p2; };  // element. Used to create edges by linking points
+    struct Element { unsigned int p1, p2; void set(int i, int j) { p1= i; p2= j; } };  // element. Used to create edges by linking points
     Element el(int i, int j) { Element e= {static_cast<unsigned int>(i), static_cast<unsigned int>(j)}; return e; }
     Point3D *point_list;                      // x,y,z positions of each points
     Point3D *force_list;                      // force vectors on each point
     Point3D *output_list;                     // End position
     Bool3D *fix_list;                         // put a true on x,y,z if the point is fixed in this direction
     Element *element_list;                    // edge list
-    void calc() { calculate_equation(); populate_equation(); } // Does the calculations. Get you results in output_list
+    void calc() { calculate_equation(); populate_equation(); hasCalculated= true; } // Does the calculations. Get you results in output_list
 
     // Number of points. Use setNbPoints to set it!!!!
     unsigned int point_no;
