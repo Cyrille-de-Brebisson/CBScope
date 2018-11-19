@@ -1,11 +1,10 @@
-//#include <QGuiApplication>
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QIcon>
 #include "model.h"
 
-QGuiApplication *qtapp;
+static QGuiApplication *qtapp;
 QString getAppPath()
 {
     return qtapp->applicationDirPath();
@@ -32,6 +31,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<CBScopeMes>("CBScopeMes", 1, 0, "CBScopeMes");
 
     QApplication app(argc, argv); qtapp= &app;
+    CBSModel::SingletonProvider(nullptr, nullptr); // Create the model and load files...
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

@@ -5,9 +5,10 @@ class CMes
 {
 public:
     bool hasCalculated;
-    CMes(): hasCalculated(false), young(6000), point_list(nullptr), force_list(nullptr), output_list(nullptr), fix_list(nullptr), element_list(nullptr), point_no(0), element_no(0) { }
+    CMes(): hasCalculated(false), young(64000), point_list(nullptr), force_list(nullptr), output_list(nullptr), fix_list(nullptr), element_list(nullptr), point_no(0), element_no(0), dof_no(0), F(nullptr), K(nullptr) { }
     ~CMes() { setNbPoints(0); setNbelement(0); }
     double young;                             // young elasticity number
+    double density;
     struct Point3D { double x, y, z; };       // x,y,z coordinates, used for a number of things
     Point3D pts(double x, double y, double z) { Point3D r= {x, y, z}; return r; } // helper function
     struct Bool3D { bool x, y, z; };          // 3 booleans. Used to fix points...
@@ -18,7 +19,7 @@ public:
     Point3D *output_list;                     // End position
     Bool3D *fix_list;                         // put a true on x,y,z if the point is fixed in this direction
     Element *element_list;                    // edge list
-    void calc() { calculate_equation(); populate_equation(); hasCalculated= true; } // Does the calculations. Get you results in output_list
+    void calc() { populate_equation(); calculate_equation(); hasCalculated= true; } // Does the calculations. Get you results in output_list
 
     // Number of points. Use setNbPoints to set it!!!!
     unsigned int point_no;
@@ -72,7 +73,6 @@ private:
     unsigned int dof_no; // degrees of freedom
     double *F;           // force vector
     double *K;           // stiffness matrix
-    double inline &k(unsigned int i, unsigned int j) { return K[i*point_no+j]; }
 };
 
 #endif // MES_H

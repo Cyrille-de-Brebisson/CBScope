@@ -2,11 +2,13 @@
 #include <math.h>
 #include <QDebug>
 
+#define k(i, j) K[i*dof_no+j]
+
 void CMes::populate_equation()
 {
     // init F, K
-    for (unsigned int i=0; i<point_no*point_no; i++) K[i]= 0.0;
-    for (unsigned int i=0; i<point_no; i++) F[i]= 0.0;
+    for (unsigned int i=0; i<dof_no*dof_no; i++) K[i]= 0.0;
+    for (unsigned int i=0; i<dof_no; i++) F[i]= 0.0;
     for (unsigned int i = 0; i < point_no; i++)
     {
         const Bool3D& fix = fix_list[i];
@@ -29,7 +31,7 @@ void CMes::populate_equation()
     // compose K - stiffness matrix
     for (unsigned int i = 0; i < element_no; i++)
     {
-        const double EA = 1000; // Young * Area
+        const double EA = young; // Young * Area
         const Element& element = element_list[i];
         const Point3D& point1 = point_list[element.p1];
         const Point3D& point2 = point_list[element.p2];
@@ -115,6 +117,43 @@ void CMes::populate_equation()
 // solving K * dP = F by LU method
 void CMes::calculate_equation()
 {
+//    qDebug() << "const int point_no =" << point_no <<";";
+//    qDebug() << "const int element_no = "<< element_no << ";";
+//    qDebug() << "const Point3D point_list[point_no] = {";
+//    for (int i=0; i<point_no; i++)
+//        qDebug()<< ("{" + QString::number(point_list[i].x)+", "+QString::number(point_list[i].y)+", "+QString::number(point_list[i].z)+"}, ").toStdString().c_str();
+//    qDebug() << "};";
+//    qDebug() << "Point3D force_list[point_no] = {";
+//    for (int i=0; i<point_no; i++)
+//        qDebug()<< ("{" + QString::number(force_list[i].x)+", "+QString::number(force_list[i].y)+", "+QString::number(force_list[i].z)+"}, ").toStdString().c_str();
+//    qDebug() << "};";
+//    qDebug() << "const Element element_list[element_no] = {";
+//    for (int i=0; i<element_no; i++)
+//        qDebug()<< ("{" + QString::number(element_list[i].p1)+", "+QString::number(element_list[i].p2)+"}, ").toStdString().c_str();
+//    qDebug() << "};";
+//    qDebug() << "Point3D fix_list[point_no] = {";
+//    for (int i=0; i<point_no; i++)
+//        qDebug()<< ("{" + QString(fix_list[i].x?"1":"0")+", "+QString(fix_list[i].y?"1":"0")+", "+QString(fix_list[i].z?"1":"0")+"}, ").toStdString().c_str();
+//    qDebug() << "};";
+//
+//    qDebug() << "Forces";
+//    for (int i=0; i<point_no; i++)
+//    {
+//        qDebug()<< QString::number(force_list[i].x,'f',2)+" "+QString::number(force_list[i].y,'f',2)+" "+QString::number(force_list[i].z,'f',2)+" ";
+//        qDebug()<< (fix_list[i].x?"T ":"  ")+QString(fix_list[i].y?"T ":"  ")+(fix_list[i].z?"T ":"  ");
+//    }
+//
+//    qDebug() << "K";
+//    for (int i=0; i<dof_no; i++)
+//    {
+//        QString s;
+//        for (int j=0; j<dof_no; j++) s= s+QString::number(k(i,j),'f',2)+" ";
+//        qDebug() << s;
+//    }
+//    qDebug() << "F";
+//    QString s;
+//    for (int j=0; j<dof_no; j++) s= s+QString::number(F[j],'f',2)+" ";
+//    qDebug() << s;
 //	double L[dof_no][dof_no] = { { 0.0 } };
 //	double U[dof_no][dof_no] = { { 0.0 } }; // upper matrix
 //	double Z[dof_no] = { 0.0 }; // auxiliary vector
@@ -135,7 +174,7 @@ void CMes::calculate_equation()
     // find L, U where L * U = K
     for(unsigned int i1 = 0; i1 < dof_no; i1++)
     {
-        qDebug() << i1 << " out of " << dof_no;
+//        qDebug() << i1 << " out of " << dof_no;
         double acc = 0.0;
         for(unsigned int i2 = 0; i2 < dof_no; i2++)
             acc += l(i1,i2) * u(i2,i1);
@@ -195,4 +234,12 @@ void CMes::calculate_equation()
         if(fix.z) force.z = dP[pz];
         else output.z += dP[pz];
     }
+    qDebug() << "Point3D output_list[point_no] = {";
+    for (int i=0; i<point_no; i++)
+        qDebug()<< ("{" + QString::number(output_list[i].x)+", "+QString::number(output_list[i].y)+", "+QString::number(output_list[i].z)+"}, ").toStdString().c_str();
+    qDebug() << "};";
+    qDebug() << "Point3D force[point_no] = {";
+    for (int i=0; i<point_no; i++)
+        qDebug()<< ("{" + QString::number(force_list[i].x)+", "+QString::number(force_list[i].y)+", "+QString::number(force_list[i].z)+"}, ").toStdString().c_str();
+    qDebug() << "};";
 }

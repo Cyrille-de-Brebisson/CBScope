@@ -35,6 +35,7 @@ ApplicationWindow {
         }
     }
     Component.onCompleted: {
+        setFont(header);
         setFont(footer);
         setFont(scopeView);
     }
@@ -127,6 +128,25 @@ ApplicationWindow {
                 MyText { text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
             }
             MyOText { caption: qsTr("secondary offset toward primary"); text: scopeView.model.secondaryOffset.toFixed(1); }
+            Row { spacing: 10;
+                Text { y: (parent.height-height)/2; text: qsTr("Density (g/cm^3)") }
+                MyText { y: (parent.height-height)/2; text: scopeView.model.density; onTextChanged: scopeView.model.density= Number(text); }
+                Text { y: (parent.height-height)/2; text: qsTr("Weight (Kg)") }
+                MyOText { y: (parent.height-height)/2; text: scopeView.model.weight.toFixed(3); }
+                Text { y: (parent.height-height)/2; text: qsTr("Young (KgF/mm²)") }
+                MyText { y: (parent.height-height)/2; text: scopeView.model.young; onTextChanged: scopeView.model.young= Number(text); }
+                Text { y: (parent.height-height)/2; text: qsTr("Poisson") }
+                MyText { y: (parent.height-height)/2; text: scopeView.model.poisson; onTextChanged: scopeView.model.poisson= Number(text); }
+                ComboBox { y: (parent.height-height)/2; 
+                           model: ListModel { ListElement { name: "Pyrex 7740" } 
+                                              ListElement { name: "Zerodur" } 
+                                              ListElement { name: "Plate Glass" } 
+                                              ListElement { name: "Fused scilica" } 
+                                              ListElement { name: "Duran 50" } }
+                            textRole: "name";
+                            onCurrentIndexChanged: { scopeView.model.density= scopeView.model.materials(currentIndex, 2); scopeView.model.poisson= scopeView.model.materials(currentIndex, 1); scopeView.model.young= scopeView.model.materials(currentIndex, 0); }
+                }
+            }
         }
 
         //********************************
@@ -189,11 +209,13 @@ ApplicationWindow {
             Row { spacing: 10; width: parent.width;
                 Text   { y: (parent.height-height)/2; text: qsTr("Secondary sizes to study"); }
                 MyText { y: (parent.height-height)/2; text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
             }
             CBScopeIlumination {
                 id: scopeIlumination
                 width: parent.width; height: parent.height-y;
                 scope: scopeView.model
+                onTwoInchesChanged: update();
             }
             Connections {
                 target: scopeView.model
@@ -394,20 +416,22 @@ ApplicationWindow {
                 id: scopeSupport
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
-                onScopeChanged: update()
-                onShow3DChanged: { scopeSupport.update(); }
-                onShowForcesChanged: { scopeSupport.update(); }
-            }
-            Connections {
-                target: scopeView.model
-                onDiametreChanged: { scopeSupport.update(); }
-                onNbZonesChanged: { scopeSupport.update(); }
             }
             Row {
                 spacing: 10; y:1;
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show 3D"); checked: scopeSupport.show3D; onCheckedChanged: scopeSupport.show3D= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Forces"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
-                Button { text: "Calc"; onClicked: scopeView.model.doMesSolve(); }
+                ComboBox { y: (parent.height-height)/2; 
+                           model: ListModel { ListElement { name: "3 points" } 
+                                              ListElement { name: "6 points" } 
+                                              ListElement { name: "9 points" } 
+                                              ListElement { name: "18 points" } 
+                                              ListElement { name: "27 points" } 
+                                              ListElement { name: "36 points" } }
+                            textRole: "name";
+                            currentIndex: scopeView.model.cellType
+                            onCurrentIndexChanged: { scopeView.model.cellType= currentIndex; scopeSupport.update(); }
+                 }
+                Button { text: "Calc"; onClicked: { scopeView.model.doMesSolve(); scopeSupport.update(); } }
             }
         }
     }

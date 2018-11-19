@@ -1,15 +1,16 @@
 // tab navigation
 // indicate ROC offset and allow to fix other parabolization on that offset!
 // Couder mask print
-// Plop
 // find stroke that helped last time...
+// Plop
 // zone changes signals...
 // couder meshing problem with redistributing zones after the support ring.
 
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
 
-#include <math.h>
+#include <cmath>
+static double const M_PI= 3.14159265358979323846264338327;
 #include <QObject>
 #include <QMutex>
 #include <QMutexLocker>
@@ -27,7 +28,8 @@
 #include <QQuickPaintedItem>
 #include <QDesktopServices>
 #include "QQmlObjectListModel.h"
-#include "mes.h"
+//#include "mes.h"
+#include "mes2.h"
 
 // ********************************************************
 // Most of our objects will derive from this savable object
@@ -51,7 +53,9 @@ public:
         if (!json_doc.isObject()) { qDebug() << "JSON is not an object."; return false; }
         QJsonObject o = json_doc.object();
         if (o.isEmpty()) { qDebug() << "JSON object is empty."; return false; }
-        return loadProperties(&o); // Load the json object into our system
+        bool ret= loadProperties(&o); // Load the json object into our system
+        loadProperties(nullptr); // re-enable all signals!
+        return ret;
     }
 
     bool saveFile(QString const file) const
@@ -69,23 +73,28 @@ public:
         return true;
     }
 
-    virtual bool subLoad(QJsonObject *o) { (void)o; return true; } // override these if you have more to load/save than read/write Q_PROPERTIES
+    virtual bool subLoad(QJsonObject *o) { if (o==nullptr) blockSignals(false); return true; } // override these if you have more to load/save than read/write Q_PROPERTIES
     virtual bool subSave(QJsonObject *o) const { (void)o; return true; } // override these if you have more to load/save than read/write Q_PROPERTIES
     virtual QList<QString> Ignored() const { return QList<QString>(); }  // override to provide a list of properties to ignore!
 
     bool loadProperties(QJsonObject *j) // Load all the properties from j into this.
     {
-        const QMetaObject *metaobject = metaObject();
-        int count = metaobject->propertyCount();                   // For each property in this
-        QList<QString> ignore(Ignored());
-        for (int i=1; i<count; ++i) {                              // skip object name (which is the first property)
-            QMetaProperty metaproperty = metaobject->property(i);  // get the property accessor
-            if (!metaproperty.isWritable()) continue;              // only works on read/write properties
-            if (ignore.indexOf(metaproperty.name())!=-1) continue; // to ignore
-            QJsonValue v= j->take(metaproperty.name());            // and and remove the associated object from json
-            if (v.isUndefined()) { qDebug() << "could not find" << metaproperty.name() << "in" << *j; continue; } // if not in jason, do nothing
-            bool ok= metaproperty.write(this, v.toVariant());      // save json value into this property
-            (void)ok;
+        if (j!=nullptr)
+        {
+            blockSignals(true);
+            const QMetaObject *metaobject = metaObject();
+            int count = metaobject->propertyCount();                   // For each property in this
+            QList<QString> ignore(Ignored());
+            for (int i=1; i<count; ++i) {                              // skip object name (which is the first property)
+                QMetaProperty metaproperty = metaobject->property(i);  // get the property accessor
+                if (!metaproperty.isWritable()) continue;              // only works on read/write properties
+                if (ignore.indexOf(metaproperty.name())!=-1) continue; // to ignore
+                QJsonValue v= j->take(metaproperty.name());            // and and remove the associated object from json
+                if (v.isUndefined()) { qDebug() << "could not find" << metaproperty.name() << "in" << *j; continue; } // if not in jason, do nothing
+                qDebug() << "loading " << metaproperty.name() << "=" << v.toVariant();
+                bool ok= metaproperty.write(this, v.toVariant());      // save json value into this property
+                (void)ok;
+            }
         }
         return subLoad(j);          // load all the stuff that can not be done automatically
     }
@@ -94,6 +103,7 @@ public:
     template <typename T> bool loadList(QQmlObjectListModel<T> *d, char const *property, QJsonObject *j)
     {
         d->clear();        // clear current list content
+        qDebug() << "loading list " << property;
         QJsonValue v= j->take(property); if (v.isUndefined()) return false; // find data in json
         QJsonArray a= v.toArray();
         for (int i=0; i<a.count(); i++)          // for all object in the json property
@@ -158,7 +168,7 @@ static double inline forwardOffsetForSecondary(double diagMinorAxis, double diag
     type _##name; \
 public:\
     type get##Name() const { return _##name; } \
-    void set##Name(type v) { if (doubleEq(_##name,v)) return; _##name= v; emit name##Changed(); emits; }
+    void set##Name(type v) { if (doubleEq(_##name,v)) return; _##name= v; emit name##Changed(); if (!signalsBlocked()) { emits; } }
 
 #define CBSProp(type, name, Name) CBSPropE(type, name, Name, {})
 
@@ -238,11 +248,11 @@ public:
 class CBSQString : public CBSSaveLoadObject {
     Q_OBJECT
 public:
-    CBSPropE(QString, val, Val, _doubleVal= NAN;)
+    CBSPropE(QString, val, Val, _doubleVal= nan("");)
 Q_SIGNALS:
     void valChanged();
 public:
-    CBSQString(QObject *parent=nullptr): CBSSaveLoadObject(parent), _doubleVal(NAN) { }
+    CBSQString(QObject *parent=nullptr): CBSSaveLoadObject(parent), _doubleVal(nan("")) { }
     double _doubleVal;
     double asDouble()
     {
@@ -297,6 +307,11 @@ public:
     }
     bool subLoad(QJsonObject *o)
     {
+        if (o==nullptr) 
+        { 
+          for (int i=0; i<m_mesures->count(); i++) m_mesures->at(i)->subLoad(nullptr);
+          blockSignals(false); return true; 
+        }
         bool ret= loadList(m_mesures, "mesures", o);
         for (int i=0; i<m_mesures->count(); i++) connect(m_mesures->at(i), SIGNAL(valChanged()), this, SLOT(doCalculations()));
         return ret;
@@ -316,7 +331,7 @@ private:
     double *_Hm4F  ;
     double *_RelativeSurface;
 public:
-    int iNbZone; // applies to _surf
+    unsigned int iNbZone; // applies to _surf
     double *_surf  ;
     double *_profil;
     double *_Hz  ;
@@ -371,10 +386,13 @@ public:
     CBSProp(QString, name, Name)
     CBSProp(QString, comments, Comments)
     CBSProp(QString, secondariesToConcider, SecondariesToConcider)
-    CBSPropE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
-    CBSProp(double, thickness, Thickness)
-    CBSProp(double, density, Density)
-    CBSPropE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); )
+    CBSPropE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit weightChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); doMes())
+    CBSPropE(double, thickness, Thickness, emit weightChanged(); doMes())
+    CBSPropE(double, density, Density, emit weightChanged(); doMes())
+    Q_PROPERTY(double weight READ getWeight NOTIFY weightChanged)
+    CBSPropE(double, young, Young, doMes())
+    CBSPropE(double, poisson, Poisson, doMes())
+    CBSPropE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); doMes())
     CBSPropE(double, secondary, Secondary, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSPropE(double, secondaryToFocal, SecondaryToFocal, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSProp(double, spherometerLegDistances, SpherometerLegDistances)
@@ -391,7 +409,7 @@ public:
     QML_OBJMODEL_PROPERTY(CBSModelParabolizingWork, parabolizings)
     QML_OBJMODEL_PROPERTY(CBSDouble, zones)
     QML_OBJMODEL_PROPERTY(CBSModelEP, eps)
-    CBSProp(int, cellType, CellType)
+    CBSPropE(int, cellType, CellType, doMes())
 Q_SIGNALS:
     void nameChanged();
     void commentsChanged();
@@ -414,12 +432,16 @@ Q_SIGNALS:
     void cellTypeChanged();
     void thicknessChanged();
     void densityChanged();
+    void youngChanged();
+    void poissonChanged();
+    void weightChanged();
+    void meshChanded();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
     void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); }
 public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
-                           _diametre(150), _thickness(25), _density(2.8), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
+                           _diametre(150), _thickness(25), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _cellType(0), _conical(-1)
     {
         m_hoggings= new QQmlObjectListModel<CBSModelHoggingWork>(this);
@@ -457,6 +479,7 @@ public:
         double hogged= volumeSphereCap(current, ::sagita(current, _diametre));             // calculate how much was hogged
         return getToHog()-hogged;                                                          // substract from total to hog
     }
+    double getWeight() { return _diametre*_diametre/4.0*M_PI*_thickness*_density/1e6; }
     Q_INVOKABLE double getHogTimeWithGrit() // return the amount of time needed to finish the hogging with the latest used grit
     {
         if (m_hoggings->count()==0) return 0.0;
@@ -525,6 +548,14 @@ public:
     }
     bool subLoad(QJsonObject *o)
     {
+        if (o==nullptr) 
+        { 
+          for (int i=0; i<m_hoggings->count(); i++) m_hoggings->at(i)->subLoad(nullptr);
+          for (int i=0; i<m_parabolizings->count(); i++) m_parabolizings->at(i)->subLoad(nullptr);
+          for (int i=0; i<m_eps->count(); i++) m_eps->at(i)->subLoad(nullptr);
+          for (int i=0; i<m_zones->count(); i++) m_zones->at(i)->subLoad(nullptr);
+          blockSignals(false); return true; 
+        }
         loadList(m_hoggings, "hoggings", o);
         loadList(m_zones, "zones", o);
         loadList(m_parabolizings, "parabolizings", o);
@@ -545,10 +576,26 @@ public:
     double _conical;
         void paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed=true, bool showBlue=true);
     Q_INVOKABLE void printCouder();
-        double thicnknessAt(double r) { return _thickness-sagita(_focal*2.0, (_diametre/2.0)-r); } // Thickness of the mirror at a given distance from center
-    Q_INVOKABLE void doMes();
-    Q_INVOKABLE void doMesSolve();
-    CMes mes;
+        double thicnknessAt(double r) { return (_thickness-sagita(_focal*2.0, (_diametre/2.0)-r)); } // Thickness of the mirror at a given distance from center in metters!
+    Q_INVOKABLE void doMes()
+    {
+      mes.createMirror(_diametre/2.0, _thickness, _young, 0.2, _focal*2.0, _density/1e6, _cellType, nullptr);
+      emit meshChanded();
+    }
+    Q_INVOKABLE void doMesSolve() { mes.doIt(); }
+    CMes2 mes;
+    //    CMes mes;
+    Q_INVOKABLE double materials(int index, int prop)
+    {
+      double const props[5][3]= {
+      { 6400.0, 0.2 , 2.23}, // Pyrex 7740
+      { 9100.0, 0.24, 2.48}, // zerodur       
+      { 6000.0, 0.22, 2.45}, // plate glass   
+      { 7400.0, 0.17, 2.22}, // fused scilica 
+      { 6300.0, 0.2 , 2.23}}; // Duran         
+      if (index<0 || index>4 || prop<0 || prop>2) return 0.0;
+      return props[index][prop];
+    }
 };
 
 
@@ -593,7 +640,15 @@ public:
     }
     Q_INVOKABLE int addScope() { CBSModelScope *s= new CBSModelScope(m_scopes); s->setName("Default"); m_scopes->append(s); return m_scopes->count()-1; }
     void saveFile() { CBSSaveLoadObject::saveFile(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/CBScopes.scopes"); }
-    bool subLoad(QJsonObject *o) { return loadList(m_scopes, "scopes", o); }
+    bool subLoad(QJsonObject *o) 
+    { 
+      if (o==nullptr) 
+      { 
+        for (int i=0; i<m_scopes->count(); i++) m_scopes->at(i)->subLoad(nullptr);
+        blockSignals(false); return true; 
+      }
+      return loadList(m_scopes, "scopes", o); 
+    }
     bool subSave(QJsonObject *o) const { return saveList(m_scopes, "scopes", o); }
     Q_INVOKABLE void help() { QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope help.odt")); }
 };
@@ -604,7 +659,7 @@ class CBScopeMesure : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    CBSProp(CBSModelScope*, scope, Scope)
+    CBSPropE(CBSModelScope*, scope, Scope, update())
     CBSProp(CBSModelParabolizingWork*, mesure, Mesure)
 Q_SIGNALS:
     void mesureChanged();
@@ -627,10 +682,12 @@ class CBScopeIlumination : public QQuickPaintedItem
     Q_OBJECT
 public:
     CBSProp(CBSModelScope*, scope, Scope)
+    CBSProp(bool, twoInches, TwoInches)
 Q_SIGNALS:
         void scopeChanged();
+        void twoInchesChanged();
     public:
-    CBScopeIlumination(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr) { }
+    CBScopeIlumination(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _twoInches(true) { }
     void paint(QPainter *painter);
 
     // Members for cartesian to pixel conversions
@@ -668,15 +725,24 @@ class CBScopeMes : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    CBSProp(CBSModelScope*, scope, Scope)
-    CBSProp(bool, show3D, Show3D)
+    Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope NOTIFY scopeChanged);
+    CBSModelScope *_scope;
     CBSProp(bool, showForces, ShowForces)
 Q_SIGNALS:
     void scopeChanged();
-    void show3DChanged();
     void showForcesChanged();
 public:
-    CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _show3D(false), _showForces(true) { }
+    CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _showForces(true) { }
     void paint(QPainter *painter);
+    CBSModelScope *getScope() { return _scope; }
+    void setScope(CBSModelScope *s)
+    {
+      if (s==_scope) return;
+      disconnect(_scope, SIGNAL(meshChanded()), this, SLOT(update()));
+      _scope= s;
+      connect(_scope, SIGNAL(meshChanded()), this, SLOT(update()));
+      emit scopeChanged();
+      emit update();
+    }
 };
 #endif

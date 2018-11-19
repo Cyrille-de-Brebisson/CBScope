@@ -91,7 +91,6 @@ void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool s
 {
     QBrush brush(QColor(0, 0, 0, 0));
     painter->setBrush(brush);
-    painter->setRenderHint(QPainter::Antialiasing);
     // Paint in black the circles that correspond to the zone edges and full mirror (which should match zone(n)...)
 #define circle(r) painter->drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
     painter->setPen(QPen(QColor(0, 0, 0)));
@@ -123,17 +122,18 @@ void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool s
 
 void CBSModelScope::printCouder()
 {
-    QPrinter printer(QPrinter::HighResolution);
+    QPrinter printer;//(QPrinter::HighResolution);
     QPrintDialog dialog(&printer, nullptr);
     dialog.setWindowTitle(tr("Print couder mask"));
     if (dialog.exec() != QDialog::Accepted) return;
-//    printer.setOutputFileName("couder.ps");
     QRect area(printer.pageRect());
     int dpi= printer.resolution();
     QPoint c= area.center();
     QPainter painter;
     painter.begin(&printer);
+    painter.beginNativePainting();
     paintCouder(&painter, c, dpi);
+    painter.endNativePainting();
     painter.end();
 }
 
@@ -175,7 +175,7 @@ void CBScopeIlumination::paint(QPainter *painter)
     h= int(itemSize.height());
     addx= w/10;
     addy= h/10;
-    rw= 53.0;
+    rw= _twoInches ? 53.0 : 33.0;
 
     painter->drawRect(0, 0, w, h);
     painter->drawRect(addx, addy, w-2*addx, h-2*addy);
@@ -194,8 +194,7 @@ void CBScopeIlumination::paint(QPainter *painter)
     if (_scope==nullptr) return;
 
     for (double fx= 2; fx<rw/2; fx+= 2)
-        rotateText(painter, getX(-fx)-painter->font().pixelSize()/2, h-addy+5, QString::number(2* 3456.0/60.0*fx/_scope->_focal, 'f', 2)+QString("°"));
-
+        rotateText(painter, getX(-fx)-painter->font().pixelSize()/2, h-addy+5, QString::number(2*3456.0/60.0*fx/_scope->_focal, 'f', 2)+QString("°"));
 
     QColor colors[5]= {QColor(255, 0, 0), QColor(0, 255, 0), QColor(0, 0, 255), /*QColor(255, 255, 0),*/ QColor(255, 0, 255), QColor(0, 255, 255) };
 
@@ -212,8 +211,8 @@ void CBScopeIlumination::paint(QPainter *painter)
         double loss= diagObstructionArea(_scope->_diametre, sec);
         if (v==0.0) continue; // 0% at central point, no need to continue!
         QPen p(colors[count%5]); p.setWidth(2); painter->setPen(p);
-        QPoint pts[53]; int cnt= 0;
-        for (double fx= -rw/2.0; fx<rw/2.0; fx+= rw/53.0)
+        QPoint pts[54]; int cnt= 0;
+        for (double fx= -rw/2.0; fx<=rw/2.0; fx+= rw/53.0)
         {
             double v= calcOffAxisIllumination(_scope->_diametre, _scope->_focal, sec, _scope->_secondaryToFocal, std::abs(fx))-loss;
             int y= getY(v); //1-v);
@@ -224,7 +223,7 @@ void CBScopeIlumination::paint(QPainter *painter)
         count++;
         painter->save();
         painter->setClipRect(addx, addy, w-2*addx, h-2*addy);
-        painter->drawPolyline(pts, 53);
+        painter->drawPolyline(pts, 54);
         painter->restore();
         painter->drawText(secX, addy/2, n);
         QFontMetrics fm(painter->font());
@@ -261,12 +260,13 @@ void CBScopeMesure::paint(QPainter *painter)
     QFontMetrics fm(painter->font());
     addy= fm.height()+4;
 //    painter->drawRect(addx, addy, w-2*addx, h-2*addy);
+    if (_scope!=nullptr && _mesure!=nullptr && _mesure->iNbZone==0) _mesure->doCalculations();
     if (_scope==nullptr || _mesure==nullptr || _mesure->iNbZone==0) return;
     rw= _scope->_diametre/2.0;
 
     // find top y. Take the lowest 2^n*65nm/2 that works if it exists...
     rh=65.0/2.0; // at least 65/2nm onthe display
-    for (int i=0;i<_mesure->iNbZone+1;i++) if (_mesure->_surf[i]>rh) rh= _mesure->_surf[i];
+    for (unsigned int i=0;i<_mesure->iNbZone+1;i++) if (_mesure->_surf[i]>rh) rh= _mesure->_surf[i];
     double d= 65.0/2.0;
     for (int i=0; i<10; i++) if (rh<d) { rh= d; break; } else d*=2.0;
     // calculate y marks. max of one every 20 pixels. use a number that is a multiple of 5.
@@ -289,13 +289,13 @@ void CBScopeMesure::paint(QPainter *painter)
     // get curve points and draw verticals...
     painter->setPen(QPen(QColor(0, 0, 0)));
     QPoint *pts= new QPoint[_mesure->iNbZone+1];
-    for (int iZ=0;iZ<_mesure->iNbZone+1;iZ++)
+    for (unsigned int iZ=0;iZ<_mesure->iNbZone+1;iZ++)
     {
         pts[iZ]= getP(_mesure->_Hz[iZ], _mesure->_surf[iZ]);
         painter->drawLine(pts[iZ].x(), addy, pts[iZ].x(), h-addy);
     }
     QPen p(QColor(0, 0, 0)); p.setWidth(2); painter->setPen(p);
-    painter->drawPolyline(pts, _mesure->iNbZone+1);
+    painter->drawPolyline(pts, int(_mesure->iNbZone)+1);
     delete[] pts;
 
     painter->drawText(0, fm.height(), " Lambda="+QString::number(_mesure->_Lambda, 'f', 2)+
@@ -340,7 +340,7 @@ void CBSModelParabolizingWork::doCalculations()
     _WeightedStrehl=0.;
     if (_scope==nullptr) return;
     checkNbMesures();
-    iNbZone=_scope->getNbZones();
+    iNbZone=static_cast<unsigned int>(_scope->getNbZones());
 
     if (_surf  !=nullptr) delete[] _surf  ; _surf  = new double[10+  iNbZone+1]; //10+ because I think that I have an overflow somewhere...
     if (_profil!=nullptr) delete[] _profil; _profil= new double[10+  iNbZone];
@@ -357,11 +357,11 @@ void CBSModelParabolizingWork::doCalculations()
     double _dRoDif=1.22*greenWaveNm*dRay/_scope->_diametre/2.; //unit? TODO
 
     // get Hz
-    for(int i=0;i<iNbZone+1;i++) _Hz[i]= _scope->get_zones()->at(i)->_val;
+    for(unsigned int i=0;i<iNbZone+1;i++) _Hz[i]= _scope->get_zones()->at(int(i))->_val;
 
     //compute Hm2R, Hm4F
     double a= 1e300, b= -1e300; // min and max
-    for(int i=0;i<iNbZone;i++)
+    for(unsigned int i=0;i<iNbZone;i++)
     {
         double _Hm=(_Hz[i+1]+_Hz[i])/2.0;
         _Hm4F[i]=_Hm/dRay/2.;
@@ -370,28 +370,28 @@ void CBSModelParabolizingWork::doCalculations()
              _Hm2R=-_scope->_conical*sqr(_Hm)/2./dRay;
         else
             _Hm2R=-_scope->_conical*(sqr(_Hm)/dRay + sqr(sqr(_Hm)) /2. /dRay/sqr(dRay));
-        _mesc[i]=(m_mesures->at(i)->asDouble()-_Hm2R)*(_scope->getSlitIsMoving()?2.0:1.0);
+        _mesc[i]=(m_mesures->at(int(i))->asDouble()-_Hm2R)*(_scope->getSlitIsMoving()?2.0:1.0);
         if (a>_mesc[i]) a= _mesc[i]; if (b<_mesc[i]) b= _mesc[i];
     }
 
     //calcule les surfaces relatives
     double dSum=0.;
-    for(int i=0;i<iNbZone;i++)
+    for(unsigned int i=0;i<iNbZone;i++)
     {
         _RelativeSurface[i]=sqr(_Hz[i+1])-sqr(_Hz[i]);
         dSum+=_RelativeSurface[i];
     }
-    for(int i=0;i<iNbZone;i++) _RelativeSurface[i]=_RelativeSurface[i]/dSum/**iNbZone*/;
+    for(unsigned int i=0;i<iNbZone;i++) _RelativeSurface[i]=_RelativeSurface[i]/dSum/**iNbZone*/;
 
     // search for lf/ro between a end b
     double const RESMES= 0.0001;
     find_minimum(a,b,RESMES,calc_lf1000);
-    for(int i=0;i<iNbZone;i++) { double t=_lf1000[i]/_dRoDif/1e6; if (_LfRoMax<t) _LfRoMax= t; } // find max of LfRo
+    for(unsigned int i=0;i<iNbZone;i++) { double t=_lf1000[i]/_dRoDif/1e6; if (_LfRoMax<t) _LfRoMax= t; } // find max of LfRo
 
     // compute surface profile using slopes
     _profil[0]=0.;
     a= 1e300; b= -1e300; // min and max
-    for(int i=0;i<iNbZone;i++)
+    for(unsigned int i=0;i<iNbZone;i++)
     {
         double t=-_lf1000[i]/_scope->getFocal()/2.0*2000.;
         if (a>t) a= t; if (b<t) b= t;
@@ -409,7 +409,7 @@ void CBSModelParabolizingWork::doCalculations()
     // compute conique qui minimise le ptv
     find_minimum(a,b,dReso,calc_less_ptv);
 
-    double dMax=_surf[0]; for (int i=1; i<iNbZone; i++) if (_surf[1]>dMax) dMax= _surf[1];
+    double dMax=_surf[0]; for (unsigned int i=1; i<iNbZone; i++) if (_surf[1]>dMax) dMax= _surf[1];
     if (dMax!=0.) _Lambda=greenWave/2./dMax;
     else _Lambda=9999.;
 
@@ -418,7 +418,7 @@ void CBSModelParabolizingWork::doCalculations()
     _WeightedStrehl=exp(-sqr(2.*M_PI*1./_WeightedLambdaRms)); //compute stddev rms
 
     _glassToRemove= 0.0;
-    for (int i=0; i<iNbZone; i++) _glassToRemove+= volumeRing(_Hz[i], _Hz[i+1], _surf[i]/1e6, _surf[i+1]/1e6);
+    for (unsigned int i=0; i<iNbZone; i++) _glassToRemove+= volumeRing(_Hz[i], _Hz[i+1], _surf[i]/1e6, _surf[i+1]/1e6);
 
     QDateTime t2(QDateTime::currentDateTime());
     emit mesuresChanged();
@@ -448,7 +448,7 @@ double CBSModelParabolizingWork::calc_less_ptv(CBSModelParabolizingWork *pMes, d
 {
     double min= 1e300;
     //compute surface
-    for (int i=0;i<pMes->iNbZone+1;i++)
+    for (unsigned int i=0;i<pMes->iNbZone+1;i++)
     {
         double dtemp;
         double denom= 1.-(pMes->_scope->_conical+1.)*sqr(curv*pMes->_Hz[i]);
@@ -462,7 +462,7 @@ double CBSModelParabolizingWork::calc_less_ptv(CBSModelParabolizingWork *pMes, d
 
     // shift between 0 and max-min
     double max= -1e300;
-    for (int i=0;i<pMes->iNbZone+1;i++) { pMes->_surf[i]-=min; if (pMes->_surf[i]>max) max= pMes->_surf[i]; }
+    for (unsigned int i=0;i<pMes->iNbZone+1;i++) { pMes->_surf[i]-=min; if (pMes->_surf[i]>max) max= pMes->_surf[i]; }
     return max; // return PTV
 }
 
@@ -470,7 +470,7 @@ double CBSModelParabolizingWork::calc_less_rms(CBSModelParabolizingWork* pMes,do
 {
     double dtemp;
     //compute surface
-    for (int i=0;i<pMes->iNbZone+1;i++)
+    for (unsigned int i=0;i<pMes->iNbZone+1;i++)
     {
         double denom= 1.-(pMes->_scope->_conical+1.)*sqr(curv*pMes->_Hz[i]);
         if (denom>=0.) dtemp=( curv*sqr(pMes->_Hz[i]) ) / ( 1.+sqrt(denom) );
@@ -479,10 +479,10 @@ double CBSModelParabolizingWork::calc_less_rms(CBSModelParabolizingWork* pMes,do
     }
     //compute mean
     double dM=0.;
-    for(int i=0;i<pMes->iNbZone;i++) dM+=(pMes->_surf[i]+pMes->_surf[i+1])/2.*pMes->_RelativeSurface[i];
+    for(unsigned int i=0;i<pMes->iNbZone;i++) dM+=(pMes->_surf[i]+pMes->_surf[i+1])/2.*pMes->_RelativeSurface[i];
     //compute var and stddev
     double dVar=0.;
-    for(int i=0;i<pMes->iNbZone;i++) dVar+=sqr((pMes->_surf[i]+pMes->_surf[i+1])/2.-dM)*pMes->_RelativeSurface[i];
+    for(unsigned int i=0;i<pMes->iNbZone;i++) dVar+=sqr((pMes->_surf[i]+pMes->_surf[i+1])/2.-dM)*pMes->_RelativeSurface[i];
     double dStd=sqrt(dVar);
     return pMes->_Std=dStd;
 }
@@ -490,7 +490,7 @@ double CBSModelParabolizingWork::calc_less_rms(CBSModelParabolizingWork* pMes,do
 double CBSModelParabolizingWork::calc_lf1000(CBSModelParabolizingWork* pMes,double h)
 {
     double minl=1e300, maxl= -1e300;
-    for (int i=0;i<pMes->iNbZone;i++)
+    for (unsigned int i=0;i<pMes->iNbZone;i++)
     {
         pMes->_lf1000[i]=1000.*(pMes->_mesc[i]-h)*pMes->_Hm4F[i];
         if (minl>pMes->_lf1000[i]) minl= pMes->_lf1000[i];
@@ -515,6 +515,7 @@ void CBScopeCouder::paint(QPainter *painter)
     _scope->paintCouder(painter, c, _zoom?96/2:96, _showRed, _showBlue);
 }
 
+#ifndef MES2_H
 void CBSModelScope::doMes()
 {
     // cellType NbPoints NbSupportRings NbAnglularSegments NbMeshRings supportsPerRing
@@ -542,9 +543,9 @@ void CBSModelScope::doMes()
     int nbPoints= 0; for (int i=0; i<=nbRings; i++) nbPoints+= pointsPerRing[i]; nbPoints*= 2;
     mes.setNbPoints(nbPoints, true);
     int nbSupRings= cellDefs[_cellType].nbRing;
-    double supRingRad[3]; for (int i=0; i<nbSupRings; i++) supRingRad[i]= _diametre/2.0/(nbSupRings+1.0)*(i+1);
+    double supRingRad[3]; for (int i=0; i<nbSupRings; i++) supRingRad[i]= _diametre/2.0/(nbSupRings+1.0)*(i+1)/1000.0; // in metters
     double meshRingRads[17]; // radiis of the various mesh rings
-    for (int i=0; i<=nbRings; i++) meshRingRads[i]= i*_diametre/2.0/(nbRings);
+    for (int i=0; i<=nbRings; i++) meshRingRads[i]= i*_diametre/2.0/(nbRings)/1000.0;
     // now, find closest meshRing to a support ring and move meshRing to that ring. Then, re-adjust internal rings...
     int lastMeshRingDone= 0;
     for (int sr= 0; sr<nbSupRings; sr++)
@@ -562,7 +563,8 @@ void CBSModelScope::doMes()
     int ptsCount= 0;
     mes.point_list[ptsCount++]= mes.pts(0.0, 0.0, 0.0);
     mes.point_list[ptsCount++]= mes.pts(0.0, 0.0, thicnknessAt(0.0));
-    double v= volumeRing(0, meshRingRads[1]/2.0, thicnknessAt(0.0), thicnknessAt(meshRingRads[1]/2.0))*_density/1000.0; // force
+    double v= volumeRing(0, meshRingRads[1]/2.0, thicnknessAt(0.0), thicnknessAt(meshRingRads[1]/2.0)/1000.0)*(_density*1000); // force
+    qDebug() << "center force " <<v;
     mes.force_list[1]= mes.pts(0, 0, -v);
 
     // 1 elements for centre + 7 elements for each of the 6 triangles= 1+7*6=43!
@@ -573,11 +575,12 @@ void CBSModelScope::doMes()
     double h= thicnknessAt(meshRingRads[1]);
     int lastPointL= 12, lastPointH= 13;
     int firstPointLastRing= ptsCount;
-    v= volumeRing(meshRingRads[1]/2.0, (meshRingRads[1]+meshRingRads[2])/2.0, thicnknessAt(meshRingRads[1]/2.0), thicnknessAt((meshRingRads[1]+meshRingRads[2])/2.0))*_density/1000.0/6.0; // force
+    v= volumeRing(meshRingRads[1]/2.0, (meshRingRads[1]+meshRingRads[2])/2.0, thicnknessAt(meshRingRads[1]/2.0), thicnknessAt((meshRingRads[1]+meshRingRads[2])/2.0))*(_density*1000.0)/6.0; // force
+    qDebug() << "ring 1 force " <<v<<" *6="<<6*v;
     for (int j=0; j<6; j++)
     {
         mes.point_list[ptsCount]= mes.pts(meshRingRads[1]*cos(j*M_PI/3.0), meshRingRads[1]*sin(j*M_PI/3.0), 0);
-        mes.force_list[ptsCount]= mes.pts(0, 0, -v);
+        mes.force_list[ptsCount+1]= mes.pts(0, 0, -v);
         mes.point_list[ptsCount+1]= mes.pts(meshRingRads[1]*cos(j*M_PI/3.0), meshRingRads[1]*sin(j*M_PI/3.0), h);
         mes.element_list[elCount++]= mes.el(ptsCount,ptsCount+1);  // vertical between the points
         mes.element_list[elCount++]= mes.el(0,ptsCount);           // center to point 1
@@ -599,8 +602,9 @@ void CBSModelScope::doMes()
         else mes.setNbelement(int(mes.element_no)+17*pointsPerRing[i]/2);
         // calculate the weight, per point in this ring. take 1/2 of the previous and next rings.
         // except for last ring there only 1/2 of the previous ring is used...
-        if (i!=nbRings) v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, (meshRingRads[i]+meshRingRads[i+1])/2.0, thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt((meshRingRads[i]+meshRingRads[i+1])/2.0))*_density/1000.0/pointsPerRing[i]; // force
-        else v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, meshRingRads[i], thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt(meshRingRads[i]))*_density/1000.0/pointsPerRing[i]; // force
+        if (i!=nbRings) v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, (meshRingRads[i]+meshRingRads[i+1])/2.0, thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt((meshRingRads[i]+meshRingRads[i+1])/2.0))*(_density*1000.0)/pointsPerRing[i]; // force
+        else v= volumeRing((meshRingRads[i-1]+meshRingRads[i])/2.0, meshRingRads[i], thicnknessAt((meshRingRads[i-1]+meshRingRads[i])/2.0), thicnknessAt(meshRingRads[i]))*(_density*1000.0)/pointsPerRing[i]; // force
+        qDebug() << "ring " << i << " force " <<v<< " *"<<pointsPerRing[i]<<"="<<pointsPerRing[i]*v;
         // thickness of the disk on the points here...
         double h= thicnknessAt(meshRingRads[i]);
         // find fix points!
@@ -620,7 +624,7 @@ void CBSModelScope::doMes()
         for (int j=0; j<pointsPerRing[i]; j++) // for each point of the ring
         {
             mes.point_list[ptsCount]= mes.pts(meshRingRads[i]*cos(a), meshRingRads[i]*sin(a), 0.0);
-            mes.force_list[ptsCount]= mes.pts(0, 0, -v);
+            mes.force_list[ptsCount+1]= mes.pts(0, 0, -v);
             mes.point_list[ptsCount+1]= mes.pts(meshRingRads[i]*cos(a), meshRingRads[i]*sin(a), h);
             if (pointsPerRing[i]==pointsPerRing[i-1])
             {
@@ -662,13 +666,13 @@ void CBSModelScope::doMes()
 
 void CBSModelScope::doMesSolve()
 {
+    doMes(); mes.young= _young;
     qDebug() << mes.point_no << " points " << mes.element_no << " elements";
     QDateTime t(QDateTime::currentDateTime());
     mes.calc();
     QDateTime t2(QDateTime::currentDateTime());
     qDebug() << t2.toMSecsSinceEpoch()-t.toMSecsSinceEpoch() << " ms";
 }
-
 void CBScopeMes::paint(QPainter *painter)
 {
     QBrush brush(QColor(200, 200, 200));
@@ -681,9 +685,8 @@ void CBScopeMes::paint(QPainter *painter)
     int h= int(itemSize.height());
     painter->drawRect(0, 0, w, h);
     if (_scope==nullptr) return;
-    _scope->doMes();
     QPoint c(w/2, h/2);
-    int dpi= 96;
+    int dpi= 96*1000;
     if (_show3D)
     {
         int const offset= 10;
@@ -722,12 +725,14 @@ void CBScopeMes::paint(QPainter *painter)
         }
     } else {
         double m= 1e300, M= -1e300;
-        for (unsigned int i=0; i<_scope->mes.point_no; i+= 2)
+        for (unsigned int i=0; i<_scope->mes.point_no; i+= 1)
         {
             if (_scope->mes.output_list[i].z<m) m= _scope->mes.output_list[i].z;
             if (_scope->mes.output_list[i].z>M) M= _scope->mes.output_list[i].z;
         }
-        qDebug() << "min max " << m << M;
+
+        qDebug() << "min max "<< m << M;
+
         painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
         for (unsigned int i=0; i<_scope->mes.point_no; i+= 2)
         {
@@ -739,5 +744,125 @@ void CBScopeMes::paint(QPainter *painter)
               painter->drawEllipse(c.x()-5+int(_scope->mes.point_list[i].x/25.4*dpi), c.y()-5+int(_scope->mes.point_list[i].y/25.4*dpi), 10, 10);
             }
         }
+
+/*
+        int lastPointH= 13;
+        int ptsCount= 3;
+        int firstPointLastRing= ptsCount;
+        for (int j=0; j<6; j++)
+        {
+            triDraw(painter, 1, lastPointH, j*2+1, m, M);
+            ptsCount+= 2;
+            lastPointH= j*2+1;
+        }
+
+        for (int i=2; i<=nbRings; i++)
+        {
+            int firstPointThisRing= ptsCount, savedFirstPointLastRing= firstPointLastRing;
+            lastPointH= ptsCount+pointsPerRing[i]*2-2+1; // Index of the last points of this ring to link the first point with the last and points with the previous point
+            // now, calculate points in the mesh and create the mest itself!
+            for (int j=0; j<pointsPerRing[i]; j++) // for each point of the ring
+            {
+                if (pointsPerRing[i]==pointsPerRing[i-1])
+                {
+                    triDraw(painter, firstPointLastRing, lastPointH, ptsCount, m, M);
+                    int t= firstPointLastRing; firstPointLastRing+=2;
+                    if (firstPointLastRing==firstPointThisRing) firstPointLastRing= savedFirstPointLastRing;
+                    triDraw(painter, t, firstPointLastRing, ptsCount, m, M);
+                } else {
+                    triDraw(painter, firstPointLastRing, lastPointH, ptsCount, m, M);
+                    if ((j&1)==1)
+                    {
+                        int t= firstPointLastRing; firstPointLastRing+=2;
+                        if (firstPointLastRing==firstPointThisRing) firstPointLastRing= savedFirstPointLastRing;
+                        triDraw(painter, t, firstPointLastRing, ptsCount, m, M);
+                    }
+                }
+                lastPointH= ptsCount++;
+            }
+            firstPointLastRing= firstPointThisRing;
+        }
+    */
     }
 }
+#else
+
+
+void CBScopeMes::paint(QPainter *painter)
+{
+    QBrush brush(QColor(200, 200, 200));
+    painter->setBrush(brush);
+    painter->setPen(QPen(QColor(0, 0, 0)));
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    QSizeF itemSize = size();
+    int w= int(itemSize.width());
+    int h= int(itemSize.height());
+    painter->drawRect(0, 0, w, h);
+    if (_scope==nullptr) return;
+    if (_scope->mes.getNbPoints()==0) _scope->doMes();
+    QPoint c(w/2, h/2);
+    double dpi= 96.0/25.4;
+#define ptnToQt(i) QPoint(c.x()+int(_scope->mes.pnt(i)->x*dpi), c.y()+int(_scope->mes.pnt(i)->y*dpi))
+#define ElptnToQt(i,j) ptnToQt(_scope->mes.mesh(i)->j)
+    painter->setPen(QPen(QColor(0,0,0)));
+    for (int i=0; i<_scope->mes.getNbElmements(); i++)
+    {
+        painter->drawLine(ElptnToQt(i,p1), ElptnToQt(i,p2));
+        painter->drawLine(ElptnToQt(i,p2), ElptnToQt(i,p3));
+        painter->drawLine(ElptnToQt(i,p3), ElptnToQt(i,p1));
+    }
+    if (!_scope->mes.hasCalculated) // || !_showForces)
+    {
+        painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
+        for (int i=0; i<_scope->mes.getNbPoints(); i++)
+        {
+            QPen p(QColor(255,0,0)); p.setWidth(3); painter->setPen(p);
+            painter->drawPoint(ptnToQt(i));
+            if (_scope->mes.pnt(i)->fix!=0)
+            {
+              QPen p(QColor(0,0,255)); p.setWidth(1); painter->setPen(p);
+              painter->drawEllipse(ptnToQt(i), 10, 10);
+            }
+        }
+    }
+//    else {
+//        double m= 1e300, M= -1e300;
+//        for (unsigned int i=0; i<_scope->mes.point_no; i+= 1)
+//        {
+//            if (_scope->mes.output_list[i].z<m) m= _scope->mes.output_list[i].z;
+//            if (_scope->mes.output_list[i].z>M) M= _scope->mes.output_list[i].z;
+//        }
+//
+//        qDebug() << "min max "<< m << M;
+//
+//        painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
+//        for (unsigned int i=0; i<_scope->mes.point_no; i+= 2)
+//        {
+//            QPen p(QColor(int((_scope->mes.output_list[i].z-m)/(M-m)*255),0,0)); p.setWidth((int(_scope->mes.output_list[i].z-m)/(M-m)*15+3)); painter->setPen(p);
+//            painter->drawPoint(QPoint(c.x()+int(_scope->mes.point_list[i].x/25.4*dpi), c.y()+int(_scope->mes.point_list[i].y/25.4*dpi)));
+//            if (_scope->mes.fix_list[i].z)
+//            {
+//              QPen p(QColor(0,255,255)); p.setWidth(1); painter->setPen(p);
+//              painter->drawEllipse(c.x()-5+int(_scope->mes.point_list[i].x/25.4*dpi), c.y()-5+int(_scope->mes.point_list[i].y/25.4*dpi), 10, 10);
+//            }
+//        }
+//    }
+#undef ptnToQt
+#undef ElptnToQt
+}
+#endif
+
+void triDraw(QPainter *painter, CMes *mes, QPoint &c, double dpi, int p1, int p2, int p3, double m, double M)
+{
+//    QLinearGradient linearGradient(0, 0, 100, 100);
+//    linearGradient.setColorAt(0.0, Qt::white);
+//    linearGradient.setColorAt(0.2, Qt::green);
+//    linearGradient.setColorAt(1.0, Qt::black);
+//    painter->setBrush(linearGradient);
+    QPoint pts[3]= { QPoint(c.x()+int(mes->point_list[p1].x/25.4*dpi), c.y()+int(mes->point_list[p1].y/25.4*dpi)),
+                     QPoint(c.x()+int(mes->point_list[p2].x/25.4*dpi), c.y()+int(mes->point_list[p2].y/25.4*dpi)),
+                     QPoint(c.x()+int(mes->point_list[p3].x/25.4*dpi), c.y()+int(mes->point_list[p3].y/25.4*dpi))};
+    painter->drawConvexPolygon(pts, 3);
+}
+
