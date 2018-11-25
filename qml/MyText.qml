@@ -8,6 +8,7 @@ Rectangle {
     clip: true
     smooth: true
     property alias text: textInput.text
+    property alias fontcol: textInput.color
     TextInput {
         id: textInput
         clip: true
