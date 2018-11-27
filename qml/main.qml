@@ -429,19 +429,24 @@ ApplicationWindow {
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
             }
-            Row {
-                spacing: 10; y:1;
+			Column { spacing: 5; y:1; x:1;
+            Row { spacing: 10; 
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Forces"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Mesh"); checked: scopeSupport.showMesh; onCheckedChanged: scopeSupport.showMesh= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Parts"); checked: scopeSupport.showParts; onCheckedChanged: scopeSupport.showParts= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Supports"); checked: scopeSupport.showSupports; onCheckedChanged: scopeSupport.showSupports= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show secondary"); checked: scopeSupport.showSecondary; onCheckedChanged: scopeSupport.showSecondary= checked }
+				}
+			Row { spacing: 10; 
                 ComboBox { y: (parent.height-height)/2; 
                            model: ListModel { ListElement { name: "3 points" } 
                                               ListElement { name: "6 points" } 
                                               ListElement { name: "9 points" } 
-                                              ListElement { name: "18 points" } 
-                                              ListElement { name: "27 points" } 
-                                              ListElement { name: "36 points" } }
+                                              ListElement { name: "18 points" } }
+                                              //ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
                             textRole: "name";
-                            currentIndex: scopeView.model.cellType
-                            onCurrentIndexChanged: { scopeView.model.cellType= currentIndex; scopeSupport.update(); }
+                            currentIndex: scopeView.model.cellType 
+                            onCurrentIndexChanged: scopeView.model.cellType= currentIndex;
                  }
                 ComboBox { y: (parent.height-height)/2; 
                            model: ListModel { ListElement { name: "100%" } 
@@ -452,10 +457,14 @@ ApplicationWindow {
                                               ListElement { name: "5%" } }
                             textRole: "name";
                             currentIndex: scopeSupport.zoom
-                            onCurrentIndexChanged: { scopeSupport.zoom= currentIndex; scopeSupport.update(); }
+                            onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
                  }
-                Button { text: "Calc"; onClicked: { scopeView.model.doMesSolve(); scopeSupport.update(); } }
+                Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
+				         onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
             }
+			MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
+			MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
+			}
         }
         //********************************
         // webcam page

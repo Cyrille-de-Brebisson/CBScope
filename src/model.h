@@ -12,7 +12,7 @@
 #define CBSMODEL_H
 
 #include <cmath>
-static double const M_PI= 3.14159265358979323846264338327;
+#define M_PI 3.14159265358979323846264338327
 #include <QObject>
 #include <QMutex>
 #include <QMutexLocker>
@@ -30,9 +30,8 @@ static double const M_PI= 3.14159265358979323846264338327;
 #include <QQuickPaintedItem>
 #include <QDesktopServices>
 #include "QQmlObjectListModel.h"
-//#include "mes.h"
-#include "mes2.h"
 #include <QAbstractVideoFilter>
+#include <QBasicTimer>
 
 // ********************************************************
 // Most of our objects will derive from this savable object
@@ -442,13 +441,13 @@ public:
     CBSProp(QString, name, Name)
     CBSProp(QString, comments, Comments)
     CBSProp(QString, secondariesToConcider, SecondariesToConcider) // for illumination  calculations
-    CBSPropE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit weightChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); doMes())
-    CBSPropE(double, thickness, Thickness, emit weightChanged(); doMes())
-    CBSPropE(double, density, Density, emit weightChanged(); doMes())
+    CBSPropE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit weightChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
+    CBSPropE(double, thickness, Thickness, emit weightChanged())
+    CBSPropE(double, density, Density, emit weightChanged())
     Q_PROPERTY(double weight READ getWeight NOTIFY weightChanged)
-    CBSPropE(double, young, Young, doMes())
-    CBSPropE(double, poisson, Poisson, doMes())
-    CBSPropE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged(); doMes())
+    CBSProp(double, young, Young)
+    CBSProp(double, poisson, Poisson)
+    CBSPropE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
     CBSPropE(double, secondary, Secondary, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSPropE(double, secondaryToFocal, SecondaryToFocal, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSProp(double, spherometerLegDistances, SpherometerLegDistances)
@@ -465,7 +464,7 @@ public:
     QML_OBJMODEL_PROPERTY(CBSModelParabolizingWork, parabolizings)
     QML_OBJMODEL_PROPERTY(CBSDouble, zones)
     QML_OBJMODEL_PROPERTY(CBSModelEP, eps)
-    CBSPropE(int, cellType, CellType, doMes())
+    CBSProp(int, cellType, CellType)
     CBSProp(double, couderx, Couderx)
     CBSProp(double, coudery, Coudery)
     CBSProp(double, couderz, Couderz)
@@ -508,7 +507,6 @@ Q_SIGNALS:
     void youngChanged();
     void poissonChanged();
     void weightChanged();
-    void meshChanded();
     void couderxChanged();
     void couderyChanged();
     void couderzChanged();
@@ -661,14 +659,6 @@ public:
     }
       void paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange); // Draw a couder mask
     Q_INVOKABLE void printCouder(); // Print the couder mask
-      double thicnknessAt(double r) { return (_thickness-sagita(_focal*2.0, (_diametre/2.0)-r)); } // Thickness of the mirror at a given distance from center in metters!
-    Q_INVOKABLE void doMes()
-    {
-      mes.createMirror(_diametre/2.0, _thickness, _young, 0.2, _focal*2.0, _density/1e6, _cellType, nullptr);
-      emit meshChanded();
-    }
-    Q_INVOKABLE void doMesSolve() { mes.doIt(); }
-    CMes2 mes;
 
     //////////////////////////////////////////////////////////
     // Center of Gravity stuff
@@ -768,7 +758,10 @@ public:
     CBSProp(int, windowsFlags, WindowsFlags)
     CBSProp(int, windowsFont, WindowsFont)
     CBSProp(bool, windowsFontBold, WindowsFontBold)
-    QML_OBJMODEL_PROPERTY(CBSModelScope, scopes)
+	Q_PROPERTY(QString errMsg READ getErrMsg WRITE setErrMsg NOTIFY errMsgChanged)
+	Q_PROPERTY(QString dbgMsg READ getDbgMsg WRITE setDbgMsg NOTIFY dbgMsgChanged)
+	Q_PROPERTY(QString warMsg READ getWarMsg WRITE setWarMsg NOTIFY warMsgChanged)
+	QML_OBJMODEL_PROPERTY(CBSModelScope, scopes)
 Q_SIGNALS:
     void windowsPosXChanged();
     void windowsPosYChanged();
@@ -777,6 +770,9 @@ Q_SIGNALS:
     void windowsFlagsChanged();
     void windowsFontChanged();
     void windowsFontBoldChanged();
+	void errMsgChanged();
+	void dbgMsgChanged();
+	void warMsgChanged();
 public:
     CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false)
     {
@@ -817,6 +813,7 @@ public:
       return loadList(m_scopes, "scopes", o); 
     }
     bool subSave(QJsonObject *o) const { return saveList(m_scopes, "scopes", o); }
+	QList<QString> Ignored() const { QList<QString> l; l.append("errMsg"); l.append("dbgMsg"); l.append("warMsg"); return l; }
     Q_INVOKABLE void help() { QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope help.odt")); }
     Q_INVOKABLE double materials(int index, int prop) // list properties of material. constants used by the UI
     {
@@ -829,6 +826,14 @@ public:
       if (index<0 || index>4 || prop<0 || prop>2) return 0.0;
       return props[index][prop];
     }
+	QMutex lock;
+	QString _errMsg, _dbgMsg, _warMsg;
+	QString getErrMsg() { lock.lock(); QString r(_errMsg); lock.unlock(); return r; }
+	void setErrMsg(QString v) { lock.lock(); _errMsg= v; lock.unlock(); emit errMsgChanged(); }
+	QString getDbgMsg() { lock.lock(); QString r(_dbgMsg); lock.unlock(); return r; }
+	void setDbgMsg(QString v) { lock.lock(); _dbgMsg= v; lock.unlock(); emit dbgMsgChanged(); }
+	QString getWarMsg() { lock.lock(); QString r(_warMsg); lock.unlock(); return r; }
+	void setWarMsg(QString v) { lock.lock(); _warMsg= v; lock.unlock(); emit warMsgChanged(); }
 };
 
 //***********************************************
@@ -899,25 +904,65 @@ class CBScopeMes : public QQuickPaintedItem
 public:
     Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope NOTIFY scopeChanged);
     CBSModelScope *_scope;
-    CBSProp(bool, showForces, ShowForces)
-    CBSProp(int, zoom, Zoom)
+	CBSPropE(bool, showForces, ShowForces, update())
+	CBSPropE(bool, showMesh, ShowMesh, update())
+	CBSPropE(bool, showParts, ShowParts, update())
+	CBSPropE(bool, showSupports, ShowSupports, update())
+	CBSPropE(bool, showSecondary, ShowSecondary, update())
+	CBSPropE(double, zoom, Zoom, update())
+	CBSProp(double, matrixProgresses, MatrixProgresses)
+	CBSProp(double, errRms, ErrRms)
+	CBSProp(double, errPV, ErrPv)
+	CBSProp(double, refocusFL, RefocusFL)
+	CBSProp(int, nbEvals, NbEvals)
+	CBSProp(double, stepSize, StepSize)
+	Q_PROPERTY(bool calc READ getCalc NOTIFY calcChanged) // true if calculating!
 Q_SIGNALS:
     void scopeChanged();
-    void showForcesChanged();
-    void zoomChanged();
+	void showForcesChanged();
+	void showMeshChanged();
+	void showPartsChanged();
+	void zoomChanged();
+	void nbEvalsChanged();
+	void stepSizeChanged();
+	void showSupportsChanged();
+	void matrixProgressesChanged();
+	void errRmsChanged();
+	void errPVChanged();
+	void refocusFLChanged();
+	void calcChanged();
+	void showSecondaryChanged();
+private:
+	bool hasPlopInit;
+	bool hasCalculated;
+	double _radius, _secondary;
 public:
-    CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _showForces(true), _zoom(0) { }
+	CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _showForces(true), _showMesh(true), 
+		_showParts(true), _showSupports(true), _showSecondary(true), _zoom(1.0), _matrixProgresses(0.0), _errRms(0.0), _errPV(0.0), _refocusFL(0.0),
+		_nbEvals(-1), _stepSize(0), hasPlopInit(false), hasCalculated(false), _radius(0.0), _secondary(0.0)
+	{ }
     void paint(QPainter *painter);
     CBSModelScope *getScope() { return _scope; }
     void setScope(CBSModelScope *s)
     {
-      if (s==_scope) return;
-      disconnect(_scope, SIGNAL(meshChanded()), this, SLOT(update()));
-      _scope= s;
-      connect(_scope, SIGNAL(meshChanded()), this, SLOT(update()));
+      if (s==_scope) return; _scope= s;
       emit scopeChanged();
       emit update();
     }
+	void createMirror(double diametre, double secondary, double thickness, double young, double poisson, double focale, double density, int _cellType);
+	Q_INVOKABLE void doMesSolve() 
+	{ 
+		if (_scope==nullptr) return;
+		createMirror(_scope->getDiametre(), _scope->getSecondary(), _scope->getThickness(), _scope->getYoung(), _scope->getPoisson(), _scope->getFocal(), _scope->getDensity(), _scope->getCellType()); 
+	}
+	Q_INVOKABLE void doMesStop();
+	bool getCalc();
+	QBasicTimer timer;
+	void timerEvent(QTimerEvent *event) 
+	{ 
+		update(); 
+		if (!getCalc()) timer.stop();
+	}
 };
 
 //***************************************
