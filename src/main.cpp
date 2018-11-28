@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<CBScopeMesure>("CBScopeMesure", 1, 0, "CBScopeMesure");
     qmlRegisterType<CBScopeCouder>("CBScopeCouder", 1, 0, "CBScopeCouder");
     qmlRegisterType<CBScopeMes>("CBScopeMes", 1, 0, "CBScopeMes");
-    qmlRegisterType<CBScopeVirtualCouder>("CBScopeVirtualCouder", 1, 0, "CBScopeVirtualCouder");
+	qmlRegisterType<CBScopeVirtualCouder>("CBScopeVirtualCouder", 1, 0, "CBScopeVirtualCouder");
+	qmlRegisterType<CBScopeCouderOverlay>("CBScopeCouderOverlay", 1, 0, "CBScopeCouderOverlay");
 
     QApplication app(argc, argv); qtapp= &app;
     CBSModel::SingletonProvider(nullptr, nullptr); // Create the model and load files...

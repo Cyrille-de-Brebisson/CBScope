@@ -35,7 +35,7 @@ void CBScopeMes::doMesStop() { please_stop_plop= 1; }
 void CBScopeMes::createMirror(double diametre, double secondary, double thickness, double young, double poisson, double focale, double density, int _cellType)
 { 
 	if (mesThread!=nullptr) return;
-	_radius= diameter/2.0; _secondary= secondary/2.0;
+	_radius= diametre/2.0; _secondary= secondary/2.0;
 	mutex.lock();
 	mesToUse= this;
 	if (!hasPlopInit)
@@ -54,18 +54,18 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 	         int n_num_support_rings; char num_support[maxSupportRings]; double rel_support_radii[maxSupportRings]; char rel_support_boud_vars[maxSupportRings];
 			 int n_basis_ring_found, basis_ring_found[6];
 			 int n_support_angle;  double support_angle[maxSupportRings];
-			 int n_rel_support_radii;
+			 int nbVars; double varVals[4];
 			 int n_parts; struct { char type, quantity, point_type[3], ring_num[3], point_num[3]; } parts[5];
 	       }
         const cellDefs[]={
-			//       opt vars                                     sup_rings nb, pts & diam                       basis_rng               angles          sup_radii   parts
-			{3,  8,  1,{{14, 0,0},          },                    3, 1, {3         }, {0.4          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 1,          0, {},                              },
-			{6,  12, 1,{{14, 0,0},          },                    3, 1, {6         }, {0.6          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 1,          1, {{ 1, 3, {0, 0}, {0, 0}, {0, 1} } }},
-			{9,  12, 2,{{ 0,-1,1}, { 1,-1,1}},                    3, 3, {3,3,3     }, {0.4, 0.6, 0.8},{ 0,1,1,0},    1, {3,      },      3, {0, 30, 90}, 3,          1, {{ 0, 3, {0, 0, 0}, {0, 1, 2}, {0, 0, 2}} }},
-		    {18, 20, 2,{{14, 0,0}, {14, 1,0}},                    6, 2, {6,12      }, {0.37, 0.799  },{-1,-1,0,0},   1, {6,      },      2, {0, 15,  0}, 1,          2, {{ 0, 6, {0, 0, 0}, {0, 1, 1}, {0, 0, 11}}, { 1, 3, {1, 1}, {0, 0}, {0, 1} } }},
-		    {27, 20, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,9,12    }, {0.4, 0.6, 0.8},{ 0,1,2,0},    1, {3,      },      3, {30,20,15 }, 1,          4, {{ 0, 3, {0, 0, 0}, {1, 2, 2}, {0, 0, 1}}, { 0, 3, {0, 0, 0}, {1, 2, 2}, {2, 2, 3} }, { 0, 3, {0, 0, 0}, {0, 0, 1}, {0, 1, 1} }, { 0, 3, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} } } },
-			{36, 24, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,12,18   }, {0, 0, 0,     },{ 0,1,2,0},    1, {6,      },      0, {30,20,15 }, 1,          5, {{ 1, 6, {0, 0}, {0, 1}, {0, 0}}, { 1, 6, {0, 0}, {2, 2}, {0, 1} }, { 1, 6, {0, 0}, {1, 2}, {1, 2} }, { 0, 6, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} }, { 1, 3, {1, 1}, {3, 3}, {0, 1} } } },
-			{54, 24, 4,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}, {3,-1,1}}, 3, 4, {6,12,12,24}, {0, 0, 0,     },{ 0,1,2,3},    1, {6,      },      0, {30,20,15 }, 1,          4, {{ 0, 6, {0, 0,0}, {0, 1,1}, {0, 0,11}}, { 0, 12, {0,0,0}, {2,3,3}, {0,1,0} }, { 0, 6, {1,1,1}, {0,1,1}, {0,0,11} }, { 1, 3, {1, 1}, {2, 2}, {0, 1} } } },
+			//       opt vars                                     sup_rings nb, pts & diam                       basis_rng               angles          vars                       parts
+			{3,  8,  1,{{14, 0,0},          },                    3, 1, {3         }, {0.4          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 0,{                   },   0, {},                              },
+			{6,  12, 1,{{14, 0,0},          },                    3, 1, {6         }, {0.6          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 0,{                   },   1, {{ 1, 3, {0, 0}, {0, 0}, {0, 1} } }},
+			{9,  12, 2,{{ 0,-1,1}, { 1,-1,1}},                    3, 3, {3,3,3     }, {0.0, 0.0, 0.0},{ 0,1,1,0},    1, {3,      },      3, {0, 30, 90}, 2,{0.2536,0.5597      },   1, {{ 0, 3, {0, 0, 0}, {0, 1, 2}, {0, 0, 2}} }},
+		    {18, 20, 2,{{14, 0,0}, {14, 1,0}},                    6, 2, {6,12      }, {0.37, 0.799  },{-1,-1,0,0},   1, {6,      },      2, {0, 15,  0}, 2,{0.325, 0.7798      },   2, {{ 0, 6, {0, 0, 0}, {0, 1, 1}, {0, 0, 11}}, { 1, 3, {1, 1}, {0, 0}, {0, 1} } }},
+		    {27, 20, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,9,12    }, {0.0, 0.0, 0.0},{ 0,1,2,0},    1, {3,      },      3, {30,20,15 }, 3,{0.33,0.666,0.8748  },   4, {{ 0, 3, {0, 0, 0}, {1, 2, 2}, {0, 0, 1}}, { 0, 3, {0, 0, 0}, {1, 2, 2}, {2, 2, 3} }, { 0, 3, {0, 0, 0}, {0, 0, 1}, {0, 1, 1} }, { 0, 3, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} } } },
+			{36, 24, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,12,18   }, {0, 0, 0,     },{ 0,1,2,0},    1, {6,      },      0, {30,20,15 }, 3,{0.27,0.58,0.842    },   5, {{ 1, 6, {0, 0}, {0, 1}, {0, 0}}, { 1, 6, {0, 0}, {2, 2}, {0, 1} }, { 1, 6, {0, 0}, {1, 2}, {1, 2} }, { 0, 6, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} }, { 1, 3, {1, 1}, {3, 3}, {0, 1} } } },
+			{54, 24, 4,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}, {3,-1,1}}, 3, 4, {6,12,12,24}, {0, 0, 0,     },{ 0,1,2,3},    1, {6,      },      0, {30,20,15 }, 4,{.216,.478,.672,.886},   4, {{ 0, 6, {0, 0,0}, {0, 1,1}, {0, 0,11}}, { 0, 12, {0,0,0}, {2,3,3}, {0,1,0} }, { 0, 6, {1,1,1}, {0,1,1}, {0,0,11} }, { 1, 3, {1, 1}, {2, 2}, {0, 1} } } },
 		};
 
 		CBSModel::singleton->setErrMsg("");
@@ -111,6 +111,8 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		parm_list[6].dptr[0] = poisson;
 
 		n_abs_support_radii = 0;
+		n_rel_force= 0;
+		n_support_angle= 0; // can be set to n_num_support_rings if we want the angles to vary...
 		n_basis_min_found = 1;
 		n_mesh_rings_found = 1;
 		n_mesh_depth = 5;
@@ -182,6 +184,13 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 			opt_var_is_var[i] = cellDefs[_cellType].optimize_vars[i][2];
 			opt_var_step[i] = 0.010000;
 		}
+		for (int i=0; i<cellDefs[_cellType].nbVars; i++)
+		{
+			strcpy(var_table[i].name, "ok");
+			var_table[i].value= cellDefs[_cellType].varVals[i];
+			var_table[i].affects_basis= 0;
+			var_table[i].var_def= 1;
+		}
 
 		use_p_v_error = false;
         refocus_flag = true;
@@ -252,6 +261,14 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 			sprintf(buf, "opt_var_is_var[%d]= %d;", i, opt_var_is_var[i]); qDebug() << buf;
 			sprintf(buf, "opt_var_step[%d]= %f;", i, opt_var_step[i]); qDebug() << buf;
 		}
+		int i=0; while (var_table[i].name[0]!=0)
+		{
+			sprintf(buf, "var_table[%d].name= %s;", i, var_table[i].name); qDebug() << buf;
+			sprintf(buf, "var_table[%d].value= %f;", i, var_table[i].value); qDebug() << buf;
+			sprintf(buf, "var_table[%d].affects_basis= %d;", i, var_table[i].affects_basis); qDebug() << buf;
+			sprintf(buf, "var_table[%d].var_def= %d;", i, var_table[i].var_def); qDebug() << buf;
+			i++;
+		}
 		sprintf(buf, "n_monte_vars= %d;", n_monte_vars); qDebug() << buf;
 		sprintf(buf, "n_scan_vars= %d;", n_scan_vars); qDebug() << buf;
 		sprintf(buf, "n_scan_set_vars= %d;", n_scan_set_vars); qDebug() << buf;
@@ -309,7 +326,6 @@ void CBScopeMes::paint(QPainter *painter)
 	if (plate_plot_n_triangles==0) return;
 	mutex.lock();
 
-
 	QPoint c(w/2, h/2);
 	double const zs[]= {100.0, 75.0, 50.0, 25.0, 10.0, 5.0};
 	double dpi= 96.0/25.4*zs[int(_zoom)]/100;
@@ -321,9 +337,8 @@ void CBScopeMes::paint(QPainter *painter)
 		if (_showForces)
 		{
 			double zmin= 1e300, zmax= -1e300; int mi, Mi;
-			for (int i=0; i<plate_plot_n_triangles; i++)
+			for (int i=0; i<plate_plot_n_points; i++)
 			{
-				if (abs(plate_plot_z_displacement[i])>1) continue;
 				if (zmin>plate_plot_z_displacement[i]) zmin= plate_plot_z_displacement[i], mi= i;
 				if (zmax<plate_plot_z_displacement[i]) zmax= plate_plot_z_displacement[i], Mi= i;
 			}
@@ -346,6 +361,7 @@ void CBScopeMes::paint(QPainter *painter)
 			painter->drawConvexPolygon(p, 3);
 		}
 	}
+	QString parts;
 	if (_showParts)
 	{
 		painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
@@ -362,12 +378,19 @@ void CBScopeMes::paint(QPainter *painter)
 					painter->drawLine(QPoint(xs*dpi+c.x(), ys*dpi+c.y()), QPoint(xe*dpi+c.x(), ye*dpi+c.y()));
 				}
 				double xs, ys;
-				polar_to_euc (part_cg_radius [i],part_cg_angle [i] + isubpart * (double) degrees / part_quantity [i],&xs, &ys);
+				polar_to_euc (part_cg_radius[i],part_cg_angle [i] + isubpart * (double) degrees / part_quantity [i],&xs, &ys);
 				painter->setPen(QPen(QColor(255,0,0)));
 				painter->drawEllipse(QPoint(xs*dpi+c.x(), ys*dpi+c.y()), 10, 10);
 			}
+			double x[3], y[3], l[3];
+			for (int j = 0; j < ncorners; j++) polar_to_euc (part_corner_radius [i] [j], part_corner_angle [i] [j], &x[j], &y[j]);
+			for (int j=0; j<ncorners; j++) l[j]= sqrt((x[(j+1)%ncorners]-x[j])*(x[(j+1)%ncorners]-x[j])+(y[(j+1)%ncorners]-y[j])*(y[(j+1)%ncorners]-y[j]));
+			if (i!=0) parts+= +"\n";
+			if (part_type [i]==0) parts+= "triangle: cog_radius "+QString::number(part_cg_radius[i], 'f', 1)+" length1 "+QString::number(l[0], 'f', 1)+" length2 "+QString::number(l[1], 'f', 1)+" length3 "+QString::number(l[2], 'f', 1);
+			else parts+= "bar: cog_radius "+QString::number(part_cg_radius[i], 'f', 1)+" length1 "+QString::number(l[0], 'f', 1);
 		}
 	}
+	setParts(parts);
 	if (_showSupports)
 	{
 		painter->setBrush(QBrush(QColor(0, 0, 0, 0)));

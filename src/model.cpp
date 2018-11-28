@@ -612,6 +612,86 @@ struct TZoneData { // structure that does the counting and image modification...
   }
 };
 
+static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCurvature, double gratingFreq, double gratingOffset, double scalingFactor, 
+	uint32_t *imageData, int lineWidth, double allowableParabolicDeviation, bool includeDeviation, bool invertBands, double zoneSqrt);
+
+void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c)
+{
+	if (_scope==nullptr) return;
+	TZoneData tt;
+	// center
+	imagew= tempImage.width(); imageh= tempImage.height(); // save data for later as they are needed by "user click"
+	c= QPoint(int(imagew*_scope->_couderx),int(imageh*(inverted ? _scope->_coudery : (1.0-_scope->_coudery))));
+	dpi= 100*_scope->_couderz/25.4; // scaling factor
+	if (_scope->getDiametre()*dpi>2*imagew) _scope->_couderz= imagew*25.4/(100*_scope->getDiametre());
+	if (_scope->_couderx<0 || _scope->_couderx>1) _scope->_couderx= 0.5;
+	if (_scope->_coudery<0 || _scope->_coudery>1) _scope->_coudery= 0.5;
+	if (_scope->get_zones()->count()!=0 && !_scope->_ronchi && imageh>256/tt.bucket) // no zones, no work....
+	{
+		double bot= 10; // find the "horizontal" cut line for the zones...
+		if (_scope->get_zones()->at(0)->_val<1) bot= _scope->get_zones()->at(1)->_val*0.7;
+		else bot= _scope->get_zones()->at(2)->_val*0.7;
+		int z= _scope->getZone(); // current zone to "count"
+		if (z<0 || z>_scope->get_zones()->count()-1) _scope->setZone(z=0); // sanity check
+		int type= _scope->getVirtualCouderType(); // type of filtering to do...
+		if (type<0 || type>4) _scope->setVirtualCouderType(type= 0); // more sanity check
+		tt.count(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, bot*dpi, type); // count the pixels
+		int maxz1= 1, maxz2= 1;
+		for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz1) maxz1= tt.Z1[i]; if (tt.Z2[i]>maxz2) maxz2= tt.Z2[i]; } // max on each sides..
+		if (maxz2>maxz1) maxz1= maxz2; // equalize We could have only one max as a mater of fact, but since I added this later on and was not sure if it was a good idea, I am leaving it here so far
+		for (int i=0; i<256/tt.bucket; i++) // for each bucket fo ilumination counting...
+		{
+			uint32_t *s= (uint32_t*)(tempImage.bits()+(tempImage.height()-i-1)*tempImage.bytesPerLine()); // point in the picture to the correct line/pow
+			int x= tt.Z1[i]*16/maxz1;                 // nb pixels to draw for left zone
+			for (int j=16-x; --j>=0;) *s++= 0xffffffff; // draw white first
+			while (--x>=0) *s++= 0xff000000;                   // then black
+			*s++= 0xff0000ff;                          // and a blue vertical line
+			int x2= tt.Z2[i]*16/maxz2;                // same for the right zone, but inverted
+			x= x2; while (--x>=0) *s++= 0xff000000;
+			for (int j=16-x2; --j>=0;) *s++= 0xffffffff;
+		}
+	}
+
+	if (_scope->_ronchi)
+	{
+		int w= int(_scope->getDiametre()*dpi)/2*2;
+		int line= (w+31)/32;
+		if (ronchisize!=w || diam!=_scope->getDiametre() || roc!=_scope->getFocal()*2.0 || grad!= _scope->getGrading() || off!= _scope->getRonchiOffset())
+		{
+			if (ronchi!=nullptr) delete[] ronchi;
+			ronchi= new uint32_t[line*w];
+			memset(ronchi, 0, line*w*4);
+			ronchisize= w;
+			diam= _scope->getDiametre(); roc= _scope->getFocal()*2.0; grad= _scope->getGrading(); off= _scope->getRonchiOffset();
+			ronchiCalcWithAllowableDeviation(diam, roc, grad, off, dpi, ronchi, line, 0.0, false, false, 0);
+		}
+		w/= 2;
+		int dx1= c.x()-w, dx2= c.x()+w-1, dy1= c.y()-w, dy2= c.y()+w-1;
+		int sx1= 0, sy1= 0;
+		if (dx1<0) { sx1-= dx1; dx1= 0; }
+		if (dy1<0) { sy1-= dy1; dy1= 0; }
+		if (dx2>=imagew) dx2= imagew;
+		if (dy2>=imageh) dy2= imageh;
+		for (int y=dy1; y<=dy2; y++)
+		{
+			uchar *s= tempImage.bits()+y*tempImage.bytesPerLine()+4*dx1;
+			int sx= sx1;
+			for (int x=dx1; x<=dx2; x++)
+			{
+				if ((ronchi[sy1*line+(sx/32)]&(1<<(sx%32)))!=0) { s[0]>>=1; s[1]>>=1; s[2]>>=1; }
+				s+= 4; sx++;
+			}
+			sy1++;
+		}
+
+	} else {
+		ronchisize= 0;
+		if (ronchi!=nullptr) { delete[] ronchi; ronchi= nullptr; }
+	}
+
+	dpi*= 25.4;
+}
+
 QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVideoSurfaceFormat &surfaceFormat, RunFlags flags)
 {
     (void)surfaceFormat; (void)flags;
@@ -619,53 +699,122 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
     QImage tempImage;
     // handle pause. Either start of pause or end of pause mode by taking a snapshot of the current frame.
     // then, set tempImage to current frame or paused frame
+	bool pause= false;
+	if (filter!=nullptr && filter->getScope()!=nullptr)  pause= filter->getScope()->getPause();
+		
     if (filter!=nullptr && filter->pausedFrame!=nullptr) 
     {
-      if (filter->getPause()) tempImage= *filter->pausedFrame;
+      if (pause) tempImage= *filter->pausedFrame;
       else { delete filter->pausedFrame; filter->pausedFrame= nullptr; tempImage =qt_imageFromVideoFrame(*inputframe); }
     } else {
       tempImage =qt_imageFromVideoFrame(*inputframe);
-      if (filter!=nullptr && filter->getPause()) filter->pausedFrame= new QImage(tempImage);
+      if (pause) filter->pausedFrame= new QImage(tempImage);
     }
 
-    QPainter p(&tempImage);
-    TZoneData tt;
-    if (filter!=nullptr && filter->getScope()!=nullptr)
-    {
-        // center
-        QPoint c(int(tempImage.width()*filter->getScope()->_couderx),int(tempImage.height()*(1.0-filter->getScope()->_coudery)));
-        filter->imagew= tempImage.width(); filter->imageh= tempImage.height(); // save data for later as they are needed by "user click"
-        double dpi= 100*filter->getScope()->_couderz/25.4; // scaling factor
-        if (filter->getScope()->get_zones()->count()!=0) // no zones, no work....
-        {
-            double bot= 10; // find the "horizontal" cut line for the zones...
-            if (filter->getScope()->get_zones()->at(0)->_val<1) bot= filter->getScope()->get_zones()->at(1)->_val*0.7;
-            else bot= filter->getScope()->get_zones()->at(2)->_val*0.7;
-            int z= filter->getZone(); // current zone to "count"
-            if (z>=0 || z<filter->getScope()->get_zones()->count()-1) // sanity check
-            {
-                int type= filter->getScope()->getVirtualCouderType(); // type of filtering to do...
-                if (type<0 || type>4) filter->getScope()->setVirtualCouderType(type= 0); // more sanity check
-                tt.count(&tempImage, c, filter->getScope()->get_zones()->at(z)->getVal()*dpi, filter->getScope()->get_zones()->at(z+1)->getVal()*dpi, bot*dpi, type); // count the pixels
-                int maxz1= 1, maxz2= 1;
-                for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz1) maxz1= tt.Z1[i]; if (tt.Z2[i]>maxz2) maxz2= tt.Z2[i]; } // max on each sides..
-                if (maxz2>maxz1) maxz1= maxz2; // equalize We could have only one max as a mater of fact, but since I added this later on and was not sure if it was a good idea, I am leaving it here so far
-                for (int i=0; i<256/tt.bucket; i++) // for each bucket fo ilumination counting...
-                {
-                    uint32_t *s= (uint32_t*)(tempImage.bits()+(tempImage.height()-i-1)*tempImage.bytesPerLine()); // point in the picture to the correct line/pow
-                    int x= tt.Z1[i]*16/maxz1;                 // nb pixels to draw for left zone
-                    for (int j=16-x; --j>=0;) *s++= 0xffffff; // draw white first
-                    while (--x>=0) *s++= 0;                   // then black
-                    *s++= 0xff;                               // and a blue vertical line
-                    int x2= tt.Z2[i]*16/maxz2;                // same for the right zone, but inverted
-                    x= x2; while (--x>=0) *s++= 0;
-                    for (int j=16-x2; --j>=0;) *s++= 0xffffff;
-                }
-            }
-        }
-        filter->getScope()->paintCouder(&p, c, dpi*25.4, false, false, false); // Paint couder screen (ie: circles for each zones)
-    }
+    if (filter!=nullptr)
+	{
+		double dpi; QPoint c;
+		filter->vco.draw(tempImage, filter->getScope(), dpi, c);
+		if (filter->getScope()!=nullptr)
+		{
+  			QPainter p(&tempImage);
+			filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+		}
+	}
     inputframe->unmap();
     QVideoFrame outputFrame= QVideoFrame(tempImage);
     return outputFrame;
+}
+
+
+
+/////////////////////////////////////////
+static bool calcBand(double scaledRadiusOfCurvature, double scaledMirrorZone, double deviationForScaledMirrorZone, double scaledGratingOffset, double x, double scaledLineWidth) 
+{
+	double zZone = scaledRadiusOfCurvature + (scaledMirrorZone - deviationForScaledMirrorZone) / scaledRadiusOfCurvature;
+	double lZone = scaledRadiusOfCurvature + scaledGratingOffset * 2 - zZone;
+	double uZone = abs(lZone * x / zZone);
+	int tZone = int((uZone / scaledLineWidth) + 0.5);
+	return tZone % 2 == 0;
+};
+
+static double calcDeviationForScaledMirrorZone(double scaledMirrorZone, double scaledMirrorRadiusSquared, double allowableParabolicDeviation, double maxScaledMirrorZone, double zoneSqrt) 
+{
+	if (scaledMirrorZone / scaledMirrorRadiusSquared < zoneSqrt) {
+		// inside zone: shape gradually from perfect center to max allowableParabolicDeviation at zone
+		return allowableParabolicDeviation * maxScaledMirrorZone * scaledMirrorZone / maxScaledMirrorZone / zoneSqrt;
+	}
+	// outside zone: shape gradually from perfect edge to max allowableParabolicDeviation at zone
+	return allowableParabolicDeviation * maxScaledMirrorZone * (scaledMirrorRadiusSquared - scaledMirrorZone) / maxScaledMirrorZone / (1 - zoneSqrt);
+};
+
+// from algorithm in Sky and Telescope magazine: trace light rays through grating;
+// correction factor of 1 = parabola
+static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCurvature, double gratingFreq, double gratingOffset, double scalingFactor, 
+			uint32_t *imageData, int lineWidth, double allowableParabolicDeviation, bool includeDeviation, bool invertBands, double zoneSqrt) 
+{
+	int scaledMirrorRadius = mirrorDia / 2 * scalingFactor;
+	int scaledMirrorRadiusSquared = scaledMirrorRadius * scaledMirrorRadius;
+	double scaledRadiusOfCurvature = radiusOfCurvature * scalingFactor;
+	double scaledGratingOffset = gratingOffset * scalingFactor;
+	double scaledLineWidth = scalingFactor / (2 * gratingFreq);
+
+	for (int y = 0; y < scaledMirrorRadius; y++) 
+	{
+		int ySquared = y * y;
+		int maxScaledMirrorZone = ySquared + scaledMirrorRadiusSquared;
+		for (int x = 0; x < scaledMirrorRadius; x++) {
+			int scaledMirrorZone = ySquared + x * x;
+			if (scaledMirrorZone > scaledMirrorRadiusSquared) break;
+			// for spherical mirror, Z=RC;
+			double z = scaledRadiusOfCurvature + scaledMirrorZone / scaledRadiusOfCurvature;
+			// offset*2 for light source that moves with Ronchi grating
+			double l = scaledRadiusOfCurvature + scaledGratingOffset * 2 - z;
+			// u = projection of ray at scaledMirrorRadius onto grating displaced from RC by gratingOffset
+			double u = abs(l * x / z);
+			// test for ray blockage by grating
+			int t = int((u / scaledLineWidth) + 0.5);
+			bool band = t % 2 == 0;
+
+			if (includeDeviation) {
+				double deviationForScaledMirrorZone = calcDeviationForScaledMirrorZone(scaledMirrorZone, scaledMirrorRadiusSquared, allowableParabolicDeviation, maxScaledMirrorZone, zoneSqrt);
+				band = calcBand(scaledRadiusOfCurvature, scaledMirrorZone, deviationForScaledMirrorZone, scaledGratingOffset, x, scaledLineWidth);
+			}
+			if ((band && !invertBands) || (!band && invertBands))
+			{
+				imageData[(scaledMirrorRadius+y)*lineWidth+(scaledMirrorRadius+x)/32]|= 1<<((scaledMirrorRadius+x)%32);
+				imageData[(scaledMirrorRadius+y)*lineWidth+(scaledMirrorRadius-x)/32]|= 1<<((scaledMirrorRadius-x)%32);
+				imageData[(scaledMirrorRadius-y)*lineWidth+(scaledMirrorRadius+x)/32]|= 1<<((scaledMirrorRadius+x)%32);
+				imageData[(scaledMirrorRadius-y)*lineWidth+(scaledMirrorRadius-x)/32]|= 1<<((scaledMirrorRadius-x)%32);
+			}
+		}
+	}
+};
+
+void CBScopeCouderOverlay::paint(QPainter *painter)
+{
+	QSizeF itemSize = size();
+	int w= int(itemSize.width());
+	int h= int(itemSize.height());
+	if (_scope==nullptr) return;
+	int iw= img.width(), ih= img.height();
+	if (_source=="" || ih==0 || iw==0 || w==0 || h==0) return;
+	QImage i(iw, ih, QImage::Format_ARGB32);
+	QPainter p(&i);
+	p.drawImage(QPoint(0,0), img);
+	double dpi; QPoint c;
+	vco.draw(i, _scope, dpi, c);
+	if (_scope!=nullptr) _scope->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+	painter->setBrush(QBrush(QColor(255,255,255)));
+	painter->setPen(QPen(QColor(255,255,255)));
+	painter->drawRect(0, 0, w, h);
+	double rd= w/double(h), rs= iw/double(ih);
+	if (rd>rs)
+	{
+		int dw= (iw*h)/ih;
+		painter->drawImage(irect= QRect((w-dw)/2, 0, dw, h), i);
+	} else {
+		int dh= (ih*w)/iw;
+		painter->drawImage(irect= QRect(0, (h-dh)/2, w, dh), i);
+	}
 }

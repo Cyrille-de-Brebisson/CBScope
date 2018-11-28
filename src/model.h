@@ -1,12 +1,9 @@
 //   tab navigation
 //   indicate ROC offset and allow to fix other parabolization on that offset!
 //   find stroke that helped last time...
-//   Plop
 //   add ideal readings in parabolizing/zones...
-//   add fine control to webcam page
-//   check that the model list delete do delete all items!!!!
-//   list views (hogging), current item = on click/selected/focused... 
 //   Put camera on loader if mobile complains...
+//   current items on list views...
 
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
@@ -105,7 +102,7 @@ public:
     template <typename T> bool loadList(QQmlObjectListModel<T> *d, char const *property, QJsonObject *j)
     {
         d->clear();        // clear current list content
-        qDebug() << "loading list " << property;
+        //qDebug() << "loading list " << property;
         QJsonValue v= j->take(property); if (v.isUndefined()) return false; // find data in json
         QJsonArray a= v.toArray();
         for (int i=0; i<a.count(); i++)          // for all object in the json property
@@ -278,7 +275,6 @@ public:
   {
     if (v==_val) return;
     _val= v; _doubleVal= nan(""); asDouble();
-    qDebug() << this << "emits val change";
     emit valChanged();
   }
   bool getError() { return _error; }
@@ -465,11 +461,21 @@ public:
     QML_OBJMODEL_PROPERTY(CBSDouble, zones)
     QML_OBJMODEL_PROPERTY(CBSModelEP, eps)
     CBSProp(int, cellType, CellType)
+
+	// virtual Couder/Ronchi stuff
     CBSProp(double, couderx, Couderx)
     CBSProp(double, coudery, Coudery)
     CBSProp(double, couderz, Couderz)
-    CBSProp(bool, showCouderRed,  ShowCouderRed)   // normal zones style display
-    CBSProp(bool, showCouderBlue, ShowCouderBlue) // my zone style display
+	CBSProp(int, zone, Zone)                                           // zone being couder analyzed at the moment
+	QML_OBJMODEL_PROPERTY(CBSQString, zoneModel)                       // list of the zones
+	CBSProp(bool, pause, Pause)                                        // pause webcam streaming
+	CBSProp(bool, ronchi, Ronchi)                                      // display ronchi
+	CBSProp(double, ronchiOffset, RonchiOffset)                        // out of focus for Ronchi
+	CBSProp(double, grading, Grading)                                  // 3.9 = 100 dpi or so
+
+	// Couder screen
+	CBSProp(bool, showCouderRed,  ShowCouderRed)   // normal zones style display
+	CBSProp(bool, showCouderBlue, ShowCouderBlue) // my zone style display
     CBSProp(bool, showCouderOrange, ShowCouderOrange) // my zone style display
     CBSProp(int, virtualCouderType, VirtualCouderType) // 0: Grayscale, 1: RGB/3, 2:R, 3:G, 4:B
     // Properties for COG pages
@@ -521,16 +527,32 @@ Q_SIGNALS:
     void cogBottomWeightsChanged();
     void cogChanged();
     void notesChanged();
+	void zoneChanged();
+	void scopeChanged();
+	void pauseChanged();
+	void ronchiChanged();
+	void ronchiOffsetChanged();
+	void gradingChanged();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
     void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); }
     void emitcogWeightChanged() { emit cogChanged(); emit cogBottomWeightsChanged(); emit cogTopWeightsChanged(); }
     void emitZoneChanged() { emit nbZonesChanged(); }
+	void rezone()
+	{
+		m_zoneModel->clear();
+		for (int i=0; i<get_zones()->count()-1; i++)
+		{
+			CBSQString *s= new CBSQString(m_zoneModel); s->setVal(QString("Z")+QString::number(i+1)+QString(" ")+QString::number(get_zones()->at(i)->_val)+"-"+QString::number(get_zones()->at(i+1)->_val));
+			m_zoneModel->append(s);
+		}
+	}
 public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
                            _diametre(150), _thickness(25), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _cellType(0),
-                           _couderx(.5), _coudery(.5), _couderz(.80), _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
+                           _couderx(.5), _coudery(.5), _couderz(.80), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9), _zone(0),
+						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
                            _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0)
     {
         m_hoggings= new QQmlObjectListModel<CBSModelHoggingWork>(this);
@@ -539,8 +561,9 @@ public:
         m_zones= new QQmlObjectListModel<CBSDouble>(this);
         m_bottomWeights= new QQmlObjectListModel<CBSQString>(this);
         m_topWeights= new QQmlObjectListModel<CBSQString>(this);
-        setNbZones(getNbZonesSuggested()); autoZones();
-    }
+		m_zoneModel= new QQmlObjectListModel<CBSQString>(this);
+		setNbZones(getNbZonesSuggested()); autoZones();
+	}
     ~CBSModelScope() {
         delete m_hoggings;  
         delete m_parabolizings;
@@ -548,6 +571,7 @@ public:
         delete m_eps;
         delete m_bottomWeights;
         delete m_topWeights;
+		delete m_zoneModel;
     }
 
     // Various small getters
@@ -648,7 +672,8 @@ public:
         }
         while (v<m_zones->count()-1) m_zones->remove(m_zones->count()-1);
         validateZones();
-        emit nbZonesChanged();
+		rezone();
+		emit nbZonesChanged();
     }
     Q_INVOKABLE void autoZones() // auto calc zones
     {
@@ -742,6 +767,7 @@ public:
         saveList(m_bottomWeights, "bottomWeights", o);
         return true;
     }
+	QList<QString> Ignored() const { QList<QString> l; l.append("zoneModel"); return l; }
 };
 
 
@@ -909,6 +935,7 @@ public:
 	CBSPropE(bool, showParts, ShowParts, update())
 	CBSPropE(bool, showSupports, ShowSupports, update())
 	CBSPropE(bool, showSecondary, ShowSecondary, update())
+	CBSProp(QString, parts, Parts)
 	CBSPropE(double, zoom, Zoom, update())
 	CBSProp(double, matrixProgresses, MatrixProgresses)
 	CBSProp(double, errRms, ErrRms)
@@ -932,6 +959,7 @@ Q_SIGNALS:
 	void refocusFLChanged();
 	void calcChanged();
 	void showSecondaryChanged();
+	void partsChanged();
 private:
 	bool hasPlopInit;
 	bool hasCalculated;
@@ -967,6 +995,40 @@ public:
 
 //***************************************
 // filter component for webcam for virtual couder
+  class CBVirtualCouderOverlayInternal
+  {
+	  uint32_t *ronchi; int ronchisize;
+	  double diam, roc, grad, off;
+	  int imagew, imageh; // these get set in the CBScopeVirtualCouderRunnable::run function...
+	  bool inverted;
+  public:
+	  CBVirtualCouderOverlayInternal(bool inverted): imagew(-1), imageh(-1), ronchi(nullptr), ronchisize(0), inverted(inverted) {}
+	  ~CBVirtualCouderOverlayInternal() { if (ronchi!=nullptr) delete[] ronchi; }
+	  void userclick(CBSModelScope *_scope, double x, double y) // find which zone the used clicked in and select it...
+	  {
+		  if (_scope==nullptr || imagew==-1 || imageh==-1) return;
+		  QPoint c(int(imagew*_scope->_couderx),int(imageh*(1.0-_scope->_coudery)));
+		  QPoint p1(int(imagew*x),int(imageh*(1.0-y)));
+		  c= c-p1; double r= sqrt(c.x()*c.x()+c.y()*c.y());
+		  double dpi= 100*_scope->_couderz/25.4;
+		  r= r/dpi;
+		  for (int i=0; i<_scope->get_zones()->count(); i++)
+			  if (r<=_scope->get_zones()->at(i)->_val) { _scope->setZone(i-1); return; }
+	  }
+	  void button(CBSModelScope *_scope, int b)
+	  {
+		  if (_scope==nullptr || imagew==-1 || imageh==-1) return;
+		  double dx= 1./double(imagew), dy= 1./double(imageh);
+		  if (b==0) _scope->setCoudery(_scope->getCoudery()-dy);
+		  if (b==1) _scope->setCoudery(_scope->getCoudery()+dy);
+		  if (b==2) _scope->setCouderx(_scope->getCouderx()-dx);
+		  if (b==3) _scope->setCouderx(_scope->getCouderx()+dx);
+		  if (dy<dx) dx= dy;
+		  if (b==4) _scope->setCouderz(_scope->getCouderz()-dx);
+		  if (b==5) _scope->setCouderz(_scope->getCouderz()+dx);
+	  }
+	  void draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c);
+  };
 class CBScopeVirtualCouder;
 class CBScopeVirtualCouderRunnable : public  QVideoFilterRunnable
 {
@@ -978,50 +1040,58 @@ public:
 class CBScopeVirtualCouder : public QAbstractVideoFilter
 {
     Q_OBJECT
-    CBSPropE(CBSModelScope*, scope, Scope, rezone(); QObject *v2= (QObject*)v;
-                                                     connect(v2, SIGNAL(nbZonesChanged()), this, SLOT(rezone()));)
-    Q_PROPERTY(int zone READ getZone WRITE setZone NOTIFY zoneChanged) // zone being analyzed at the moment
-    QML_OBJMODEL_PROPERTY(CBSQString, zoneModel)                       // list of the zones
-    CBSProp(bool, pause, Pause)                                        // pause webcam streaming
+    CBSProp(CBSModelScope*, scope, Scope);
 Q_SIGNALS:
-    void zoneChanged();
-    void scopeChanged();
-    void pauseChanged();
-    void finished(QObject *result);
+	void scopeChanged();
+	void finished(QObject *result);
 public:
-    CBScopeVirtualCouder(QObject *p= nullptr): QAbstractVideoFilter(p), _scope(nullptr), _pause(false), imagew(-1), imageh(-1), pausedFrame(nullptr), _zone(0)
-    { 
-      m_zoneModel= new QQmlObjectListModel<CBSQString>(this);
-    }
-    ~CBScopeVirtualCouder() { delete m_zoneModel; }
+    CBScopeVirtualCouder(QObject *p= nullptr): QAbstractVideoFilter(p), _scope(nullptr), pausedFrame(nullptr), vco(false) { }
     QVideoFilterRunnable *createFilterRunnable() { return new CBScopeVirtualCouderRunnable(this); }
-      int imagew, imageh; // these get set in the CBScopeVirtualCouderRunnable::run function...
-    Q_INVOKABLE void userclick(double x, double y) // find which zone the used clicked in and select it...
-    {
-        if (_scope==nullptr || imagew==-1 || imageh==-1) return;
-        QPoint c(int(imagew*_scope->_couderx),int(imageh*(1.0-_scope->_coudery)));
-        QPoint p1(int(imagew*x),int(imageh*(1.0-y)));
-        c= c-p1; double r= sqrt(c.x()*c.x()+c.y()*c.y());
-        double dpi= 100*_scope->_couderz/25.4;
-        r= r/dpi;
-        for (int i=0; i<_scope->get_zones()->count(); i++)
-            if (r<=_scope->get_zones()->at(i)->_val) { setZone(i-1); return; }
-    }
-    QImage *pausedFrame; // non null if we are paused...
-
-    int _zone;
-    int getZone() { return _zone; }
-    void setZone(int v) { if (v==_zone || v<0 || v>=_scope->get_zones()->count()-1) return; _zone= v; emit zoneChanged(); }
-public slots:
-    void rezone()
-    {
-        m_zoneModel->clear();
-        if (_scope==nullptr) return;
-        for (int i=0; i<_scope->get_zones()->count()-1; i++)
-        {
-            CBSQString *s= new CBSQString(m_zoneModel); s->setVal(QString("Z")+QString::number(i+1)+QString(" ")+QString::number(_scope->get_zones()->at(i)->_val)+"-"+QString::number(_scope->get_zones()->at(i+1)->_val));
-            m_zoneModel->append(s);
-        }
-    }
+	QImage *pausedFrame; // non null if we are paused...
+	CBVirtualCouderOverlayInternal vco;
+	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); }
+	Q_INVOKABLE void button(int b) { vco.button(_scope, b); }
 };
+
+class CBScopeCouderOverlay : public QQuickPaintedItem
+{
+	Q_OBJECT
+public:
+	CBSPropE(CBSModelScope*, scope, Scope, QObject *v2= (QObject*)(v);
+										update();
+										connect(v2, SIGNAL(couderxChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(couderyChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(couderzChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(zoneChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(ronchiChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(ronchiOffsetChanged()), this, SLOT(update()));
+										connect(v2, SIGNAL(gradingChanged()), this, SLOT(update())); )
+	CBSPropE(QString, source, Source, load(); )
+Q_SIGNALS:
+	void scopeChanged();
+	void sourceChanged();
+public:
+	CBScopeCouderOverlay(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), vco(true) { }
+	void paint(QPainter *painter);
+	CBVirtualCouderOverlayInternal vco;
+	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); update(); }
+	Q_INVOKABLE void button(int b) { vco.button(_scope, b); update(); }
+	QRect irect;
+	Q_INVOKABLE QPointF mapPointToSourceNormalized(QPoint p)
+	{
+		if (irect.width()==0 || irect.height()==0) return QPointF(0,0);
+		return QPointF((p.x()-irect.left())/double(irect.width()), (p.y()-irect.top())/double(irect.height()));
+	}
+	QImage img;
+	void load()
+	{
+		if (_source=="") img= QImage();
+		else {
+			if (_source.startsWith("file:///")) _source= _source.mid(8);
+			img= QImage(_source);
+		}
+		update();
+	}
+};
+
 #endif
