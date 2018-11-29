@@ -1,0 +1,1 @@
+/Users/cyrilledebrebisson/Qt/5.11.2/clang_64/bin/macdeployqt CBScope.app -qmldir=/Users/cyrilledebrebisson/Documents/GitHub/CBScope/qml -dmg

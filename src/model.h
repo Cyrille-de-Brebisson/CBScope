@@ -842,7 +842,9 @@ public:
     }
     bool subSave(QJsonObject *o) const { return saveList(m_scopes, "scopes", o); }
 	QList<QString> Ignored() const { QList<QString> l; l.append("errMsg"); l.append("dbgMsg"); l.append("warMsg"); return l; }
-    Q_INVOKABLE void help() { QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope_help.htm")); }
+    Q_INVOKABLE void help() {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope_help.htm"));
+    }
 	Q_INVOKABLE int loadScope(QString scope); // load a scope from a definition. returns it's model id
     Q_INVOKABLE double materials(int index, int prop) // list properties of material. constants used by the UI
     {

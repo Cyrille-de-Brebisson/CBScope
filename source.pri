@@ -17,7 +17,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/src/model.h \
     $$PWD/src/QQmlObjectListModel.h \
-    $$PWD/src/mes2.h \
     $$PWD/src/plop/gd.h \
     $$PWD/src/plop/global.h \
     $$PWD/src/plop/grid_gen.h \

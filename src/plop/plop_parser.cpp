@@ -662,7 +662,7 @@ void read_info_chars (void)
                 	if (iparm == -1 && line [0] != '\0')
     				{	warn_msg_s ("Don't understand line: %s\n", line);
     				}
-    				else if (parm_list [iparm].name != '\0')
+                    else if (parm_list [iparm].name[0] != '\0')
     				{	if (n_words - 1 > parm_list [iparm].max_num)
     					{	err_msg_s ("Too many parameters in the line: %s\n", line);
     						err_msg_d ("The maximum is %d\n", parm_list [iparm].max_num);

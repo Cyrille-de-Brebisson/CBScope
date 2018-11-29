@@ -1,8 +1,10 @@
 #include "model.h"
 #include <QPainter>
 #include <QColor>
+#ifndef IOS
 #include <QPrinter>
 #include <QPrintDialog>
+#endif
 
 CBSModel *CBSModel::singleton= nullptr;
 
@@ -152,6 +154,7 @@ void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool s
 // Print a couder screen on the printer. Pop up a print dialog box...
 void CBSModelScope::printCouder()
 {
+#ifndef IOS
     QPrinter printer;//(QPrinter::HighResolution);
     QPrintDialog dialog(&printer, nullptr);
     dialog.setWindowTitle(tr("Print couder mask"));
@@ -165,6 +168,7 @@ void CBSModelScope::printCouder()
     paintCouder(&painter, c, dpi, _showCouderRed, _showCouderBlue, _showCouderOrange);
     painter.endNativePainting();
     painter.end();
+#endif
 }
 
 #define scopeEmailStartString "__SCOPE__START__\n"

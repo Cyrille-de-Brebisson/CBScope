@@ -681,8 +681,8 @@ ApplicationWindow {
         //********************************
 		Rectangle {
 	        width: parent.width; height: parent.height;
-			border.width: 3; border.color: textInput.focus ? "#569ffd" : "lightgrey"; radius: 4;
-			ScrollView { // Scrollable text area...
+            border.width: 3; border.color: notesText.focus ? "#569ffd" : "lightgrey"; radius: 4;
+            ScrollView { id: notesText // Scrollable text area...
 				x: parent.border.width; y: parent.border.width; width: parent.width-parent.border.width*2; height: parent.height-parent.border.width*2;
 				TextArea { 
 					wrapMode: Text.Wrap; clip: true
