@@ -54,6 +54,7 @@ win32 {
     CONFIG(release, debug|release) {
       CONFIGTYPE = Release
       DEFINES += NDEBUG
+      CONFIG += static
     }
 
     CONFIG(debug, debug|release) {

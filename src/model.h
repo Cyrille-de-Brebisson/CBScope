@@ -4,6 +4,7 @@
 //   add ideal readings in parabolizing/zones...
 //   Put camera on loader if mobile complains...
 //   current items on list views...
+//   save pictures in scopes?
 
 #ifndef CBSMODEL_H
 #define CBSMODEL_H
@@ -684,6 +685,7 @@ public:
     }
       void paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange); // Draw a couder mask
     Q_INVOKABLE void printCouder(); // Print the couder mask
+	Q_INVOKABLE void email(); // send the scope by email...
 
     //////////////////////////////////////////////////////////
     // Center of Gravity stuff
@@ -840,7 +842,8 @@ public:
     }
     bool subSave(QJsonObject *o) const { return saveList(m_scopes, "scopes", o); }
 	QList<QString> Ignored() const { QList<QString> l; l.append("errMsg"); l.append("dbgMsg"); l.append("warMsg"); return l; }
-    Q_INVOKABLE void help() { QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope help.odt")); }
+    Q_INVOKABLE void help() { QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope_help.htm")); }
+	Q_INVOKABLE int loadScope(QString scope); // load a scope from a definition. returns it's model id
     Q_INVOKABLE double materials(int index, int prop) // list properties of material. constants used by the UI
     {
       double const props[5][3]= {
@@ -964,10 +967,11 @@ private:
 	bool hasPlopInit;
 	bool hasCalculated;
 	double _radius, _secondary;
+	int _cellType;
 public:
 	CBScopeMes(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _scope(nullptr), _showForces(true), _showMesh(true), 
 		_showParts(true), _showSupports(true), _showSecondary(true), _zoom(1.0), _matrixProgresses(0.0), _errRms(0.0), _errPV(0.0), _refocusFL(0.0),
-		_nbEvals(-1), _stepSize(0), hasPlopInit(false), hasCalculated(false), _radius(0.0), _secondary(0.0)
+		_nbEvals(-1), _stepSize(0), hasPlopInit(false), hasCalculated(false), _radius(0.0), _secondary(0.0), _cellType(0)
 	{ }
     void paint(QPainter *painter);
     CBSModelScope *getScope() { return _scope; }

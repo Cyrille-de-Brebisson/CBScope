@@ -1,0 +1,46 @@
+; InstallSimple project
+
+[Setup]
+WindowTitle=CB Scope
+ProductName=CB Scope
+BandText=InstallSimple
+
+[Graphics]
+SplashScreen=
+SplashScreenDelay=3
+Header=
+HeaderJustify=Right
+HeaderFontColor=0
+WizardBitmap=
+WizardFontColor=0
+
+[FirstMessage]
+CB Scope is an application designed to help amateur telescope makers crate their telescopes.
+It should do all the needed calculations for this type of work.
+[LastMessage]
+Thank you for using our software!
+
+[LicenseAgreement]
+You are NOT allowed to sell this app!
+
+[SetupFiles]
+SourceFolder=P:\perso\Astro\astroapp\CBScope\Release\Win32
+SpecialFolder=Program Files
+SetupPath=CBScope
+SetupFile=P:\perso\Astro\astroapp\CBScope\CBScopeInstall.exe
+
+[Shortcuts]
+ProgramGroup=
+CBScope.exe=m
+
+[Registry]
+
+[Requirements]
+OperatingSystem=0
+NetFramework=0
+NetFrameworkLink=http://www.microsoft.com/en-us/download/details.aspx?id=17718
+AdminRights=0
+
+[AfterInstalling]
+RunCommand=
+Reboot=0

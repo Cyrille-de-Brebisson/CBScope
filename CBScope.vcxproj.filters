@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;moc;h;def;odl;idl;res;</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts;xlf</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts;xlf</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Distribution Files">
+      <UniqueIdentifier>{B83CAF91-C7BF-462F-B76C-EA11631F866C}</UniqueIdentifier>
+      <Extensions>*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Distribution Files">
+      <UniqueIdentifier>{B83CAF91-C7BF-462F-B76C-EA11631F866C}</UniqueIdentifier>
+      <Extensions>*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="qmlcachegen">
+      <UniqueIdentifier>{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}-qmlcache</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="qmlcachegen">
+      <UniqueIdentifier>{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}-qmlcache</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="qmlcachengen_loader">
+      <UniqueIdentifier>{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}-qmlcache_loader</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="qmlcachengen_loader">
+      <UniqueIdentifier>{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}-qmlcache_loader</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Header Files\plop">
+      <UniqueIdentifier>{9c1c592b-bfb2-4884-93ba-2d39867023c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\plop">
+      <UniqueIdentifier>{70305285-0893-4f45-a877-c5f150f536b1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\QQmlObjectListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mes2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\grid_gen.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plate.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plate_global.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plop_debug.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plop_parser.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plop_run.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\plot.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\sparsemat.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\gd.cpp">
+      <Filter>Source Files\plop</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="src\QQmlObjectListModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\model.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Intermediate\Debug\Win32\moc_predefs.h.cbt">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Intermediate\Release\Win32\moc_predefs.h.cbt">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+    <ClCompile Include="debug\qml_AppTheme_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_AppTheme_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\qml_MyMultiText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyMultiText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\qml_MyOText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyOText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\qml_MyText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyText_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\qml_main_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_main_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug\qmlcache_loader.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qmlcache_loader.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="language\cbscope_cs.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_da.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_de.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_en.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_es.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_fi.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_hr.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_hu.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_it.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_ja.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_ko.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_lt.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_lv.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_no.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_pl.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_pt-br.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_pt-pt.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_ru.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_sk.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_sr.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_sv.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_zh-cn.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_zh-tw.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cbscope.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\cbscope.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="qml\qmldir">
+      <Filter>Resource Files</Filter>
+    </None>
+    <QtRcc Include="resources_qmlcache.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="qml\MyMultiText.qml">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="qml\MyOText.qml">
+      <Filter>Distribution Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="qml\AppTheme.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qml\MyMultiText.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qml\MyOText.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qml\MyText.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qml\main.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="resources.qrc">
+      <Filter>qmlcachengen_loader</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\plop\global.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plot.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\sparsemat.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\gd.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\grid_gen.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\parm_types.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plate_global.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_debug.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_parms.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_parser.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\SparseStat.h">
+      <Filter>Header Files\plop</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

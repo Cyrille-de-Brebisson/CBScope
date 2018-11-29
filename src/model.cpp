@@ -167,6 +167,39 @@ void CBSModelScope::printCouder()
     painter.end();
 }
 
+#define scopeEmailStartString "__SCOPE__START__\n"
+#define scopeEmailEndString "\n__SCOPE__ENDS__"
+void CBSModelScope::email()
+{
+	QJsonObject json_obj;
+	saveProperties(&json_obj);
+	QJsonDocument json_doc(json_obj);
+	QString json_string = json_doc.toJson();
+	QString startText("Sending scope "+_name+"\n"+scopeEmailStartString);
+	QString endText(scopeEmailEndString); endText+= "\n";
+	QDesktopServices::openUrl(QUrl::fromEncoded("mailto:email@somewhere.com?subject=Sending%20scope&body="+QUrl::toPercentEncoding(startText+json_string+endText)));
+}
+
+int CBSModel::loadScope(QString scope) // load a scope from a definition. returns it's model id
+{
+	int pos1= scope.indexOf(scopeEmailStartString);
+	if (pos1==-1) return -1; pos1+= strlen(scopeEmailStartString);
+	int pos2= scope.indexOf(scopeEmailEndString);
+	if (pos2==-1) return -1;
+	QString json_string(scope.mid(pos1, pos2-pos1));
+	QByteArray json_bytes = json_string.toLocal8Bit();
+	auto json_doc = QJsonDocument::fromJson(json_bytes); // Transform into json system
+	if (json_doc.isNull()) { qDebug() << "Failed to create JSON doc."; return -1; }
+	if (!json_doc.isObject()) { qDebug() << "JSON is not an object."; return -1; }
+	QJsonObject o = json_doc.object();
+	if (o.isEmpty()) { qDebug() << "JSON object is empty."; return -1; }
+	CBSModelScope *s= new CBSModelScope(m_scopes); 
+	s->loadProperties(&o); // Load the json object into our system
+	s->loadProperties(nullptr); // re-enable all signals!
+	m_scopes->append(s);
+	return m_scopes->count()-1;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Couder screen widget
 void CBScopeCouder::paint(QPainter *painter)
@@ -614,7 +647,7 @@ struct TZoneData { // structure that does the counting and image modification...
 
 static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCurvature, double gratingFreq, double gratingOffset, double scalingFactor, 
 	uint32_t *imageData, int lineWidth, double allowableParabolicDeviation, bool includeDeviation, bool invertBands, double zoneSqrt);
-
+	
 void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c)
 {
 	if (_scope==nullptr) return;
@@ -672,11 +705,11 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 		if (dy1<0) { sy1-= dy1; dy1= 0; }
 		if (dx2>=imagew) dx2= imagew;
 		if (dy2>=imageh) dy2= imageh;
-		for (int y=dy1; y<=dy2; y++)
+		for (int y=dy1; y<dy2; y++)
 		{
 			uchar *s= tempImage.bits()+y*tempImage.bytesPerLine()+4*dx1;
 			int sx= sx1;
-			for (int x=dx1; x<=dx2; x++)
+			for (int x=dx1; x<dx2; x++)
 			{
 				if ((ronchi[sy1*line+(sx/32)]&(1<<(sx%32)))!=0) { s[0]>>=1; s[1]>>=1; s[2]>>=1; }
 				s+= 4; sx++;
@@ -782,10 +815,12 @@ static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCu
 			}
 			if ((band && !invertBands) || (!band && invertBands))
 			{
-				imageData[(scaledMirrorRadius+y)*lineWidth+(scaledMirrorRadius+x)/32]|= 1<<((scaledMirrorRadius+x)%32);
-				imageData[(scaledMirrorRadius+y)*lineWidth+(scaledMirrorRadius-x)/32]|= 1<<((scaledMirrorRadius-x)%32);
-				imageData[(scaledMirrorRadius-y)*lineWidth+(scaledMirrorRadius+x)/32]|= 1<<((scaledMirrorRadius+x)%32);
-				imageData[(scaledMirrorRadius-y)*lineWidth+(scaledMirrorRadius-x)/32]|= 1<<((scaledMirrorRadius-x)%32);
+#define pixon(y, x) imageData[(y)*lineWidth+(x)/32]|= 1<<((x)%32)
+				pixon((scaledMirrorRadius+y), scaledMirrorRadius+x);
+				pixon((scaledMirrorRadius+y), scaledMirrorRadius-x);
+				pixon((scaledMirrorRadius-y), scaledMirrorRadius+x);
+				pixon((scaledMirrorRadius-y), scaledMirrorRadius-x);
+#undef pixon
 			}
 		}
 	}

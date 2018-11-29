@@ -35,7 +35,7 @@ void CBScopeMes::doMesStop() { please_stop_plop= 1; }
 void CBScopeMes::createMirror(double diametre, double secondary, double thickness, double young, double poisson, double focale, double density, int _cellType)
 { 
 	if (mesThread!=nullptr) return;
-	_radius= diametre/2.0; _secondary= secondary/2.0;
+	_radius= diametre/2.0; _secondary= secondary/2.0; this->_cellType= _cellType;
 	mutex.lock();
 	mesToUse= this;
 	if (!hasPlopInit)
@@ -390,7 +390,7 @@ void CBScopeMes::paint(QPainter *painter)
 			else parts+= "bar: cog_radius "+QString::number(part_cg_radius[i], 'f', 1)+" length1 "+QString::number(l[0], 'f', 1);
 		}
 	}
-	setParts(parts);
+
 	if (_showSupports)
 	{
 		painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
@@ -404,6 +404,9 @@ void CBScopeMes::paint(QPainter *painter)
 			}
 		}
 	}
+
+	if (_cellType!=0) setParts(parts);
+	else setParts("3 points at "+QString::number(support_radii[0], 'f', 1)+"mm radius");
 
 	if (_radius!=0.0)
 	{

@@ -7,7 +7,6 @@
 
 #include "global.h"
 
-#include "plate_global.h"
 #include "plop_debug.h"
 
 #ifndef __BORLANDC__
@@ -15,8 +14,6 @@
 #endif
 
 #define pow10_n_deg_free_m1		100		/* 10 ^ (deg_free - 1) */
-
-#include "plate_global.cpp"
 
 #ifdef gui_plop
 

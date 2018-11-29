@@ -122,4 +122,158 @@ typedef double dvec [n_deg_free];
 #define part_point_ring           0
 #define part_point_part           1
 
+void tri_int (
+    int i_tri,
+    tri_int_corners *corners,
+    double *x,
+    double *y,
+    double *tri_x_cg,
+    double *tri_y_cg,
+    double *xcg_p,
+    double *ycg_p,
+    double *area_p,
+    double *mx_p,
+    double *my_p,
+    double *mxy_p);
+
+extern int total_mem_alloced;
+
+extern int max_points;
+extern int max_triangles;
+
+extern int max_quads;
+
+extern int max_sparse_els;
+
+extern double *plate_point_x;        /* [max_points] */
+extern double *plate_point_y;        /* [max_points] */
+
+extern double *plate_forces;         /* [max_points] */
+extern int *plate_force_points;      /* [max_points] */
+
+extern double *plate_basis_forces [max_basis_tests];
+extern int *plate_basis_force_points [max_basis_tests];
+
+extern tri_int_corners *plate_triangle_points;   /*[max_triangles]  [tri_pts]; */
+
+extern int plate_n_points;
+extern int plate_n_triangles;
+extern int plate_n_constraints;
+extern int plate_n_forces;
+
+extern int z88_plot_n_points;
+extern int z88_plot_n_triangles;
+extern int z88_plot_n_constraints;
+extern int z88_plot_n_forces;
+
+extern int *plate_basis_n_forces;
+
+extern int plate_matrix_size;
+
+extern double plate_modulus;
+extern double plate_poisson;
+
+extern double *plate_thickness;		    /* [max_triangle] */
+extern double *plate_tri_pressure;	    /* [max_triangles */
+extern double *plate_area;				/* [max_triangles] */
+extern double *plate_mx;				    /* [max_triangles] */
+extern double *plate_my;				    /* [max_triangles] */
+extern double *plate_mxy;				/* [max_triangles] */
+extern tri_dbl_corners *plate_tri_x_cg;  /* [max_triangles] [tri_pts];	*/ 	/* distance from x to x_cg */
+extern tri_dbl_corners *plate_tri_y_cg;  /* [max_triangles] [tri_pts];  */
+extern double *plate_xcg;				/* [max_triangles] */		/* distance from x to x_cg */
+extern double *plate_ycg;				/* [max_triangles] */
+
+extern double *plate_rhs;			    /* [max_eqn] */
+extern double *plate_result;			    /* [max_eqn] */
+
+extern double *plate_basis_rhs  [max_basis_tests];
+
+extern double *plate_z_displacement;	/* [max_points] */
+
+extern double plate_shear;
+
+extern int plate_constraint_point [max_constraint];
+extern int plate_constraint_code [max_constraint];
+
+extern double plate_refocus_a0;
+extern double plate_refocus_a2;
+
+extern double plate_parab_a2;
+extern double plate_focal_length;
+extern double plate_refocus_focal_length;
+
+extern double plate_err_rms;
+extern double plate_err_vis_rms;
+extern double plate_err_p_v;
+extern double plate_err_vis_p_v;
+
+extern double z88_plot_err_rms;
+extern double z88_plot_err_vis_rms;
+extern double z88_plot_err_p_v;
+extern double z88_plot_err_vis_p_v;
+
+extern int plate_n_basis_tests;
+
+extern int warp_sphere_flag;
+extern int refocus_flag;
+extern int refocus_xyr_flag;
+extern int calculate_zernike_flag;
+extern int zernike_order;
+extern int generate_z88_input_flag;
+
+extern double zernike_coeff [max_refocus_distortion_order];
+
+extern double fact_table [max_refocus_distortion_order];
+
+extern int pic_size;
+extern int n_colors;
+extern int n_contours;
+
+extern double pic_z_range;
+extern double contour_space;
+
+
+extern double radius;
+
+extern double obstruction_radius;
+extern double obstruction_diam;
+extern double rel_obstruction_radius;
+
+// copy of data for plotting in gui version
+// the solver will update the plate_ version and gui accesses the plate_plot_
+// version. need to get the lock on plop data to update plate_plot_ version.
+
+extern double *tmp_function_vals [max_refocus_distortion_order];
+
+extern int plate_plot_n_points;
+extern int plate_plot_n_triangles;
+
+extern double *plate_plot_point_x;        /* [max_points] */
+extern double *plate_plot_point_y;        /* [max_points] */
+
+extern double *plate_plot_z_displacement;	/* [max_points] */
+
+extern double plate_plot_z_min;
+extern double plate_plot_z_max;
+
+extern tri_int_corners *plate_plot_triangle_points;   /*[max_triangles]  [tri_pts]; */
+
+extern double tri_fract_inv;
+extern double tri_fract_sq_inv;
+
+// copy of z88 data for plotting in gui version
+
+extern int z88_input_files_valid;
+
+extern double *z88_plot_point_x;        /* [max_points] */
+extern double *z88_plot_point_y;        /* [max_points] */
+
+extern double *z88_plot_z_displacement;	/* [max_points] */
+
+extern double z88_plot_z_min;
+extern double z88_plot_z_max;
+
+extern tri_int_corners *z88_plot_triangle_points;   /*[max_triangles]  [tri_pts]; */
+
 #endif

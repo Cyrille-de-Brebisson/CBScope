@@ -187,17 +187,34 @@
     </QtMoc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\plop\gd.cpp" />
+    <ClCompile Include="src\plop\grid_gen.cpp" />
+    <ClCompile Include="src\plop\plate.cpp" />
+    <ClCompile Include="src\plop\plate_global.cpp" />
+    <ClCompile Include="src\plop\plop_debug.cpp" />
+    <ClCompile Include="src\plop\plop_parser.cpp" />
+    <ClCompile Include="src\plop\plop_run.cpp" />
+    <ClCompile Include="src\plop\plot.cpp" />
+    <ClCompile Include="src\plop\sparsemat.cpp" />
     <ClCompile Include="src\QQmlObjectListModel.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\mes.cpp" />
     <ClCompile Include="src\mes2.cpp" />
     <ClCompile Include="src\model.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\plop\gd.h" />
+    <ClInclude Include="src\plop\global.h" />
+    <ClInclude Include="src\plop\grid_gen.h" />
+    <ClInclude Include="src\plop\parm_types.h" />
+    <ClInclude Include="src\plop\plate_global.h" />
+    <ClInclude Include="src\plop\plop_debug.h" />
+    <ClInclude Include="src\plop\plop_parms.h" />
+    <ClInclude Include="src\plop\plop_parser.h" />
+    <ClInclude Include="src\plop\plot.h" />
+    <ClInclude Include="src\plop\sparsemat.h" />
+    <ClInclude Include="src\plop\SparseStat.h" />
     <QtMoc Include="src\QQmlObjectListModel.h">
     </QtMoc>
-    <ClInclude Include="src\mes.h" />
-    <ClInclude Include="src\mes2.h" />
     <QtMoc Include="src\model.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\.;.\GeneratedFiles;.;.\src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\QtCore;.\Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtMultimedia</IncludePath>
       <Define Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_WINDOWS;UNICODE;_UNICODE;WIN32;WIN64;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_SVG_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_QML_LIB;QT_NETWORK_LIB;QT_CORE_LIB;QT_MULTIMEDIA_LIB</Define>

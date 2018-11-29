@@ -19,8 +19,8 @@ import CBScopeCouderOverlay 1.0
 
 ApplicationWindow {
     visible: true
-    width: AppTheme.mainPageWidth
-    height: AppTheme.mainPageHeight
+    width: 800
+    height: 600
     id: window
     property alias editTextHeight: scopeView.editTextHeight
     property int fontSize: CBSModel.windowsFont
@@ -71,17 +71,6 @@ ApplicationWindow {
             text: qsTr("New Scope")
             onClicked: scopes.currentIndex= CBSModel.addScope(scopes.currentIndex);
         }
-        Button {
-            text: qsTr("Help");
-            onClicked: CBSModel.help()
-        }
-        ComboBox {
-            textRole: "text";
-            model: ListModel { ListElement { text: "font 10"; } ListElement { text: "font 11"; } ListElement { text: "font 12"; } ListElement { text: "font 13"; } ListElement { text: "font 14"; } ListElement { text: "font 15"; } ListElement { text: "font 16"; } }
-            currentIndex: window.fontSize-10
-            onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
-        }
-        CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
     }
 
     //*******************************************************
@@ -99,7 +88,7 @@ ApplicationWindow {
         Column {
             id: mainPageCol
             spacing: 10
-            width: window.width
+            width: parent.width; height: parent.height;
             property alias editTextHeight: scopeDiametreEdit.height
             Row { spacing: 10;
                 width: parent.width
@@ -155,6 +144,40 @@ ApplicationWindow {
                             onCurrentIndexChanged: { scopeView.model.density= CBSModel.materials(currentIndex, 2); scopeView.model.poisson= CBSModel.materials(currentIndex, 1); scopeView.model.young= CBSModel.materials(currentIndex, 0); }
                 }
             }
+			Rectangle { height: parent.height-y-scopeTextArea.height-scopeBottomRow.height-2*parent.spacing; width: parent.width; }
+			TextArea { id: scopeTextArea; width: parent.width;
+				text: qsTr("CBScope is an application designed by Cyrille.de.brebisson@gmail.com to help amateur telescope makers build telescopes.\n"+
+				           "Parts of the application code comes from other similar apps and I wich to thank: Etienne de Foras (Foucault), David Lewis (Plop) and Mel Bartels (Secondary illumination and Ronchi).\n"+
+						   "Click on the Help button bellow for help on how to use this app");
+				wrapMode: Text.Wrap; readOnly: true;
+			}
+			Row { id: scopeBottomRow; width: parent.width; spacing: 10
+				Button {
+					text: qsTr("Help");
+					onClicked: CBSModel.help()
+				}
+				Button { text: qsTr("Email scope"); onClicked: scopeView.model.email(); }
+				Button { text: qsTr("Receive scope"); onClicked: receiveScopePopup.open(); }
+				ComboBox {
+					textRole: "text";
+					model: ListModel { ListElement { text: "font 10"; } ListElement { text: "font 11"; } ListElement { text: "font 12"; } ListElement { text: "font 13"; } ListElement { text: "font 14"; } ListElement { text: "font 15"; } ListElement { text: "font 16"; } }
+					currentIndex: window.fontSize-10
+					onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
+				}
+				CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
+			}
+
+			Popup { id: receiveScopePopup; x: 50; y: 50; width: parent.width-2*x; height: parent.height-2*y; modal: true; focus: true; clip: true;
+					closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+					ScrollView { // Scrollable text area...
+						width: parent.width; height: receiveScopePopupBottom.y-10
+						TextArea { id: popupText; text: qsTr("Paste scope definition here, then press Load!"); }
+					}
+					Row { spacing: 10; id: receiveScopePopupBottom; x: parent.width-width; y: parent.height-height-10
+						Button { text: qsTr("Load!"); onPressed: { scopes.currentIndex= CBSModel.loadScope(popupText.text); receiveScopePopup.close(); } }
+						Button { text: qsTr("cancel"); onPressed: receiveScopePopup.close(); }
+					}
+			}
         }
 
         //********************************
@@ -421,54 +444,6 @@ ApplicationWindow {
         }
 
         //********************************
-        // Support page
-        //********************************
-        Rectangle {
-            width: window.width; height: parent.height;
-            CBScopeMes {
-                id: scopeSupport
-                width: parent.width; height: parent.height;
-                scope: scopeView.model
-            }
-			Column { spacing: 5; y:1; x:1;
-            Row { spacing: 10; 
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Forces"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Mesh"); checked: scopeSupport.showMesh; onCheckedChanged: scopeSupport.showMesh= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Parts"); checked: scopeSupport.showParts; onCheckedChanged: scopeSupport.showParts= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Supports"); checked: scopeSupport.showSupports; onCheckedChanged: scopeSupport.showSupports= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show secondary"); checked: scopeSupport.showSecondary; onCheckedChanged: scopeSupport.showSecondary= checked }
-				}
-			Row { spacing: 10; 
-                ComboBox { y: (parent.height-height)/2; 
-                           model: ListModel { ListElement { name: "3 points" } 
-                                              ListElement { name: "6 points" } 
-                                              ListElement { name: "9 points" } 
-                                              ListElement { name: "18 points" }
-                                              ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
-                            textRole: "name";
-                            currentIndex: scopeView.model.cellType 
-                            onCurrentIndexChanged: scopeView.model.cellType= currentIndex;
-                 }
-                ComboBox { y: (parent.height-height)/2; 
-                           model: ListModel { ListElement { name: "100%" } 
-                                              ListElement { name: "75%" } 
-                                              ListElement { name: "50%" } 
-                                              ListElement { name: "25%" } 
-                                              ListElement { name: "10%" } 
-                                              ListElement { name: "5%" } }
-                            textRole: "name";
-                            currentIndex: scopeSupport.zoom
-                            onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
-                 }
-                Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
-				         onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
-            }
-			MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
-			MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
-			}
-			MyOText { y: parent.height-height; caption: "parts"; text: scopeSupport.parts }
-        }
-        //********************************
         // webcam page
         //********************************
         DropArea { 
@@ -581,11 +556,61 @@ ApplicationWindow {
 					Button { x:parent.width-120+30; y:60; width:30; height: 30; text: "V"; onPressed: parent.viewer().button(1); }
 					Button { x:parent.width-120+ 0; y:30; width:30; height: 30; text: "<"; onPressed: parent.viewer().button(2); }
 					Button { x:parent.width-120+60; y:30; width:30; height: 30; text: ">"; onPressed: parent.viewer().button(3); }
-					Button { x:parent.width-120+90; y:15; width:30; height: 30; text: "+"; onPressed: parent.viewer().button(4); }
-					Button { x:parent.width-120+90; y:45; width:30; height: 30; text: "-"; onPressed: parent.viewer().button(5); }
+					Button { x:parent.width-120+90; y:15; width:30; height: 30; text: "+"; onPressed: parent.viewer().button(5); }
+					Button { x:parent.width-120+90; y:45; width:30; height: 30; text: "-"; onPressed: parent.viewer().button(4); }
 				}
 			}
         }
+
+        //********************************
+        // Support page
+        //********************************
+        Rectangle {
+            width: window.width; height: parent.height;
+            CBScopeMes {
+                id: scopeSupport
+                width: parent.width; height: parent.height;
+                scope: scopeView.model
+            }
+			Column { spacing: 5; y:1; x:1;
+            Row { spacing: 10; 
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Disp"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Mesh"); checked: scopeSupport.showMesh; onCheckedChanged: scopeSupport.showMesh= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Parts"); checked: scopeSupport.showParts; onCheckedChanged: scopeSupport.showParts= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Supports"); checked: scopeSupport.showSupports; onCheckedChanged: scopeSupport.showSupports= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Show secondary"); checked: scopeSupport.showSecondary; onCheckedChanged: scopeSupport.showSecondary= checked }
+				}
+			Row { spacing: 10; 
+                ComboBox { y: (parent.height-height)/2; 
+                           model: ListModel { ListElement { name: "3 points" } 
+                                              ListElement { name: "6 points" } 
+                                              ListElement { name: "9 points" } 
+                                              ListElement { name: "18 points" }
+                                              ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
+                            textRole: "name";
+                            currentIndex: scopeView.model.cellType 
+                            onCurrentIndexChanged: scopeView.model.cellType= currentIndex;
+                 }
+                ComboBox { y: (parent.height-height)/2; 
+                           model: ListModel { ListElement { name: "100%" } 
+                                              ListElement { name: "75%" } 
+                                              ListElement { name: "50%" } 
+                                              ListElement { name: "25%" } 
+                                              ListElement { name: "10%" } 
+                                              ListElement { name: "5%" } }
+                            textRole: "name";
+                            currentIndex: scopeSupport.zoom
+                            onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
+                 }
+                Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
+				         onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
+            }
+			MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
+			MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
+			}
+			MyOText { y: parent.height-height; caption: "parts"; text: scopeSupport.parts }
+        }
+
         //********************************
         // COG page
         //********************************
@@ -650,14 +675,22 @@ ApplicationWindow {
               }
             }
         }
+
         //********************************
         // comments page
         //********************************
-        Column {
-            width: window.width; height: parent.height;
-            Text   { id: commentLabelCommentsPage; text: qsTr("Comments"); }
-            MyMultiText { y: commentLabelCommentsPage.height; width: parent.width; text: scopeView.model.notes; onTextChanged: scopeView.model.notes= text; }
-        }
+		Rectangle {
+	        width: parent.width; height: parent.height;
+			border.width: 3; border.color: textInput.focus ? "#569ffd" : "lightgrey"; radius: 4;
+			ScrollView { // Scrollable text area...
+				x: parent.border.width; y: parent.border.width; width: parent.width-parent.border.width*2; height: parent.height-parent.border.width*2;
+				TextArea { 
+					wrapMode: Text.Wrap; clip: true
+					text: scopeView.model.notes;
+					onTextChanged: scopeView.model.notes= text;
+				}
+			}
+		}
     }
 
     //********************************
@@ -674,8 +707,8 @@ ApplicationWindow {
                 TabButton { text: qsTr("Hogging") }
                 TabButton { text: qsTr("Parabolizing") }
                 TabButton { text: qsTr("Couder") }
-                TabButton { text: qsTr("Support") }
                 TabButton { text: qsTr("Webcam") }
+                TabButton { text: qsTr("Support") }
                 TabButton { text: qsTr("COG") }
                 TabButton { text: qsTr("Notes") }
             }

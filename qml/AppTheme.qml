@@ -8,10 +8,10 @@ QtObject
     id: root
 
     readonly property real refScreenWidth: 500
-    readonly property real refScreenHeight: 600
+    readonly property real refScreenHeight: refScreenWidth*9/16
 
-    readonly property real screenWidth: 800
-    readonly property real screenHeight: 800
+    readonly property real screenWidth: 400
+    readonly property real screenHeight: 300
 
     function hscale(size) {
         return Math.round(size * (screenWidth / refScreenWidth))
@@ -28,8 +28,6 @@ QtObject
     readonly property real screenLeftMargin: hscale(16)
     readonly property real screenRightMargin: screenLeftMargin
     readonly property real statusBarHeight: vscale(79)
-    readonly property int mainPageHeight: vscale(screenHeight)
-    readonly property int mainPageWidth: hscale(screenWidth)
     readonly property real appToolBarHeight: vscale(120)
     readonly property real dividerSize: 1
 
