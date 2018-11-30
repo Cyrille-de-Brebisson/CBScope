@@ -213,7 +213,7 @@ ApplicationWindow {
                                 Text   { id: rowEp1; y: (parent.height-height)/2; text: qsTr("name"); }
                                 MyText { id: rowEp2; y: (parent.height-height)/2; text: name; onTextChanged: name= text; }
                                 Rectangle { height: parent.height; width: parent.width-rowEp1.width-rowEp2.width-rowEp5.width-3*parent.spacing; }
-                                Button { id: rowEp5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.eps.remove(index); }
+                                Button { id: rowEp5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.epsRemove(index); }
                             }
                             Row { spacing: 10; id: i13;
                                 Text { y: (parent.height-height)/2; text: qsTr("focal") }
@@ -243,19 +243,18 @@ ApplicationWindow {
                 MyText { y: (parent.height-height)/2; text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
             }
-            CBScopeIlumination {
-                id: scopeIlumination
+            CBScopeIlumination { id: scopeIlumination
                 width: parent.width; height: parent.height-y;
                 scope: scopeView.model
                 onTwoInchesChanged: update();
-            }
-            Connections {
-                target: scopeView.model
-                onDiametreChanged: { scopeIlumination.update(); }
-                onFocalChanged: { scopeIlumination.update(); }
-                onSecondaryToFocalChanged: { scopeIlumination.update(); }
-                onSecondariesToConciderChanged: { scopeIlumination.update(); }
-                onEpsChanged: { scopeIlumination.update(); }
+				Connections {
+					target: scopeView.model
+					onDiametreChanged:				scopeIlumination.update();
+					onFocalChanged:					scopeIlumination.update();
+					onSecondaryToFocalChanged:		scopeIlumination.update();
+					onSecondariesToConciderChanged: scopeIlumination.update();
+					onEpsChanged:					scopeIlumination.update();
+				}
             }
         }
 
@@ -296,7 +295,7 @@ ApplicationWindow {
                                     Text   { id: rowHog1; y: (parent.height-height)/2; text: qsTr("comments"); }
                                     MyMultiText { id: rowHog2; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
                                     Rectangle { height: parent.height; width: parent.width-rowHog1.width-rowHog2.width-rowHog5.width-3*parent.spacing; }
-                                    Button { id: rowHog5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.deleteEp(index); }
+                                    Button { id: rowHog5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.hoggingsRemove(index); }
                                 }
                                 Row { spacing: 10; id: row2Hog;
                                     Text { y: (parent.height-height)/2; text: qsTr("start ROC") }
@@ -397,8 +396,9 @@ ApplicationWindow {
                                 Text   { id: rowMes1; y: (parent.height-height)/2; text: qsTr("time"); }
                                 MyText { id: rowMes2; y: (parent.height-height)/2; text: time; onTextChanged: time= text; }
                                 Text   { id: rowMes3; y: (parent.height-height)/2; text: qsTr("Comments"); }
-                                MyText { id: rowMes4; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
-                                Rectangle { height: parent.height; width: parent.width-rowMes1.width-rowMes2.width-rowMes3.width-rowMes4.width-rowMes5.width-5*parent.spacing; }
+                                MyMultiText { id: rowMes4; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
+				                CheckBox { id: rowMes6; y: (parent.height-height)/2; x: parent.width; text: qsTr("fixTo"); checked: scopeView.model.fixedFocal===index; onClicked: scopeView.model.fixedFocal= (checked ? index : -1); }
+                                Rectangle { height: parent.height; width: parent.width-rowMes1.width-rowMes2.width-rowMes3.width-rowMes4.width-rowMes5.width-rowMes6.width-6*parent.spacing; }
                                 Button { id: rowMes5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.parabolizings.remove(index); }
                             }
                             CBScopeMesure {
@@ -649,7 +649,7 @@ ApplicationWindow {
                         MyText { y: (parent.height-height)/2; text: comment; onTextChanged: comment= text; }
                         Text   { y: (parent.height-height)/2; text: qsTr("weight"); }
                         MyText { y: (parent.height-height)/2; text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
-                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.bottomWeights.remove(index); }
+                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
                       }
                   }
                 }
@@ -668,7 +668,7 @@ ApplicationWindow {
                         MyText { y: (parent.height-height)/2; text: comment; onTextChanged: comment= text; }
                         Text   { y: (parent.height-height)/2; text: qsTr("weight"); }
                         MyText { y: (parent.height-height)/2; text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
-                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.topWeights.remove(index); }
+                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.topWeightsRemove(index); }
                       }
                   }
                 }

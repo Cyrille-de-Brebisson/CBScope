@@ -13,6 +13,22 @@ double getScopeFocal(CBSModelScope *scope) { return scope->getFocal(); }
 double getScopeToHog(CBSModelScope *scope) { return scope->getToHog(); }
 double getScopeSpherometerLegDistances(CBSModelScope *scope) { return scope->getSpherometerLegDistances(); }
 
+void CBSModelEP::setScope(CBSModelScope *v)
+{
+	if (v==_scope) return; _scope= v; 
+	connect(this, SIGNAL(nameChanged()),  v, SLOT(emitEpsChanged()));     // scope needs to know to redraw illumination
+	connect(this, SIGNAL(fieldChanged()), v, SLOT(emitEpsChanged()));    // scope needs to know to redraw illumination
+	connect(v, SIGNAL(focalChanged()),    this, SLOT(ScopeFocalChanged()));
+	connect(v, SIGNAL(diametreChanged()), this, SLOT(ScopeFocalChanged()));
+	emit scopeChanged();
+}
+void CBSModelHoggingWork::setScope(CBSModelScope *v)
+{
+	if (v==_scope) return; _scope= v; 
+	connect(this, SIGNAL(gritChanged()), v, SLOT(emitHogTimeWithGritChanged()));
+	connect(this, SIGNAL(endSphereChanged()), v, SLOT(emitHogTimeWithGritChanged()));
+	connect(this, SIGNAL(hogSpeedChanged()), v, SLOT(emitHogTimeWithGritChanged())); 
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Couder painting functions...
@@ -391,12 +407,13 @@ void CBScopeMesure::paint(QPainter *painter)
                                       " LambdaRms="+QString::number(_mesure->_WeightedLambdaRms, 'f', 2)+
                                       " Lf/Ro="+QString::number(_mesure->_LfRoMax, 'f', 2)+
                                       " Strehl="+QString::number(_mesure->_WeightedStrehl, 'f', 2)+
-                                      " focale="+QString::number(_mesure->_focale*10.0, 'f', 2)+
+                                      " dFocale="+QString::number(_mesure->_focale*10.0, 'f', 2)+
                                       " glass to remove="+QString::number(_mesure->_glassToRemove, 'f', 2)+"mm^3");
 
     QString s(" diametre:"+QString::number(_mesure->_scopeDiametre, 'f', 2)+" focale:"+QString::number(_mesure->_scopeFocale, 'f', 2)+(_mesure->_scopeSlitIsMoving?" mobile slit":" fixed slit")+" zones: ");
-    for (int i=0; i<iNbZone; i++) s+= QString::number(_mesure->_Hz[i], 'f', 2)+", "; s+= QString::number(_mesure->_Hz[iNbZone], 'f', 2);
-    painter->drawText(0, h-4, s);
+    for (int i=0; i<iNbZone; i++) s+= QString::number(_mesure->_Hz[i], 'f', 2)+" ("+QString::number(_mesure->_idealReadings[i], 'f', 2)+") "; s+= QString::number(_mesure->_Hz[iNbZone], 'f', 2);
+	painter->drawText(0, h-4, s);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -431,6 +448,7 @@ void CBSModelParabolizingWork::doCalculations()
     if (_Hz    !=nullptr) delete[] _Hz    ; _Hz    = new double[10+  iNbZone+1];
     if (_Hm4F  !=nullptr) delete[] _Hm4F  ; _Hm4F  = new double[10+  iNbZone];
     if (_RelativeSurface  !=nullptr) delete[] _RelativeSurface  ; _RelativeSurface  = new double[iNbZone];
+	if (_idealReadings!=nullptr) delete[] _idealReadings; _idealReadings= new double[iNbZone];
     _Std=0.;
 
     double dRay=2.*_scopeFocale;
@@ -438,7 +456,13 @@ void CBSModelParabolizingWork::doCalculations()
     double greenWaveNm=greenWave*1.e-9;
     double _dRoDif=1.22*greenWaveNm*dRay/_scopeDiametre/2.; //unit? TODO
 
-    // get Hz
+	// Hz: zone edges
+	// Hm: zone_middle
+	// Hm4f: Hm/focale
+	// Hm2R: Hm*Hm/focal.. Mesure that we are suposed to get here!
+	// mesc: (mesure-Hm2R)*2(if moving)
+
+    // get Hz 
     for(int i=0;i<iNbZone+1;i++) _Hz[i]= get_zones()->at(int(i))->_val;
 
     //compute Hm2R, Hm4F
@@ -452,11 +476,13 @@ void CBSModelParabolizingWork::doCalculations()
              _Hm2R=-_scopeConical*sqr(_Hm)/2./dRay;
         else
             _Hm2R=-_scopeConical*(sqr(_Hm)/dRay + sqr(sqr(_Hm)) /2. /dRay/sqr(dRay));
+		if (i==0) _idealReadings[0]= _Hm2R; else _idealReadings[i]= _Hm2R-_idealReadings[0];
         _mesc[i]=(m_mesures->at(int(i))->asDouble()-_Hm2R)*(_scopeSlitIsMoving?2.0:1.0);
         if (a>_mesc[i]) a= _mesc[i]; if (b<_mesc[i]) b= _mesc[i];
     }
+	_idealReadings[0]= 0.0;
 
-    //calcule les surfaces relatives
+    //calcule les surfaces relatives: _RelativeSurface=% of total surface taken by a zone.
     double dSum=0.;
     for(int i=0;i<iNbZone;i++)
     {
@@ -486,10 +512,11 @@ void CBSModelParabolizingWork::doCalculations()
     double dReso=1./(_Hz[iNbZone]*_Hz[iNbZone]);
 
     // compute conique qui minimise le rms
-    _focale= find_minimum(a,b,dReso,calc_less_rms);
+	find_minimum(a,b,dReso,calc_less_rms);
 
     // compute conique qui minimise le ptv
-    find_minimum(a,b,dReso,calc_less_ptv);
+	_focale= find_minimum(a,b,dReso,calc_less_ptv);
+	if (!std::isnan(_adjustFocal)) calc_less_ptv(this, _adjustFocal); // override of the above, but we still want _focale...
 
     double dMax=_surf[0]; for (int i=1; i<iNbZone; i++) if (_surf[1]>dMax) dMax= _surf[1];
     if (dMax!=0.) _Lambda=greenWave/2./dMax;

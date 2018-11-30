@@ -1,7 +1,7 @@
+//   Row wrap on small UI
 //   tab navigation
 //   indicate ROC offset and allow to fix other parabolization on that offset!
 //   find stroke that helped last time...
-//   add ideal readings in parabolizing/zones...
 //   Put camera on loader if mobile complains...
 //   current items on list views...
 //   save pictures in scopes?
@@ -187,16 +187,16 @@ class CBSModelHoggingWork : public CBSSaveLoadObject {
     Q_OBJECT
 public:
     CBSProp(QString, comments, Comments)
-    CBSPropE(double, time, Time, emit hogSpeedChanged())                   // time to do this work.
+    CBSPropE(double, time, Time, emit hogSpeedChanged())                   // time spent to do this work.
     CBSPropE(double, startSphere, StartSphere, emit hogSpeedChanged(); emit percentDoneChanged();)     // sphere radius at begining of the work
     CBSPropE(double, endSphere, EndSphere, emit hogSpeedChanged(); emit endSagitaChanged(); emit percentDoneChanged(); emit endSphereSpherometerChanged(); ) // sphere radius at end of the work
     CBSProp(double, grit, Grit)                                            // grit that was used
     Q_PROPERTY(double hogSpeed READ getHogSpeed NOTIFY hogSpeedChanged)    // calculated property. Speed of hoggin in mm^3/mn
     Q_PROPERTY(double endSagita READ getEndSagita NOTIFY endSagitaChanged) // based on endSphere
     Q_PROPERTY(double percentDone READ getPercentDone NOTIFY percentDoneChanged) // based on endSphere. But will not get notified if scope data changes. Probably not a big issue at this point in time? Else, add notify in the connect bellow
-    CBSPropE(CBSModelScope*, scope, Scope, QObject *v2= (QObject*)(v);
-                                           connect(this, SIGNAL(gritChanged()), v2, SLOT(emitHogTimeWithGritChanged()));
-                                           connect(this, SIGNAL(hogSpeedChanged()), v2, SLOT(emitHogTimeWithGritChanged())); )
+	Q_PROPERTY(CBSModelScope * scope READ getScope WRITE setScope NOTIFY scopeChanged)
+	CBSModelScope *_scope; CBSModelScope *getScope() { return _scope; }
+	void setScope(CBSModelScope *v);
 Q_SIGNALS:
     void commentsChanged();
     void timeChanged();
@@ -212,7 +212,7 @@ public:
     CBSModelHoggingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _startSphere(0.0), _endSphere(0.0), _grit(0.0), _scope(nullptr) { }
     QList<QString> Ignored() const { QList<QString> l; l.append("scope"); return l; }
     double getEndSagita() { if (_scope==nullptr) return 0.0; return sagita(_endSphere, getScopeDiameter(_scope)); }
-    double getHogSpeed()
+    double getHogSpeed() // work done / time spent doig it!
     {
         if (doubleEq(_time, 0.0) || _scope==nullptr) return 0;
         double v1= 0.0, v2= 0.0;
@@ -220,7 +220,7 @@ public:
         if (!doubleEq(_endSphere, 0.0)) v2= volumeSphereCap(_endSphere, sagita(_endSphere, getScopeDiameter(_scope)));
         return (v2-v1)/_time; // end-start divided by time!
     }
-    double getPercentDone()
+    double getPercentDone() // work done here/total work to be done on the mirror
     {
         if (_scope==nullptr) return 0.0;
         double v1= 0.0, v2= 0.0;
@@ -241,7 +241,7 @@ public:
 };
 
 //**********************************************************
-// a class that embedds a double and can be used in a model
+// a class that embedds a double as a "property". For used in list models
 class CBSDouble : public CBSSaveLoadObject {
     Q_OBJECT
 public:
@@ -254,11 +254,12 @@ public:
 
 //***************************************************
 // a class the embedds a QString property and allows to get the string value as a double.
+// I have also added a comment property to it
 // If the string has more than 1 numbers in it, returns the average of the numbers...
 class CBSQString : public CBSSaveLoadObject {
   Q_OBJECT
 public:
-    Q_PROPERTY(QString val READ getVal WRITE setVal NOTIFY valChanged)
+    Q_PROPERTY(QString val READ getVal WRITE setVal NOTIFY valChanged) // string representation of the number
     CBSProp(QString, comment, Comment)
     Q_PROPERTY(bool error READ getError NOTIFY errorChanged) // true if the string is not valid!
 Q_SIGNALS:
@@ -302,11 +303,14 @@ class CBSModelParabolizingWork : public CBSSaveLoadObject {
     Q_OBJECT
 public:
     CBSProp(double, time, Time)
-    CBSProp(QString, comments, Comments)
-    QML_OBJMODEL_PROPERTY(CBSQString, mesures) // The mesured positions for the zones.
-    QML_OBJMODEL_PROPERTY(CBSDouble, zones)
+	CBSProp(QString, comments, Comments)
+	Q_PROPERTY(double adjustFocal READ getAdjustFocal WRITE setAdjustFocal NOTIFY adjustFocalChanged) // if non nan, then this will be the focal adjustment used in drawing and calcs...
+	double _adjustFocal; double getAdjustFocal() { return _adjustFocal; }
+	QML_OBJMODEL_PROPERTY(CBSQString, mesures) // The mesured positions for the zones.
+// keeping the stuff bellow as property is important for object save/load!
+    QML_OBJMODEL_PROPERTY(CBSDouble, zones)    // The zones
 public:
-    CBSPropE(double, scopeFocale, ScopeFocale, doCalculations())
+    CBSPropE(double, scopeFocale, ScopeFocale, doCalculations()) // The scope data when the mesure was created as they can not be changed from there on.
     CBSPropE(double, scopeDiametre, ScopeDiametre, doCalculations())
     CBSPropE(double, scopeConical, ScopeConical, doCalculations())
     CBSPropE(double, scopeSlitIsMoving, ScopeSlitIsMoving, doCalculations())
@@ -319,11 +323,12 @@ Q_SIGNALS:
     void scopeDiametreChanged();
     void scopeConicalChanged();
     void scopeSlitIsMovingChanged();
+	void adjustFocalChanged();
 public:
-    CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0),
+    CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _adjustFocal(std::nan("")),
       _scopeFocale(0.0), _scopeDiametre(0.0), _scopeConical(-1.0), _scopeSlitIsMoving(true),
       _lf1000(nullptr), _mesc(nullptr), _Hm4F(nullptr), _RelativeSurface(nullptr),
-      _surf(nullptr), _profil(nullptr), _Hz(nullptr),
+      _surf(nullptr), _profil(nullptr), _Hz(nullptr), _idealReadings(nullptr),
       _Std(0.0), _Lambda(0.0), _GlassMax(0.0), _WeightedLambdaRms(0.0), _WeightedStrehl(0.0), _LfRoMax(0.0), _glassToRemove(0.0), _focale(0.0)
     { 
       m_mesures= new QQmlObjectListModel<CBSQString>(this); 
@@ -340,7 +345,16 @@ public:
         if (_Hz    !=nullptr) delete[] _Hz    ;
         if (_Hm4F  !=nullptr) delete[] _Hm4F  ;
         if (_RelativeSurface!=nullptr) delete[] _RelativeSurface;
+		if (_idealReadings!=nullptr) delete[] _idealReadings;
     }
+	void setAdjustFocal(double v)
+	{
+		if (std::isnan(v)&&std::isnan(_adjustFocal)) return;
+		if (!(std::isnan(v) || std::isnan(_adjustFocal)) || doubleEq(v, _adjustFocal)) return;
+		_adjustFocal= v;
+		emit adjustFocalChanged();
+		doCalculations();
+	}
     bool subLoad(QJsonObject *o)
     {
         if (o==nullptr) 
@@ -357,11 +371,10 @@ public:
         return ret1&&ret2;
     }
     bool subSave(QJsonObject *o) const { saveList(m_mesures, "mesures", o); saveList(m_zones, "zones", o); return true; }
-    QList<QString> Ignored() const { QList<QString> l; l.append("scope"); return l; }
 public slots:
     void doCalculations();
 private:
-    void checkNbMesures()
+    void checkNbMesures() // make sure that they are n-1 mesures where n is the number of zones edges...
     {
         while (m_mesures->count()!=0 && m_mesures->count()>m_zones->count()-1) m_mesures->remove(m_mesures->count()-1);
         while (m_mesures->count()<m_zones->count()-1)
@@ -370,6 +383,7 @@ private:
           connect(d, SIGNAL(valChanged()), this, SLOT(doCalculations()));
         }
     }
+	// Everything from there on is for calculation of min/maxes...
     double find_minimum(double a,double c,double res,double (*fcn)(CBSModelParabolizingWork *self,double h));
     static double calc_lf1000(CBSModelParabolizingWork *self, double h);
     static double calc_less_rms(CBSModelParabolizingWork* self,double curv);
@@ -378,11 +392,12 @@ private:
     double *_mesc  ;
     double *_Hm4F  ;
     double *_RelativeSurface;
-public:
+public: // These are the outputs!
     double *_surf  ;
     double *_profil;
-    double *_Hz  ;
-    double _Std;
+	double *_Hz  ;
+	double *_idealReadings;
+	double _Std;
     double _Lambda;
     double _GlassMax;
     double _WeightedLambdaRms;
@@ -399,16 +414,14 @@ class CBSModelEP : public CBSSaveLoadObject {
 public:
     CBSProp(QString, name, Name)
     CBSPropE(double, focal, Focal, emit fieldChanged(); emit zoomChanged(); emit pupilleChanged(); emit viewAngleChanged())
-    CBSPropE(double, angle, Angle, emit fieldChanged(); emit getViewAngle())
+    CBSPropE(double, angle, Angle, emit fieldChanged(); emit viewAngleChanged())
     Q_PROPERTY(double field READ getField NOTIFY fieldChanged)             
     Q_PROPERTY(double zoom READ getZoom NOTIFY zoomChanged)                // These do depend on the scope parameters
     Q_PROPERTY(double pupil READ getPupille NOTIFY pupilleChanged)         // These do depend on the scope parameters
     Q_PROPERTY(double viewAngle READ getViewAngle NOTIFY viewAngleChanged) // These do depend on the scope parameters
-    CBSPropE(CBSModelScope*, scope, Scope, QObject *v2= (QObject*)v;
-                                           connect(this, SIGNAL(nameChanged()), v2, SLOT(emitEpsChanged()));     // scope needs to know to redraw illumination
-                                           connect(this, SIGNAL(fieldChanged()), v2, SLOT(emitEpsChanged()));    // scope needs to know to redraw illumination
-                                           connect(v2, SIGNAL(focalChanged()), this, SLOT(ScopeFocalChanged()));
-                                           connect(v2, SIGNAL(diametreChanged()), this, SLOT(ScopeFocalChanged())); )
+	Q_PROPERTY(CBSModelScope * scope READ getScope WRITE setScope NOTIFY scopeChanged)
+	CBSModelScope *_scope; CBSModelScope *getScope() { return _scope; }
+	void setScope(CBSModelScope *v);
 Q_SIGNALS:
     void nameChanged();
     void focalChanged();
@@ -448,8 +461,8 @@ public:
     CBSPropE(double, secondary, Secondary, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSPropE(double, secondaryToFocal, SecondaryToFocal, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSProp(double, spherometerLegDistances, SpherometerLegDistances)
-    Q_PROPERTY(int nbZonesSuggested READ getNbZonesSuggested NOTIFY nbZonesSuggestedChanged)
     CBSPropE(double, excludedAngle, ExcludedAngle, emit nbZonesSuggestedChanged())
+    Q_PROPERTY(int nbZonesSuggested READ getNbZonesSuggested NOTIFY nbZonesSuggestedChanged)
     Q_PROPERTY(double secondaryOffset READ getSecondaryOffset NOTIFY secondaryOffsetChanged)
     Q_PROPERTY(double leftToHog READ getLeftToHog NOTIFY leftToHogChanged)
     Q_PROPERTY(double toHog READ getToHog NOTIFY toHogChanged)
@@ -458,10 +471,12 @@ public:
     Q_PROPERTY(double nbZones READ getNbZones WRITE setNbZones NOTIFY nbZonesChanged)
     CBSProp(bool, slitIsMoving, SlitIsMoving)
     QML_OBJMODEL_PROPERTY(CBSModelHoggingWork, hoggings)
-    QML_OBJMODEL_PROPERTY(CBSModelParabolizingWork, parabolizings)
+	Q_PROPERTY(int fixedFocal READ getFixedFocal WRITE setFixedFocal NOTIFY fixedFocalChanged)
+	int _fixedFocal; int getFixedFocal() { return _fixedFocal; }
+	QML_OBJMODEL_PROPERTY(CBSModelParabolizingWork, parabolizings)
     QML_OBJMODEL_PROPERTY(CBSDouble, zones)
     QML_OBJMODEL_PROPERTY(CBSModelEP, eps)
-    CBSProp(int, cellType, CellType)
+    CBSProp(int, cellType, CellType) // from 0 to 5. 3 points to 54 points support for PLOP
 
 	// virtual Couder/Ronchi stuff
     CBSProp(double, couderx, Couderx)
@@ -479,7 +494,8 @@ public:
 	CBSProp(bool, showCouderBlue, ShowCouderBlue) // my zone style display
     CBSProp(bool, showCouderOrange, ShowCouderOrange) // my zone style display
     CBSProp(int, virtualCouderType, VirtualCouderType) // 0: Grayscale, 1: RGB/3, 2:R, 3:G, 4:B
-    // Properties for COG pages
+
+	// Properties for COG pages
     QML_OBJMODEL_PROPERTY(CBSQString, bottomWeights)
     QML_OBJMODEL_PROPERTY(CBSQString, topWeights)
     CBSPropE(double, cogTopLen, CogTopLen, emitcogWeightChanged())
@@ -534,9 +550,10 @@ Q_SIGNALS:
 	void ronchiChanged();
 	void ronchiOffsetChanged();
 	void gradingChanged();
+	void fixedFocalChanged();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
-    void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); }
+    void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); emit leftToHogChanged(); }
     void emitcogWeightChanged() { emit cogChanged(); emit cogBottomWeightsChanged(); emit cogTopWeightsChanged(); }
     void emitZoneChanged() { emit nbZonesChanged(); }
 	void rezone()
@@ -551,7 +568,7 @@ public slots:
 public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
                            _diametre(150), _thickness(25), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
-                           _excludedAngle(2.0), _slitIsMoving(true), _cellType(0),
+                           _excludedAngle(2.0), _slitIsMoving(true), _fixedFocal(-1), _cellType(0),
                            _couderx(.5), _coudery(.5), _couderz(.80), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9), _zone(0),
 						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
                            _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0)
@@ -607,6 +624,15 @@ public:
       if (counts==0) return 0.0;              // no items, return 0
       return getLeftToHog()*counts/sum;       // estimate hog time using current average hog speed
     }
+	void setFixedFocal(int v) 
+	{
+		if (v==_fixedFocal) return;
+		if (v<-1 || v>=m_parabolizings->count()) v= -1;
+		_fixedFocal= v;
+		if (v==-1) for (int i=0; i<m_parabolizings->count(); i++) m_parabolizings->at(i)->setAdjustFocal(std::nan(""));
+		else for (int i=0; i<m_parabolizings->count(); i++) m_parabolizings->at(i)->setAdjustFocal(i==v ? std::nan("") : m_parabolizings->at(v)->_focale);
+		emit fixedFocalChanged();
+	}
 
 
     ///////////////////////////////////////////////////////////
@@ -616,7 +642,13 @@ public:
         emit epsChanged();
         return m_eps->count()-1;
     }
-    Q_INVOKABLE int addHogging() // add a hogging work...
+	Q_INVOKABLE void epRemove(int index)
+	{
+		if (index<0 || index>=m_eps->count()) return;
+		m_eps->remove(index);
+		emitEpsChanged();
+	}
+	Q_INVOKABLE int addHogging() // add a hogging work...
     {
         CBSModelHoggingWork *t= new CBSModelHoggingWork(m_hoggings);
         if (m_hoggings->count()!=0) { t->_startSphere= m_hoggings->last()->_endSphere; t->_grit= m_hoggings->last()->_grit; } // copy stuff from last hogging if present
@@ -625,6 +657,12 @@ public:
         emit hogTimeWithGritChanged();
         return m_hoggings->count()-1;
     }
+	Q_INVOKABLE void hoggingsRemove(int index)
+	{
+		if (index<0 || index>=m_hoggings->count()) return;
+		m_hoggings->remove(index);
+		emitHogTimeWithGritChanged();
+	}
     Q_INVOKABLE int addParabolizing() // create new parabolizing work
     {
       CBSModelParabolizingWork *p= new CBSModelParabolizingWork(m_parabolizings);
@@ -713,14 +751,26 @@ public:
       connect(s, SIGNAL(valChanged()), this, SLOT(emitcogWeightChanged()));
       return m_topWeights->count()-1; 
     }
-    Q_INVOKABLE int addBottomWeight() 
+	Q_INVOKABLE void topWeightRemove(int index)
+	{
+		if (index<0 || index>=m_topWeights->count()) return;
+		m_topWeights->remove(index);
+		emitcogWeightChanged();
+	}
+	Q_INVOKABLE int addBottomWeight() 
     { 
       CBSQString *s=new CBSQString(m_bottomWeights); 
       m_bottomWeights->append(s); 
       connect(s, SIGNAL(valChanged()), this, SLOT(emitcogWeightChanged()));
       return m_bottomWeights->count()-1; 
     }
-    double getCog()
+	Q_INVOKABLE void bottomWeightsRemove(int index)
+	{
+		if (index<0 || index>=m_bottomWeights->count()) return;
+		m_bottomWeights->remove(index);
+		emitcogWeightChanged();
+	}
+	double getCog()
     {
       double t= getCogTopWeights(), b= getCogBottomWeights();
       // t*cog +((cog+topLen)/2*w)= (body-cog)*b + (body-cog+botLen)/2*w
@@ -1063,15 +1113,15 @@ class CBScopeCouderOverlay : public QQuickPaintedItem
 {
 	Q_OBJECT
 public:
-	CBSPropE(CBSModelScope*, scope, Scope, QObject *v2= (QObject*)(v);
+	CBSPropE(CBSModelScope*, scope, Scope,
 										update();
-										connect(v2, SIGNAL(couderxChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(couderyChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(couderzChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(zoneChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(ronchiChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(ronchiOffsetChanged()), this, SLOT(update()));
-										connect(v2, SIGNAL(gradingChanged()), this, SLOT(update())); )
+										connect(v, SIGNAL(couderxChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(couderyChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(couderzChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(zoneChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(ronchiChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(ronchiOffsetChanged()), this, SLOT(update()));
+										connect(v, SIGNAL(gradingChanged()), this, SLOT(update())); )
 	CBSPropE(QString, source, Source, load(); )
 Q_SIGNALS:
 	void scopeChanged();
