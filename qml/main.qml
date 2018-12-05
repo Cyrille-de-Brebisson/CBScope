@@ -119,7 +119,7 @@ ApplicationWindow {
                     MyText { caption: qsTr("secondary small diametre"); text: scopeView.model.secondary; onTextChanged: scopeView.model.secondary= Number(text); }
                     MyText { caption: qsTr("secondary to focal plane"); text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
                     MyOText { caption: qsTr("secondary offset toward primary"); text: scopeView.model.secondaryOffset.toFixed(1); }
-                    MyOText { caption: qsTr("Obstruction"); text: (scopeView.model.secondary*scopeView.model.secondary/scopeView.model.diametre*scopeView.model.diametre*100).toFixed(0)+"%"; }
+                    MyOText { caption: qsTr("Obstruction"); text: ((scopeView.model.secondary*scopeView.model.secondary)/(scopeView.model.diametre*scopeView.model.diametre)*100).toFixed(0)+"%"; }
                 }
                 Flow { spacing: 10; width: parent.width
                     MyText  { caption: qsTr("Density (g/cm^3)"); text: scopeView.model.density; onTextChanged: scopeView.model.density= Number(text); }
