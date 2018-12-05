@@ -109,7 +109,8 @@ mac {
         DESTDIR = Release/IOS
       } else {
         DEFINES += OSX
-        DESTDIR = Release/MACOBJECTS_DIR = ./Intermediate/$$DESTDIR
+        DESTDIR = Release/MAC
+        OBJECTS_DIR = ./Intermediate/$$DESTDIR
       }
       DEFINES += NDEBUG
     }
@@ -123,7 +124,7 @@ mac {
                               -Wno-address-of-temporary -Wno-unused-value -Wno-backslash-newline-escape -Wno-ignored-attributes -Wno-parentheses -Wno-comment -Wno-invalid-offsetof \
                               -Wno-switch -Wno-reorder -Wno-extra-tokens -Wno-c++11-compat-deprecated-writable-strings -Wno-absolute-value -Wno-unsequenced -Wno-unknown-pragmas -Wno-c++11-narrowing
 
-    ICON = Resources/cbscope.icns
+    ICON = Resources/icon.icns
 
     DEPLOY_COMMAND = macdeployqt
 

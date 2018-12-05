@@ -3,7 +3,6 @@
 #include <QQuickStyle>
 #include <QIcon>
 #include "model.h"
-#include <QtWebEngine/qtwebengineglobal.h>
 
 static QGuiApplication *qtapp;
 QString getAppPath()
@@ -29,7 +28,6 @@ int main(int argc, char *argv[])
 	qmlRegisterType<CBScopeCouderOverlay>("CBScopeCouderOverlay", 1, 0, "CBScopeCouderOverlay");
 
     QApplication app(argc, argv); qtapp= &app; app.setWindowIcon(iconApplication);
-    QtWebEngine::initialize();
     CBSModel::SingletonProvider(nullptr, nullptr); // Create the model and load files...
 
     QQmlApplicationEngine engine;

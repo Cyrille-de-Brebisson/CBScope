@@ -226,8 +226,8 @@ ApplicationWindow {
         //********************************
         Column {
             width: window.width; height: parent.height;
-            Row { spacing: 10; width: parent.width;
-                MyText { caption: qsTr("possibke Secondaries"); text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
+            Flow { spacing: 10; width: parent.width;
+                MyText { caption: qsTr("possible Secondaries"); text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
                 CheckBox { text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
             }
             CBScopeIlumination { id: scopeIlumination
