@@ -20,7 +20,9 @@
 //#define DebugLocale
 //#define richardgetfiledir
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846264338327
+#endif
 
 #define z88_struct_file_name_base "z88i1.txt"
 #define z88_load_file_name_base "z88i2.txt"

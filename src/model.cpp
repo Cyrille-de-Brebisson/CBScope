@@ -1,13 +1,9 @@
 #include "model.h"
 #include <QPainter>
 #include <QColor>
-#ifndef IOS
-#include <QPrinter>
-#include <QPrintDialog>
-#endif
+#include <QDirIterator>
 
 CBSModel *CBSModel::singleton= nullptr;
-
 double getScopeDiameter(CBSModelScope *scope) { return scope->getDiametre(); }
 double getScopeFocal(CBSModelScope *scope) { return scope->getFocal(); }
 double getScopeToHog(CBSModelScope *scope) { return scope->getToHog(); }
@@ -170,7 +166,7 @@ void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool s
 // Print a couder screen on the printer. Pop up a print dialog box...
 void CBSModelScope::printCouder()
 {
-#ifndef IOS
+#if CanPrint
     QPrinter printer;//(QPrinter::HighResolution);
     QPrintDialog dialog(&printer, nullptr);
     dialog.setWindowTitle(tr("Print couder mask"));
@@ -203,7 +199,7 @@ void CBSModelScope::email()
 int CBSModel::loadScope(QString scope) // load a scope from a definition. returns it's model id
 {
 	int pos1= scope.indexOf(scopeEmailStartString);
-	if (pos1==-1) return -1; pos1+= strlen(scopeEmailStartString);
+	if (pos1==-1) return -1; pos1+= int(strlen(scopeEmailStartString));
 	int pos2= scope.indexOf(scopeEmailEndString);
 	if (pos2==-1) return -1;
 	QString json_string(scope.mid(pos1, pos2-pos1));

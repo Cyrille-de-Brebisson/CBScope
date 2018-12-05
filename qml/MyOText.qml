@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 Row { spacing: 10
+    y: (parent.height-height)/2;
     property alias caption: textField.text
     property alias text: textRect.text
     Text {

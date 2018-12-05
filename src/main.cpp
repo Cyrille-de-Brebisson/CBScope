@@ -3,6 +3,7 @@
 #include <QQuickStyle>
 #include <QIcon>
 #include "model.h"
+#include <QtWebEngine/qtwebengineglobal.h>
 
 static QGuiApplication *qtapp;
 QString getAppPath()
@@ -14,12 +15,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    QIcon iconApplication;
-#ifdef WINDOWS
-    iconApplication = readIcoFile("qrc:/Resources/cbscope.ico");
-#else
-    iconApplication.addFile("qrc:/Resources/cbscope.icns");
-#endif
+    QIcon iconApplication; iconApplication.addFile("qrc:/Resources/icon.png");
 
     qmlRegisterSingletonType<CBSModel>("CBSModel", 1, 0, "CBSModel", CBSModel::SingletonProvider);
     qmlRegisterType<CBSModelHoggingWork>("CBSModelHoggingWork", 1, 0, "CBSModelHoggingWork");
@@ -32,7 +28,8 @@ int main(int argc, char *argv[])
 	qmlRegisterType<CBScopeVirtualCouder>("CBScopeVirtualCouder", 1, 0, "CBScopeVirtualCouder");
 	qmlRegisterType<CBScopeCouderOverlay>("CBScopeCouderOverlay", 1, 0, "CBScopeCouderOverlay");
 
-    QApplication app(argc, argv); qtapp= &app;
+    QApplication app(argc, argv); qtapp= &app; app.setWindowIcon(iconApplication);
+    QtWebEngine::initialize();
     CBSModel::SingletonProvider(nullptr, nullptr); // Create the model and load files...
 
     QQmlApplicationEngine engine;

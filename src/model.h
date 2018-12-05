@@ -10,7 +10,9 @@
 #define CBSMODEL_H
 
 #include <cmath>
-#define M_PI 3.14159265358979323846264338327
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <QObject>
 #include <QMutex>
 #include <QMutexLocker>
@@ -30,6 +32,13 @@
 #include "QQmlObjectListModel.h"
 #include <QAbstractVideoFilter>
 #include <QBasicTimer>
+#ifndef IOS
+#include <QPrinter>
+#include <QPrintDialog>
+#define CanPrint 1
+#else
+#define CanPrint 0
+#endif
 
 // ********************************************************
 // Most of our objects will derive from this savable object
@@ -569,7 +578,7 @@ public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
                            _diametre(150), _thickness(25), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _fixedFocal(-1), _cellType(0),
-                           _couderx(.5), _coudery(.5), _couderz(.80), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9), _zone(0),
+                           _couderx(.5), _coudery(.5), _couderz(.80), _zone(0), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9),
 						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
                            _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0)
     {
@@ -892,9 +901,6 @@ public:
     }
     bool subSave(QJsonObject *o) const { return saveList(m_scopes, "scopes", o); }
 	QList<QString> Ignored() const { QList<QString> l; l.append("errMsg"); l.append("dbgMsg"); l.append("warMsg"); return l; }
-    Q_INVOKABLE void help() {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(getAppPath()+"/SBScope_help.htm"));
-    }
 	Q_INVOKABLE int loadScope(QString scope); // load a scope from a definition. returns it's model id
     Q_INVOKABLE double materials(int index, int prop) // list properties of material. constants used by the UI
     {
@@ -983,7 +989,7 @@ class CBScopeMes : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope NOTIFY scopeChanged);
+    Q_PROPERTY(CBSModelScope *scope READ getScope WRITE setScope NOTIFY scopeChanged)
     CBSModelScope *_scope;
 	CBSPropE(bool, showForces, ShowForces, update())
 	CBSPropE(bool, showMesh, ShowMesh, update())
@@ -999,6 +1005,7 @@ public:
 	CBSProp(int, nbEvals, NbEvals)
 	CBSProp(double, stepSize, StepSize)
 	Q_PROPERTY(bool calc READ getCalc NOTIFY calcChanged) // true if calculating!
+	Q_PROPERTY(bool canPrint READ getCanPrint NOTIFY canPrintChanged) // true if we can print
 Q_SIGNALS:
     void scopeChanged();
 	void showForcesChanged();
@@ -1015,6 +1022,7 @@ Q_SIGNALS:
 	void calcChanged();
 	void showSecondaryChanged();
 	void partsChanged();
+	void canPrintChanged();
 private:
 	bool hasPlopInit;
 	bool hasCalculated;
@@ -1040,10 +1048,11 @@ public:
 		createMirror(_scope->getDiametre(), _scope->getSecondary(), _scope->getThickness(), _scope->getYoung(), _scope->getPoisson(), _scope->getFocal(), _scope->getDensity(), _scope->getCellType()); 
 	}
 	Q_INVOKABLE void doMesStop();
+	bool getCanPrint() { return CanPrint==1; }
 	bool getCalc();
 	QBasicTimer timer;
 	void timerEvent(QTimerEvent *event) 
-	{ 
+    { (void)event;
 		update(); 
 		if (!getCalc()) timer.stop();
 	}
@@ -1058,7 +1067,7 @@ public:
 	  int imagew, imageh; // these get set in the CBScopeVirtualCouderRunnable::run function...
 	  bool inverted;
   public:
-	  CBVirtualCouderOverlayInternal(bool inverted): imagew(-1), imageh(-1), ronchi(nullptr), ronchisize(0), inverted(inverted) {}
+      CBVirtualCouderOverlayInternal(bool inverted): ronchi(nullptr), ronchisize(0), imagew(-1), imageh(-1), inverted(inverted) {}
 	  ~CBVirtualCouderOverlayInternal() { if (ronchi!=nullptr) delete[] ronchi; }
 	  void userclick(CBSModelScope *_scope, double x, double y) // find which zone the used clicked in and select it...
 	  {
@@ -1096,7 +1105,7 @@ public:
 class CBScopeVirtualCouder : public QAbstractVideoFilter
 {
     Q_OBJECT
-    CBSProp(CBSModelScope*, scope, Scope);
+    CBSProp(CBSModelScope*, scope, Scope)
 Q_SIGNALS:
 	void scopeChanged();
 	void finished(QObject *result);

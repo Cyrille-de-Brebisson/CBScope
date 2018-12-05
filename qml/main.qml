@@ -16,13 +16,15 @@ import CBScopeMes 1.0
 import QtMultimedia 5.8
 import CBScopeVirtualCouder 1.0
 import CBScopeCouderOverlay 1.0
+import QtWebEngine 1.7
 
 ApplicationWindow {
+    id: window
     visible: true
     width: 800
     height: 600
-    id: window
-    property alias editTextHeight: scopeView.editTextHeight
+    minimumWidth: 300
+    minimumHeight: 500
     property int fontSize: CBSModel.windowsFont
     property bool fontBold: CBSModel.windowsFontBold
 
@@ -78,106 +80,96 @@ ApplicationWindow {
     StackLayout {
         id: scopeView
         property CBSModelScope model
-        anchors.fill: parent
+        width: parent.width; height: parent.height;
         currentIndex: tabBar.currentIndex
-        property alias editTextHeight: mainPageCol.editTextHeight
 
         //********************************
         // Main page: scope definition!!!!
         //********************************
-        Column {
-            id: mainPageCol
-            spacing: 10
-            width: parent.width; height: parent.height;
-            property alias editTextHeight: scopeDiametreEdit.height
-            Row { spacing: 10;
-                width: parent.width
-                Text { id: scr11; y: (parent.height-height)/2; text: qsTr("scope Name") }
-                MyText { id: scr12; y: (parent.height-height)/2; text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
-                Rectangle { height: parent.height; width: parent.width-scr11.width-scr12.width-scr13.width-3*parent.spacing; }
-                Button { id: scr13;
-                    visible: CBSModel.scopes.count>1
-                    text: qsTr("Delete")
-                    onClicked: CBSModel.scopes.remove(scopes.currentIndex);
+        Flickable {
+            width: parent.width; height: parent.height; clip: true;
+            contentHeight: mainPageCol.height
+            Column { id: mainPageCol; spacing: 10; width: scopeView.width;
+                Row { spacing: 10;
+                    width: parent.width
+                    MyText { caption: qsTr("scope Name"); text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
+                    Rectangle { width: parent.width-scopeDelete.width-x-parent.spacing; height: parent.height }
+                    Button { id: scopeDelete
+                        visible: CBSModel.scopes.count>1
+                        text: qsTr("Delete")
+                        onClicked: CBSModel.scopes.remove(scopes.currentIndex);
+                    }
+                }
+                Text { text: qsTr("Comments") }
+                MyMultiText { width: parent.width; text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
+                Flow { spacing: 10;  id: scopeDiametreEdit; width: parent.width
+                    MyText  { caption: qsTr("Diametre"); text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
+                    MyText  { caption: qsTr("Thicnkess"); text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
+                    MyOText { caption: qsTr("max zoom"); text: (50/25.4*scopeView.model.diametre).toFixed(0); }
+                    MyOText { caption: qsTr("limiting magnitude"); text: (8.8+(5*Math.log(scopeView.model.diametre/25.4)/Math.log(10))).toFixed(0); }
+                    MyOText { caption: qsTr("Resolution (ArcSec)"); text: (4.56/(scopeView.model.diametre/25.4)).toFixed(2); }
+                }
+                Flow { spacing: 10; width: parent.width
+                    MyText { caption: qsTr("focal length"); text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
+                    MyText { caption: qsTr("focal ratio");  text: scopeView.model.focal/scopeView.model.diametre; onTextChanged: scopeView.model.focal= Number(text)*scopeView.model.diametre; }
+                    MyText { caption: qsTr("Mirror ROC");   text: scopeView.model.focal*2; onTextChanged: scopeView.model.focal= Number(text)/2; }
+                    MyOText { caption: qsTr("sagita"); text: scopeView.model.sagita.toFixed(1); }
+                }
+                Flow { spacing: 10; width: parent.width
+                    MyText { caption: qsTr("secondary small diametre"); text: scopeView.model.secondary; onTextChanged: scopeView.model.secondary= Number(text); }
+                    MyText { caption: qsTr("secondary to focal plane"); text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
+                    MyOText { caption: qsTr("secondary offset toward primary"); text: scopeView.model.secondaryOffset.toFixed(1); }
+                    MyOText { caption: qsTr("Obstruction"); text: (scopeView.model.secondary*scopeView.model.secondary/scopeView.model.diametre*scopeView.model.diametre*100).toFixed(0)+"%"; }
+                }
+                Flow { spacing: 10; width: parent.width
+                    MyText  { caption: qsTr("Density (g/cm^3)"); text: scopeView.model.density; onTextChanged: scopeView.model.density= Number(text); }
+                    MyOText { caption: qsTr("Weight (Kg)"); text: scopeView.model.weight.toFixed(3); }
+                    MyText  { caption: qsTr("Young (KgF/mm²)"); text: scopeView.model.young; onTextChanged: scopeView.model.young= Number(text); }
+                    MyText  { caption: qsTr("Poisson"); text: scopeView.model.poisson; onTextChanged: scopeView.model.poisson= Number(text); }
+                    ComboBox { model: ListModel { ListElement { name: "select" }
+                                                  ListElement { name: "Pyrex 7740" }
+                                                  ListElement { name: "Zerodur" }
+                                                  ListElement { name: "Plate Glass" }
+                                                  ListElement { name: "Fused scilica" }
+                                                  ListElement { name: "Duran 50" } }
+                                textRole: "name";
+                                onCurrentIndexChanged: { scopeView.model.density= CBSModel.materials(currentIndex-1, 2); scopeView.model.poisson= CBSModel.materials(currentIndex-1, 1); scopeView.model.young= CBSModel.materials(currentIndex-1, 0); }
+                    }
+                }
+                Rectangle {
+                    width: parent.width;
+                    height: (scopeView.height-y) > (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) ? (scopeView.height-y) - (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) : 1;
+                    color: height===1 ? "Black" : "white"
+                }
+                TextArea { id: scopeTextArea; width: parent.width;
+                    text: qsTr("CBScope is an application designed by Cyrille.de.brebisson@gmail.com to help amateur telescope makers build telescopes.\n"+
+                               "Parts of the application code comes from other similar apps and I wich to thank: Etienne de Foras (Foucault), David Lewis (Plop) and Mel Bartels (Secondary illumination and Ronchi).\n"+
+                               "Click on the Help button bellow for help on how to use this app");
+                    wrapMode: Text.Wrap; readOnly: true;
+                }
+                Flow { id: scopeBottomRow; width: parent.width; spacing: 10;
+                    Button { text: qsTr("Email scope"); onClicked: scopeView.model.email(); }
+                    Button { text: qsTr("Receive scope"); onClicked: receiveScopePopup.open(); }
+                    ComboBox {
+                        textRole: "text";
+                        model: ListModel { ListElement { text: "font 10"; } ListElement { text: "font 11"; } ListElement { text: "font 12"; } ListElement { text: "font 13"; } ListElement { text: "font 14"; } ListElement { text: "font 15"; } ListElement { text: "font 16"; } }
+                        currentIndex: window.fontSize-10
+                        onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
+                    }
+                    CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
+                }
+                Popup { id: receiveScopePopup; x: 50; y: 50; width: parent.width-2*x; height: parent.height-2*y; modal: true; focus: true; clip: true;
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                        ScrollView { // Scrollable text area...
+                            width: parent.width; height: receiveScopePopupBottom.y-10
+                            TextArea { id: popupText; text: qsTr("Paste scope definition here, then press Load!"); }
+                        }
+                        Row { spacing: 10; id: receiveScopePopupBottom; x: parent.width-width; y: parent.height-height-10
+                            Button { text: qsTr("Load!"); onPressed: { scopes.currentIndex= CBSModel.loadScope(popupText.text); receiveScopePopup.close(); } }
+                            Button { text: qsTr("cancel"); onPressed: receiveScopePopup.close(); }
+                        }
                 }
             }
-            Text { text: qsTr("Comments") }
-            MyMultiText { text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
-            Row { spacing: 10;  id: scopeDiametreEdit;
-                Text { y: (parent.height-height)/2; text: qsTr("Diametre") }
-                MyText { text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
-                Text { y: (parent.height-height)/2; text: qsTr("Thicnkess") }
-                MyText { text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
-            }
-            Row { spacing: 10;
-                Text { y: (parent.height-height)/2; text: qsTr("focal length") }
-                MyText { text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
-                Text { y: (parent.height-height)/2; text: qsTr("focal ratio") }
-                MyText { text: scopeView.model.focal/scopeView.model.diametre; onTextChanged: scopeView.model.focal= Number(text)*scopeView.model.diametre; }
-                Text { y: (parent.height-height)/2; text: qsTr("Mirror ROC") }
-                MyText { text: scopeView.model.focal*2; onTextChanged: scopeView.model.focal= Number(text)/2; }
-                MyOText { y: (parent.height-height)/2; caption: qsTr("sagita"); text: scopeView.model.sagita.toFixed(1); }
-            }
-            Row { spacing: 10;
-                Text { y: (parent.height-height)/2; text: qsTr("secondary small diametre") }
-                MyText { text: scopeView.model.secondary; onTextChanged: scopeView.model.secondary= Number(text); }
-                Text { y: (parent.height-height)/2; text: qsTr("secondary to focal plane") }
-                MyText { text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
-            }
-            MyOText { caption: qsTr("secondary offset toward primary"); text: scopeView.model.secondaryOffset.toFixed(1); }
-            Row { spacing: 10;
-                Text { y: (parent.height-height)/2; text: qsTr("Density (g/cm^3)") }
-                MyText { y: (parent.height-height)/2; text: scopeView.model.density; onTextChanged: scopeView.model.density= Number(text); }
-                Text { y: (parent.height-height)/2; text: qsTr("Weight (Kg)") }
-                MyOText { y: (parent.height-height)/2; text: scopeView.model.weight.toFixed(3); }
-                Text { y: (parent.height-height)/2; text: qsTr("Young (KgF/mm²)") }
-                MyText { y: (parent.height-height)/2; text: scopeView.model.young; onTextChanged: scopeView.model.young= Number(text); }
-                Text { y: (parent.height-height)/2; text: qsTr("Poisson") }
-                MyText { y: (parent.height-height)/2; text: scopeView.model.poisson; onTextChanged: scopeView.model.poisson= Number(text); }
-                ComboBox { y: (parent.height-height)/2; 
-                           model: ListModel { ListElement { name: "Pyrex 7740" } 
-                                              ListElement { name: "Zerodur" } 
-                                              ListElement { name: "Plate Glass" } 
-                                              ListElement { name: "Fused scilica" } 
-                                              ListElement { name: "Duran 50" } }
-                            textRole: "name";
-                            onCurrentIndexChanged: { scopeView.model.density= CBSModel.materials(currentIndex, 2); scopeView.model.poisson= CBSModel.materials(currentIndex, 1); scopeView.model.young= CBSModel.materials(currentIndex, 0); }
-                }
-            }
-			Rectangle { height: parent.height-y-scopeTextArea.height-scopeBottomRow.height-2*parent.spacing; width: parent.width; }
-			TextArea { id: scopeTextArea; width: parent.width;
-				text: qsTr("CBScope is an application designed by Cyrille.de.brebisson@gmail.com to help amateur telescope makers build telescopes.\n"+
-				           "Parts of the application code comes from other similar apps and I wich to thank: Etienne de Foras (Foucault), David Lewis (Plop) and Mel Bartels (Secondary illumination and Ronchi).\n"+
-						   "Click on the Help button bellow for help on how to use this app");
-				wrapMode: Text.Wrap; readOnly: true;
-			}
-			Row { id: scopeBottomRow; width: parent.width; spacing: 10
-				Button {
-					text: qsTr("Help");
-					onClicked: CBSModel.help()
-				}
-				Button { text: qsTr("Email scope"); onClicked: scopeView.model.email(); }
-				Button { text: qsTr("Receive scope"); onClicked: receiveScopePopup.open(); }
-				ComboBox {
-					textRole: "text";
-					model: ListModel { ListElement { text: "font 10"; } ListElement { text: "font 11"; } ListElement { text: "font 12"; } ListElement { text: "font 13"; } ListElement { text: "font 14"; } ListElement { text: "font 15"; } ListElement { text: "font 16"; } }
-					currentIndex: window.fontSize-10
-					onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
-				}
-				CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
-			}
-
-			Popup { id: receiveScopePopup; x: 50; y: 50; width: parent.width-2*x; height: parent.height-2*y; modal: true; focus: true; clip: true;
-					closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-					ScrollView { // Scrollable text area...
-						width: parent.width; height: receiveScopePopupBottom.y-10
-						TextArea { id: popupText; text: qsTr("Paste scope definition here, then press Load!"); }
-					}
-					Row { spacing: 10; id: receiveScopePopupBottom; x: parent.width-width; y: parent.height-height-10
-						Button { text: qsTr("Load!"); onPressed: { scopes.currentIndex= CBSModel.loadScope(popupText.text); receiveScopePopup.close(); } }
-						Button { text: qsTr("cancel"); onPressed: receiveScopePopup.close(); }
-					}
-			}
         }
 
         //********************************
@@ -207,21 +199,17 @@ ApplicationWindow {
                             clip: true
                             x: parent.border.width*1.5; y: parent.border.width*1.5
                             width: parent.width-3*parent.border.width
-                            height: i12.height+i13.height+i14.height
                             Row {
-                                spacing: 10; width: parent.width; id: i12;
-                                Text   { id: rowEp1; y: (parent.height-height)/2; text: qsTr("name"); }
-                                MyText { id: rowEp2; y: (parent.height-height)/2; text: name; onTextChanged: name= text; }
-                                Rectangle { height: parent.height; width: parent.width-rowEp1.width-rowEp2.width-rowEp5.width-3*parent.spacing; }
-                                Button { id: rowEp5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.epsRemove(index); }
+                                spacing: 10; width: parent.width;
+                                MyText { caption: qsTr("name"); text: name; onTextChanged: name= text; }
+                                Rectangle { height: parent.height; width: parent.width-x-rowEp5.width-parent.spacing; }
+                                Button { id: rowEp5; text: qsTr("Delete"); onPressed: scopeView.model.epsRemove(index); }
                             }
-                            Row { spacing: 10; id: i13;
-                                Text { y: (parent.height-height)/2; text: qsTr("focal") }
-                                MyText { text: focal; onTextChanged: focal= Number(text); }
-                                Text { y: (parent.height-height)/2; text: qsTr("angle") }
-                                MyText { text: angle; onTextChanged: angle= Number(text); }
+                            Row { spacing: 10; width: parent.width;
+                                MyText { caption: qsTr("focal"); text: focal; onTextChanged: focal= Number(text); }
+                                MyText { caption: qsTr("angle"); text: angle; onTextChanged: angle= Number(text); }
                             }
-                            Row { spacing: 10; id: i14;
+                            Flow { spacing: 10; width: parent.width;
                                 MyOText { caption: qsTr("zoom");         text: zoom.toFixed(0); }
                                 MyOText { caption: qsTr("view Angle");   text: viewAngle.toFixed(2)+"°"; }
                                 MyOText { caption: qsTr("field radius"); text: field.toFixed(1); }
@@ -239,9 +227,8 @@ ApplicationWindow {
         Column {
             width: window.width; height: parent.height;
             Row { spacing: 10; width: parent.width;
-                Text   { y: (parent.height-height)/2; text: qsTr("Secondary sizes to study"); }
-                MyText { y: (parent.height-height)/2; text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
+                MyText { caption: qsTr("possibke Secondaries"); text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
+                CheckBox { text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
             }
             CBScopeIlumination { id: scopeIlumination
                 width: parent.width; height: parent.height-y;
@@ -263,10 +250,7 @@ ApplicationWindow {
         //********************************
         Column {
             width: window.width; height: parent.height; spacing: 10; id: hogPage
-            Row { spacing: 10; width: parent.width;
-                Text   { y: (parent.height-height)/2; text: qsTr("Spherometer average leg distance"); }
-                MyText { y: (parent.height-height)/2; text: scopeView.model.spherometerLegDistances; onTextChanged: scopeView.model.spherometerLegDistances= text; }
-            }
+            MyText { caption: qsTr("Spherometer leg distance"); text: scopeView.model.spherometerLegDistances; onTextChanged: scopeView.model.spherometerLegDistances= text; }
             Rectangle {
                 width: parent.width;
                 height: parent.height-y-bottomInfo.height-10
@@ -289,29 +273,23 @@ ApplicationWindow {
                                 id: col
                                 clip: true
                                 width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
-                                height: row1Hog.height+row2Hog.height+row3Hog.height+row4Hog.height
                                 Row {
-                                    spacing: 10; width: parent.width; id: row1Hog; height: rowHog2.height
-                                    Text   { id: rowHog1; y: (parent.height-height)/2; text: qsTr("comments"); }
-                                    MyMultiText { id: rowHog2; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
-                                    Rectangle { height: parent.height; width: parent.width-rowHog1.width-rowHog2.width-rowHog5.width-3*parent.spacing; }
-                                    Button { id: rowHog5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.hoggingsRemove(index); }
+                                    spacing: 10; width: parent.width; //height: rowHog2.height
+                                    Text   { text: qsTr("comments"); }
+                                    MyMultiText { text: comments; onTextChanged: comments= text; }
+                                    Rectangle { height: 10; width: parent.width-x-deleteHog.width-parent.spacing; }
+                                    Button { id: deleteHog; text: qsTr("Delete"); onPressed: scopeView.model.hoggingsRemove(index); }
                                 }
-                                Row { spacing: 10; id: row2Hog;
-                                    Text { y: (parent.height-height)/2; text: qsTr("start ROC") }
-                                    MyText { text: startSphere; onTextChanged: startSphere= Number(text); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("end ROC") }
-                                    MyText { text: endSphere; onTextChanged: endSphere= Number(text); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("end ROC spherometer") }
-                                    MyText { onTextChanged: { if (text!=="") scopeView.model.hoggings.get(index).setEndSphereSpherometer(Number(text)); } }
+                                Flow { spacing: 10; width: parent.width
+                                    MyText { caption: qsTr("start ROC"); text: startSphere; onTextChanged: startSphere= Number(text); }
+                                    MyText { caption: qsTr("end ROC"); text: endSphere; onTextChanged: endSphere= Number(text); }
+                                    MyText { caption: qsTr("end ROC spherometer"); onTextChanged: { if (text!=="") scopeView.model.hoggings.get(index).setEndSphereSpherometer(Number(text)); } }
                                 }
-                                Row { spacing: 10; id: row3Hog;
-                                    Text { y: (parent.height-height)/2; text: qsTr("time") }
-                                    MyText { text: time; onTextChanged: time= Number(text); }
-                                    Text { y: (parent.height-height)/2; text: qsTr("grit") }
-                                    MyText { text: grit; onTextChanged: grit= Number(text); }
+                                Flow { spacing: 10; width: parent.width
+                                    MyText { caption: qsTr("time"); text: time; onTextChanged: time= Number(text); }
+                                    MyText { caption: qsTr("grit"); text: grit; onTextChanged: grit= Number(text); }
                                 }
-                                Row { spacing: 10; id: row4Hog;
+                                Flow { spacing: 10; width: parent.width
                                     MyOText { caption: qsTr("hog/time");   text: hogSpeed.toFixed(1); }
                                     MyOText { caption: qsTr("end sagita"); text: endSagita.toFixed(2); }
                                     MyOText { caption: qsTr("% done in this run"); text: percentDone.toFixed(2); }
@@ -329,12 +307,11 @@ ApplicationWindow {
                     id: bottomInfoCol
                     clip: true
                     width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
-                    height: sphColi4.height+sphColi5.height
-                    Row { spacing: 10; id: sphColi4;
+                    Flow { spacing: 10; width: parent.width; 
                         MyOText { caption: qsTr("time to hog with current grit");   text: scopeView.model.hogTimeWithGrit.toFixed(2); }
                         MyOText { caption: qsTr("%done"); text: ((1-scopeView.model.leftToHog/scopeView.model.toHog)*100).toFixed(2); }
                     }
-                    Row { spacing: 10; id: sphColi5;
+                    Flow { spacing: 10; width: parent.width; 
                         MyOText { caption: qsTr("total to hog");   text: scopeView.model.toHog.toFixed(2); }
                         MyOText { caption: qsTr("left to hog"); text: scopeView.model.leftToHog.toFixed(2); }
                     }
@@ -347,22 +324,23 @@ ApplicationWindow {
         //********************************
         Column { spacing: 5; id: parabolizingColumn
             property int mesureHeight: 180
-            Row {
+            Flow { width: parent.width
                 spacing: 10
-                Text     { y: (parent.height-height)/2; text: qsTr("nb zones (")+scopeView.model.nbZonesSuggested+qsTr(" suggested)"); }
-                MyText   { y: (parent.height-height)/2; text: scopeView.model.nbZones; onTextChanged: scopeView.model.nbZones= Number(text); }
+                MyText   { id: nbZonesSuggest; caption: qsTr("nb zones (Suggest ")+scopeView.model.nbZonesSuggested+")"; text: scopeView.model.nbZones; onTextChanged: scopeView.model.nbZones= Number(text); }
                 Button   { y: (parent.height-height)/2; text: qsTr("Auto calc zones"); onPressed: popup.open() }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Slit is moving"); checked: scopeView.model.slitIsMoving; onCheckedChanged: scopeView.model.slitIsMoving= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("large View"); checked: false; onCheckedChanged: { parabolizingColumn.mesureHeight= checked?250:180; } }
             }
-            Text { text: qsTr("Enter zones boundaries from 0 (or more if there is a hole) to mirror radius") }
+            Text { text: qsTr("Enter zones boundaries from 0 (or hole radius) to mirror radius") }
             Rectangle {
                 border.width: 3; radius: 4; border.color: "Blue";
                 width: parent.width
-                height: editTextHeight+2*border.width
+                height: nbZonesSuggest.height+2*border.width
                 ListView {
-                    id: zones; model: scopeView.model.zones; orientation: Qt.Horizontal;
-                    width: parent.width-2*parent.border.width; height: editTextHeight; x: parent.border.width; y: parent.border.width;
+                    model: scopeView.model.zones; orientation: Qt.Horizontal;
+                    width: parent.width-2*parent.border.width; 
+					height: parent.height-2*parent.border.width
+					x: parent.border.width; y: parent.border.width;
                     delegate: MyText {
                         Component.onCompleted: setFont(this)
                         text: val; onTextChanged: val= Number(text);
@@ -374,7 +352,7 @@ ApplicationWindow {
                 height: parent.height-y
                 border.width: 3; radius: 4; border.color: "Black";
                 Button { x: (parent.width-width)/2; id: addMesBut; y: parent.border.width; text: qsTr("add measure"); onPressed: scopeView.model.addParabolizing() }
-                ListView { id: parabolizingList
+                ListView { 
                     clip: true;
                     model: scopeView.model.parabolizings;
                     x: parent.border.width; y: parent.border.width+addMesBut.height;
@@ -386,19 +364,18 @@ ApplicationWindow {
                         Column {
                             clip: true;
                             x: parent.border.width; y: parent.border.width; width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width;
-                            ListView {
+                            ListView { 
                                 model: mesures; orientation: Qt.Horizontal;
-                                width: parent.width; height: editTextHeight;
+                                width: parent.width; height: nbZonesSuggest.height
                                 delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
                             }
                             Row {
                                 spacing: 10; width: parent.width
-                                Text   { id: rowMes1; y: (parent.height-height)/2; text: qsTr("time"); }
-                                MyText { id: rowMes2; y: (parent.height-height)/2; text: time; onTextChanged: time= text; }
-                                Text   { id: rowMes3; y: (parent.height-height)/2; text: qsTr("Comments"); }
-                                MyMultiText { id: rowMes4; y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
-				                CheckBox { id: rowMes6; y: (parent.height-height)/2; x: parent.width; text: qsTr("fixTo"); checked: scopeView.model.fixedFocal===index; onClicked: scopeView.model.fixedFocal= (checked ? index : -1); }
-                                Rectangle { height: parent.height; width: parent.width-rowMes1.width-rowMes2.width-rowMes3.width-rowMes4.width-rowMes5.width-rowMes6.width-6*parent.spacing; }
+                                MyText { caption: qsTr("time"); text: time; onTextChanged: time= text; }
+                                Text   { y: (parent.height-height)/2; text: qsTr("Comments"); }
+                                MyMultiText { y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
+				                CheckBox { text: qsTr("fixTo"); checked: scopeView.model.fixedFocal===index; onClicked: scopeView.model.fixedFocal= (checked ? index : -1); }
+                                Rectangle { height: parent.height; width: parent.width-x-rowMes5.width-parent.spacing; }
                                 Button { id: rowMes5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.parabolizings.remove(index); }
                             }
                             CBScopeMesure {
@@ -425,13 +402,12 @@ ApplicationWindow {
                 onScopeChanged: update()
                 onZoomChanged: update()
             }
-            Row {
-                spacing: 10; y: 1;
+            Flow {
+                spacing: 10; y: 1; width: parent.width; 
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Red Zones"); checked: scopeView.model.showCouderRed; onCheckedChanged: scopeView.model.showCouderRed= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Blue Zones"); checked: scopeView.model.showCouderBlue; onCheckedChanged: scopeView.model.showCouderBlue= checked }
-                //CheckBox { y: (parent.height-height)/2; text: qsTr("Show Orange Zones"); checked: scopeView.model.showCouderOrange; onCheckedChanged: scopeView.model.showCouderOrange= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("zoom/2"); checked: scopeCouder.zoom; onCheckedChanged: scopeCouder.zoom= checked }
-                Button   { y: (parent.height-height)/2; text: qsTr("Print Couder Mask"); onPressed: scopeView.model.printCouder() }
+                Button   { visible: CBSModel.canPrint; y: (parent.height-height)/2; text: qsTr("Print Couder Mask"); onPressed: scopeView.model.printCouder() }
             }
             Connections {
                 target: scopeView.model
@@ -455,8 +431,8 @@ ApplicationWindow {
             width: window.width; height: parent.height;
 			Column {
 				width: window.width; height: parent.height;
-				Row {
-					spacing: 10;
+				Flow {
+					spacing: 10; width: parent.width
 					Text { y: (parent.height-height)/2; text: qsTr("Camera") }
 					ComboBox { id: cameras; y: (parent.height-height)/2;
 							   model: QtMultimedia.availableCameras
@@ -486,10 +462,8 @@ ApplicationWindow {
 					 }
 					 CheckBox { y: (parent.height-height)/2; text: qsTr("Pause"); checked: scopeView.model.pause; onCheckedChanged: scopeView.model.pause= checked }
 					 CheckBox { id: ronchi; y: (parent.height-height)/2; text: qsTr("Ronchi"); checked: scopeView.model.ronchi; onCheckedChanged: scopeView.model.ronchi= checked }
-					 Text   { y: (parent.height-height)/2; visible: ronchi.checked; text: qsTr("defocal"); }
-					 MyText { y: (parent.height-height)/2; visible: ronchi.checked; text: scopeView.model.ronchiOffset; onTextChanged: scopeView.model.ronchiOffset= Number(text); }
-					 Text   { y: (parent.height-height)/2; visible: ronchi.checked; text: qsTr("Grading"); }
-					 MyText { y: (parent.height-height)/2; visible: ronchi.checked; text: scopeView.model.grading; onTextChanged: scopeView.model.grading= Number(text); }
+					 MyText { caption: qsTr("defocal"); visible: ronchi.checked; text: scopeView.model.ronchiOffset; onTextChanged: scopeView.model.ronchiOffset= Number(text); }
+					 MyText { caption: qsTr("grading"); visible: ronchi.checked; text: scopeView.model.grading; onTextChanged: scopeView.model.grading= Number(text); }
 				}
 				Rectangle { visible: !ronchi.checked;
 					width: parent.width; height: 180; 
@@ -500,7 +474,7 @@ ApplicationWindow {
 						x: parent.border.width; y: parent.border.width; width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width;
 						ListView {
 							model: parent.parent.mesure.mesures; orientation: Qt.Horizontal;
-							width: parent.width; height: editTextHeight;
+							width: parent.width; height: nbZonesSuggest.height
 							delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
 						}
 						Row {
@@ -572,41 +546,41 @@ ApplicationWindow {
                 width: parent.width; height: parent.height;
                 scope: scopeView.model
             }
-			Column { spacing: 5; y:1; x:1;
-            Row { spacing: 10; 
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Disp"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Mesh"); checked: scopeSupport.showMesh; onCheckedChanged: scopeSupport.showMesh= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Parts"); checked: scopeSupport.showParts; onCheckedChanged: scopeSupport.showParts= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show Supports"); checked: scopeSupport.showSupports; onCheckedChanged: scopeSupport.showSupports= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Show secondary"); checked: scopeSupport.showSecondary; onCheckedChanged: scopeSupport.showSecondary= checked }
+			Column { spacing: 5; y:1; x:1; width: parent.width
+				Flow { spacing: 10; width: parent.width
+					CheckBox { y: (parent.height-height)/2; text: qsTr("Show Disp"); checked: scopeSupport.showForces; onCheckedChanged: scopeSupport.showForces= checked }
+					CheckBox { y: (parent.height-height)/2; text: qsTr("Show Mesh"); checked: scopeSupport.showMesh; onCheckedChanged: scopeSupport.showMesh= checked }
+					CheckBox { y: (parent.height-height)/2; text: qsTr("Show Parts"); checked: scopeSupport.showParts; onCheckedChanged: scopeSupport.showParts= checked }
+					CheckBox { y: (parent.height-height)/2; text: qsTr("Show Supports"); checked: scopeSupport.showSupports; onCheckedChanged: scopeSupport.showSupports= checked }
+					CheckBox { y: (parent.height-height)/2; text: qsTr("Show secondary"); checked: scopeSupport.showSecondary; onCheckedChanged: scopeSupport.showSecondary= checked }
+					}
+				Flow { spacing: 10; width: parent.width
+					ComboBox { y: (parent.height-height)/2; 
+							   model: ListModel { ListElement { name: "3 points" } 
+												  ListElement { name: "6 points" } 
+												  ListElement { name: "9 points" } 
+												  ListElement { name: "18 points" }
+												  ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
+								textRole: "name";
+								currentIndex: scopeView.model.cellType 
+								onCurrentIndexChanged: scopeView.model.cellType= currentIndex;
+					 }
+					ComboBox { y: (parent.height-height)/2; 
+							   model: ListModel { ListElement { name: "100%" } 
+												  ListElement { name: "75%" } 
+												  ListElement { name: "50%" } 
+												  ListElement { name: "25%" } 
+												  ListElement { name: "10%" } 
+												  ListElement { name: "5%" } }
+								textRole: "name";
+								currentIndex: scopeSupport.zoom
+								onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
+					 }
+					Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
+							 onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
 				}
-			Row { spacing: 10; 
-                ComboBox { y: (parent.height-height)/2; 
-                           model: ListModel { ListElement { name: "3 points" } 
-                                              ListElement { name: "6 points" } 
-                                              ListElement { name: "9 points" } 
-                                              ListElement { name: "18 points" }
-                                              ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
-                            textRole: "name";
-                            currentIndex: scopeView.model.cellType 
-                            onCurrentIndexChanged: scopeView.model.cellType= currentIndex;
-                 }
-                ComboBox { y: (parent.height-height)/2; 
-                           model: ListModel { ListElement { name: "100%" } 
-                                              ListElement { name: "75%" } 
-                                              ListElement { name: "50%" } 
-                                              ListElement { name: "25%" } 
-                                              ListElement { name: "10%" } 
-                                              ListElement { name: "5%" } }
-                            textRole: "name";
-                            currentIndex: scopeSupport.zoom
-                            onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
-                 }
-                Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
-				         onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
-            }
-			MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
-			MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
+				MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
+				MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
 			}
 			MyOText { y: parent.height-height; caption: "parts"; text: scopeSupport.parts }
         }
@@ -614,66 +588,51 @@ ApplicationWindow {
         //********************************
         // COG page
         //********************************
-        Rectangle {
-            width: parent.width; height: parent.height;
-            Column { spacing: 10
-              width: parent.width; height: parent.height;
-              Row { spacing: 10
-                Text   { y: (parent.height-height)/2; text: qsTr("Cog (mirror front to cog"); }
-                MyOText { y: (parent.height-height)/2; text: scopeView.model.cog }
-              }
-              Row { spacing: 10
-                Text    { y: (parent.height-height)/2; text: qsTr("bottom Len"); }
-                MyText  { y: (parent.height-height)/2; text: scopeView.model.cogBotLen; onTextChanged: scopeView.model.cogBotLen= text; }
-                Text    { y: (parent.height-height)/2; text: qsTr("mid Len"); }
-                MyOText { y: (parent.height-height)/2; text: scopeView.model.focal-scopeView.model.secondaryToFocal }
-                Text    { y: (parent.height-height)/2; text: qsTr("top Len"); }
-                MyText  { y: (parent.height-height)/2; text: scopeView.model.cogTopLen; onTextChanged: scopeView.model.cogTopLen= text; }
-                Text    { y: (parent.height-height)/2; text: qsTr("weight/mm"); }
-                MyText  { y: (parent.height-height)/2; text: scopeView.model.cogWeight; onTextChanged: scopeView.model.cogWeight= text; }
-              }
-              Row { spacing: 10
-                height: parent.height-y; width: parent.width
-                Column { spacing: 10
-                  height: parent.height; width: parent.width/2
-                  Row { spacing: 10
-                    Text    { y: (parent.height-height)/2; text: qsTr("Total bottom weight:"); }
-                    MyOText { y: (parent.height-height)/2; text: scopeView.model.cogBottomWeights }
-                    Button  { y: (parent.height-height)/2; text: qsTr("add"); onPressed: cogListViewBottom.currentIndex= scopeView.model.addBottomWeight(); }
-                  }
-                  ListView { id: cogListViewBottom
-                      model: scopeView.model.bottomWeights
-                      width: parent.width; height: parent.height-y;
-                      delegate: Row { spacing: 10; Component.onCompleted: setFont(this)
-                        Text   { y: (parent.height-height)/2; text: qsTr("text"); }
-                        MyText { y: (parent.height-height)/2; text: comment; onTextChanged: comment= text; }
-                        Text   { y: (parent.height-height)/2; text: qsTr("weight"); }
-                        MyText { y: (parent.height-height)/2; text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
-                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
-                      }
-                  }
-                }
-                Column { spacing: 10
-                  height: parent.height; width: parent.width/2
-                  Row { spacing: 10
-                    Text    { y: (parent.height-height)/2; text: qsTr("Total top weight:"); }
-                    MyOText { y: (parent.height-height)/2; text: scopeView.model.cogTopWeights }
-                    Button  { y: (parent.height-height)/2; text: qsTr("add"); onPressed: cogListViewTop.currentIndex= scopeView.model.addTopWeight(); }
-                  }
-                  ListView { id: cogListViewTop
-                      model: scopeView.model.topWeights
-                      width: parent.width; height: parent.height-y;
-                      delegate: Row { spacing: 10; Component.onCompleted: setFont(this)
-                        Text   { y: (parent.height-height)/2; text: qsTr("text"); }
-                        MyText { y: (parent.height-height)/2; text: comment; onTextChanged: comment= text; }
-                        Text   { y: (parent.height-height)/2; text: qsTr("weight"); }
-                        MyText { y: (parent.height-height)/2; text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
-                        Button { y: (parent.height-height)/2; text: qsTr("delete"); onPressed: scopeView.model.topWeightsRemove(index); }
-                      }
-                  }
-                }
-              }
-            }
+        Column { spacing: 10; width: parent.width; height: parent.height;
+			MyOText { caption: qsTr("Cog (mirror front to cog)"); text: scopeView.model.cog.toFixed(0) }
+			Flow { spacing: 10; width: parent.width; 
+				MyText  { caption: qsTr("bottom Len"); text: scopeView.model.cogBotLen; onTextChanged: scopeView.model.cogBotLen= text; }
+				MyOText { caption: qsTr("mid Len"); text: scopeView.model.focal-scopeView.model.secondaryToFocal }
+				MyText  { caption: qsTr("top Len"); text: scopeView.model.cogTopLen; onTextChanged: scopeView.model.cogTopLen= text; }
+				MyText  { caption: qsTr("weight/mm"); text: scopeView.model.cogWeight; onTextChanged: scopeView.model.cogWeight= text; }
+			}
+			Flickable { id: cogLists; width: parent.width; height: parent.height-y-parent.spacing;
+				property int maxw: 0
+			    function horizontalLayout() { return maxw<=(width-10)/2 ? 2 : 1; }
+			    contentHeight: 2*height/horizontalLayout();
+				contentWidth: width
+
+				ListView { id: bottomWeights
+					width: parent.width/cogLists.horizontalLayout(); height: Math.min(parent.height*0.8, contentHeight);
+					x: 0; y: 0;
+					header: Row { spacing: 10;
+								MyOText { caption: qsTr("Total bottom weight:"); text: scopeView.model.cogBottomWeights }
+								Button  { text: qsTr("add"); onPressed: currentIndex= scopeView.model.addBottomWeight(); }
+							}
+					model: scopeView.model.bottomWeights; 
+					delegate: Row { spacing: 10; Component.onCompleted: setFont(this); 
+						onWidthChanged: cogLists.maxw= Math.max(cogLists.maxw, width);
+						MyText { caption: qsTr("text"); text: comment; onTextChanged: comment= text; }
+						MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+						Button { text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
+					}
+				}
+				ListView {  id: topWeights
+					width: parent.width/cogLists.horizontalLayout(); height: Math.min(parent.height*0.8, contentHeight);
+					x: cogLists.horizontalLayout()==1 ? 0 : width; y: cogLists.horizontalLayout()==1 ? height+10 : 0;
+					header: Row { spacing: 10; 
+								MyOText { caption: qsTr("Total top weight:"); text: scopeView.model.cogTopWeights }
+								Button  { text: qsTr("add"); onPressed: currentIndex= scopeView.model.addTopWeight(); }
+							}
+					model: scopeView.model.topWeights; 
+					delegate: Row { spacing: 10; Component.onCompleted: setFont(this); 
+						onWidthChanged: cogLists.maxw= Math.max(cogLists.maxw, width);
+						MyText { caption: qsTr("text"); text: comment; onTextChanged: comment= text; }
+						MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+						Button { text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
+					}
+				}
+			}
         }
 
         //********************************
@@ -691,6 +650,15 @@ ApplicationWindow {
 				}
 			}
 		}
+
+        //********************************
+        // help page
+        //********************************
+		WebEngineView {
+			id: webView
+            width: parent.width; height: parent.height;
+            url: "qrc:/Resources/help/SBScope_help.htm"
+		}
     }
 
     //********************************
@@ -701,16 +669,17 @@ ApplicationWindow {
                 width: parent.width
                 id: tabBar
                 currentIndex: scopeView.currentIndex
-                TabButton { text: qsTr("Scope") }
-                TabButton { text: qsTr("EP") }
-                TabButton { text: qsTr("Secondary") }
-                TabButton { text: qsTr("Hogging") }
-                TabButton { text: qsTr("Parabolizing") }
-                TabButton { text: qsTr("Couder") }
-                TabButton { text: qsTr("Webcam") }
-                TabButton { text: qsTr("Support") }
-                TabButton { text: qsTr("COG") }
-                TabButton { text: qsTr("Notes") }
+                TabButton {  width: implicitWidth; text: qsTr("Scope") }
+                TabButton {  width: implicitWidth; text: qsTr("EP") }
+                TabButton {  width: implicitWidth; text: qsTr("Secondary") }
+                TabButton {  width: implicitWidth; text: qsTr("Hogging") }
+                TabButton {  width: implicitWidth; text: qsTr("Parabolizing") }
+                TabButton {  width: implicitWidth; text: qsTr("Couder") }
+                TabButton {  width: implicitWidth; text: qsTr("Webcam") }
+                TabButton {  width: implicitWidth; text: qsTr("Support") }
+                TabButton {  width: implicitWidth; text: qsTr("COG") }
+                TabButton {  width: implicitWidth; text: qsTr("Notes") }
+                TabButton {  width: implicitWidth; text: qsTr("Help") }
             }
     }
 }

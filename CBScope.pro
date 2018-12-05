@@ -1,4 +1,4 @@
-QT += quick svg quickcontrols2 printsupport multimedia multimedia-private
+QT += quick svg quickcontrols2 printsupport multimedia multimedia-private webengine
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -70,6 +70,7 @@ win32 {
     MAKEDIR_COMMAND = mkdir
 
     DESTDIR = $$CONFIGTYPE/Win32
+    RC_ICONS = Resources/icon.ico
 }
 
 android {
@@ -86,6 +87,7 @@ android {
     }
 
     DESTDIR = $$CONFIGTYPE/Android
+    DEPLOYMENTFOLDERS += help
 }
 
 mac {
@@ -153,8 +155,20 @@ MOC_DIR= ./Intermediate/$$DESTDIR
 
 DISTFILES += \
     qml/MyMultiText.qml \
-    qml/MyOText.qml
+    qml/MyOText.qml \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat
 
 HEADERS +=
 
 SOURCES +=
+
+contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
+    ANDROID_PACKAGE_SOURCE_DIR = \
+        $$PWD/android
+}

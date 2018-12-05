@@ -49,13 +49,13 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 	}
 	int const maxSupportRings= 4;
 	struct { int nbPoints, n_mesh_rings;
-		     char nb_vars_to_opt; char optimize_vars[4][3]; // nb, which, index, isvar;
+             int8_t nb_vars_to_opt; int8_t optimize_vars[4][3]; // nb, which, index, isvar;
 			 int basis_ring;
-	         int n_num_support_rings; char num_support[maxSupportRings]; double rel_support_radii[maxSupportRings]; char rel_support_boud_vars[maxSupportRings];
+             int n_num_support_rings; int8_t num_support[maxSupportRings]; double rel_support_radii[maxSupportRings]; int8_t rel_support_boud_vars[maxSupportRings];
 			 int n_basis_ring_found, basis_ring_found[6];
 			 int n_support_angle;  double support_angle[maxSupportRings];
 			 int nbVars; double varVals[4];
-			 int n_parts; struct { char type, quantity, point_type[3], ring_num[3], point_num[3]; } parts[5];
+             int n_parts; struct { int8_t type, quantity, point_type[3], ring_num[3], point_num[3]; } parts[5];
 	       }
         const cellDefs[]={
 			//       opt vars                                     sup_rings nb, pts & diam                       basis_rng               angles          vars                       parts
