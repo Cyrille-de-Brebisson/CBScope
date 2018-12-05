@@ -1,4 +1,4 @@
-QT += quick svg quickcontrols2 printsupport multimedia multimedia-private webengine
+QT += quick svg quickcontrols2 printsupport multimedia multimedia-private
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use

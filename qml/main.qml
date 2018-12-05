@@ -16,7 +16,7 @@ import CBScopeMes 1.0
 import QtMultimedia 5.8
 import CBScopeVirtualCouder 1.0
 import CBScopeCouderOverlay 1.0
-import QtWebEngine 1.7
+import QtWebView 1.1
 
 ApplicationWindow {
     id: window
@@ -654,7 +654,7 @@ ApplicationWindow {
         //********************************
         // help page
         //********************************
-		WebEngineView {
+        WebView {
 			id: webView
             width: parent.width; height: parent.height;
             url: "qrc:/Resources/help/SBScope_help.htm"
