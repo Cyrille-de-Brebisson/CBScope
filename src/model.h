@@ -913,7 +913,8 @@ public:
       if (index<0 || index>4 || prop<0 || prop>2) return 0.0;
       return props[index][prop];
     }
-	QMutex lock;
+    Q_INVOKABLE bool help();
+    QMutex lock;
 	QString _errMsg, _dbgMsg, _warMsg;
 	QString getErrMsg() { lock.lock(); QString r(_errMsg); lock.unlock(); return r; }
 	void setErrMsg(QString v) { lock.lock(); _errMsg= v; lock.unlock(); emit errMsgChanged(); }

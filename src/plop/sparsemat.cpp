@@ -20,6 +20,9 @@ extern void DebugMsg (char const *);
 
 #include "plop_debug.h"
 
+#undef NULL
+#define NULL nullptr
+
 extern int please_stop_plop;
 
 extern void terminate_plop (void);
@@ -51,18 +54,18 @@ typedef struct sparse_mat_el_rec {
 #endif
 
 
-sparse_ptr free_mat_el_chunks [sparse_pool_max_chunks];
+static sparse_ptr free_mat_el_chunks [sparse_pool_max_chunks];
 
 
-int next_avail_in_chunk;
-int current_sparse_pool_chunk;
+static int next_avail_in_chunk;
+static int current_sparse_pool_chunk;
 
-sparse_ptr free_mat_el_list;
+static sparse_ptr free_mat_el_list;
 
-int n_matrix_ops;
+static int n_matrix_ops;
 
-sparse_ptr *sparse_matrix_rows;
-int sparse_matrix_size;
+static sparse_ptr *sparse_matrix_rows;
+static int sparse_matrix_size;
 
 
 void clear_mat (void)
@@ -148,7 +151,7 @@ void zap_col (
 double find_el (
 	int i,
    int j)
-{	register sparse_ptr p;
+{	sparse_ptr p;
 
 	for (p = sparse_matrix_rows [i]; p != NULL && p->j != j; p = p->next_j)
 		;
@@ -162,9 +165,9 @@ void add_to_el (
 	int i,
 	int j,
 	double value)
-{	register sparse_ptr p;
-	register sparse_ptr pp;
-	register sparse_ptr pnew;
+{	sparse_ptr p;
+    sparse_ptr pp;
+    sparse_ptr pnew;
 
 #ifdef debug
 	printf ("%d %d %g\n", i, j, value);
@@ -195,7 +198,7 @@ void print_vector (
 	char *str)
 {	int i;
 
-	printf (str);
+    printf ("%s", str);
 	for (i = 0; i < n; i++)
 		printf (" %e", v [i]);
 	printf ("\n");
@@ -433,12 +436,11 @@ void solve_sparse_sys (
 void solve_sparse_sys (
 	double **result,
 	int n_results)
-{	register sparse_ptr p, pp, pnew;
+{	sparse_ptr p, pp, pnew;
 	sparse_ptr pother;
-	register int i, j;
+    int i;
 	int iother;
-	register int k;
-	register sparse_ptr piv_p;
+    int k;
 	double pivotval;
 #ifdef gui_plop
 	int rows_per_step;

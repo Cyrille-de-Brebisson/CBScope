@@ -148,6 +148,7 @@ ApplicationWindow {
                     wrapMode: Text.Wrap; readOnly: true;
                 }
                 Flow { id: scopeBottomRow; width: parent.width; spacing: 10;
+                    Button { text: "help"; onClicked: CBSModel.help(); }
                     Button { text: qsTr("Email scope"); onClicked: scopeView.model.email(); }
                     Button { text: qsTr("Receive scope"); onClicked: receiveScopePopup.open(); }
                     ComboBox {
@@ -650,15 +651,6 @@ ApplicationWindow {
 				}
 			}
 		}
-
-        //********************************
-        // help page
-        //********************************
-        WebView {
-			id: webView
-            width: parent.width; height: parent.height;
-            url: "qrc:/Resources/help/SBScope_help.htm"
-		}
     }
 
     //********************************
@@ -679,7 +671,6 @@ ApplicationWindow {
                 TabButton {  width: implicitWidth; text: qsTr("Support") }
                 TabButton {  width: implicitWidth; text: qsTr("COG") }
                 TabButton {  width: implicitWidth; text: qsTr("Notes") }
-                TabButton {  width: implicitWidth; text: qsTr("Help") }
             }
     }
 }
