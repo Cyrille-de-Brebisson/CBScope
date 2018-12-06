@@ -1065,8 +1065,8 @@ public:
 	  uint32_t *ronchi; int ronchisize;
 	  double diam, roc, grad, off;
 	  int imagew, imageh; // these get set in the CBScopeVirtualCouderRunnable::run function...
-	  bool inverted;
   public:
+      bool inverted;
       CBVirtualCouderOverlayInternal(bool inverted): ronchi(nullptr), ronchisize(0), imagew(-1), imageh(-1), inverted(inverted) {}
 	  ~CBVirtualCouderOverlayInternal() { if (ronchi!=nullptr) delete[] ronchi; }
 	  void userclick(CBSModelScope *_scope, double x, double y) // find which zone the used clicked in and select it...

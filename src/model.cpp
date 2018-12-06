@@ -773,12 +773,15 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
 
     if (filter!=nullptr)
 	{
-		double dpi; QPoint c;
-		filter->vco.draw(tempImage, filter->getScope(), dpi, c);
+        #ifdef OSX
+            filter->vco.inverted= true;
+        #endif
+        double dpi; QPoint c;
+        filter->vco.draw(tempImage, filter->getScope(), dpi, c);
 		if (filter->getScope()!=nullptr)
 		{
   			QPainter p(&tempImage);
-			filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+            filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
 		}
 	}
     inputframe->unmap();
