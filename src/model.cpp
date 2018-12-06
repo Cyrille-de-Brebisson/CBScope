@@ -26,6 +26,27 @@ void CBSModelHoggingWork::setScope(CBSModelScope *v)
 	connect(this, SIGNAL(hogSpeedChanged()), v, SLOT(emitHogTimeWithGritChanged())); 
 }
 
+bool CBSModel::help()
+{
+    QString temp(QStandardPaths::writableLocation(QStandardPaths::TempLocation)+"/CBScope");
+    QDir(temp).mkdir(".");
+    QDir(temp+"/CBScope_help_files").mkdir(".");
+    if (!QFile::copy(":/Resources/help/CBScope_help.htm", temp+"/CBScope_help.htm")) goto er;
+    {
+        QDirIterator it(":/Resources/help/CBScope_help_files");
+        while (it.hasNext()) {
+            QString s = it.next();
+            if (it.fileInfo().isDir()) continue;
+            if (!QFile::copy(s, temp+"/CBScope_help_files/"+it.fileName())) goto er;
+        }
+        QDesktopServices::openUrl(QUrl(temp+"/CBScope_help.htm"));
+        return true;
+    }
+    er:
+    QDesktopServices::openUrl(QUrl("https://github.com/Cyrille-de-Brebisson/CBScope/wiki/Help"));
+    return false;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Couder painting functions...
 

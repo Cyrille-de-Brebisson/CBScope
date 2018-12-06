@@ -1,4 +1,4 @@
-QT += quick svg quickcontrols2 printsupport multimedia multimedia-private
+QT += quick quickcontrols2 printsupport multimedia multimedia-private
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -163,6 +163,20 @@ DISTFILES += \
     android/res/values/libs.xml \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
     android/gradlew.bat
 
 HEADERS +=
@@ -173,3 +187,5 @@ contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
 }
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
