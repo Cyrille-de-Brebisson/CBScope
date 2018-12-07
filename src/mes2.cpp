@@ -21,11 +21,13 @@ public:
 private:
 	void run() override
 	{
+        QTime s= QTime::currentTime();
 		init_default_basis();
 		plate_init();
 		run_plate();
 		mesThread= nullptr;
-		emit mesToUse->calcChanged();
+        mesToUse->setMatrixProgresses(s.elapsed());
+        emit mesToUse->calcChanged();
 	}
 };
 

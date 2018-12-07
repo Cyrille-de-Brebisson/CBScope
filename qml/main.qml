@@ -16,7 +16,6 @@ import CBScopeMes 1.0
 import QtMultimedia 5.8
 import CBScopeVirtualCouder 1.0
 import CBScopeCouderOverlay 1.0
-import QtWebView 1.1
 
 ApplicationWindow {
     id: window
@@ -577,7 +576,7 @@ ApplicationWindow {
 								currentIndex: scopeSupport.zoom
 								onCurrentIndexChanged: scopeSupport.zoom= currentIndex;
 					 }
-					Button { text: (!scopeSupport.calc ? "Calc" : "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%"); 
+                    Button { text: (!scopeSupport.calc ? (scopeSupport.matrixProgresses===0 ? "Calc" : "Calc "+ scopeSupport.matrixProgresses): "stop "+(scopeSupport.matrixProgresses*100).toFixed(0)+"%");
 							 onClicked: if (scopeSupport.calc) scopeSupport.doMesStop(); else scopeSupport.doMesSolve(); }
 				}
 				MyOText { caption: "P-V err"; text: (scopeSupport.errPV*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errPV).toFixed(0) }
