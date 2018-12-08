@@ -629,7 +629,7 @@ ApplicationWindow {
 						onWidthChanged: cogLists.maxw= Math.max(cogLists.maxw, width);
 						MyText { caption: qsTr("text"); text: comment; onTextChanged: comment= text; }
 						MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
-						Button { text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
+                        Button { text: qsTr("delete"); onPressed: scopeView.model.topWeightsRemove(index); }
 					}
 				}
 			}
