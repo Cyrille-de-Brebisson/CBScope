@@ -72,6 +72,17 @@ ApplicationWindow {
             text: qsTr("New Scope")
             onClicked: scopes.currentIndex= CBSModel.addScope(scopes.currentIndex);
         }
+        Button { id: chrono
+            property double startTime
+            property double time: 0
+            property bool  mode: false
+            text: (mode ? qsTr("Stop ") : qsTr("Start "))+Math.floor(time/60000)+":"+Math.floor((time/1000)%60);
+            onClicked: { mode= !mode; if (mode) { startTime= new Date().getTime(); time= 0; } }
+            Timer { running: chrono.mode
+                interval: 1000; repeat: true;
+                onTriggered: chrono.time= new Date().getTime()-chrono.startTime;
+            }
+        }
     }
 
     //*******************************************************
