@@ -304,6 +304,7 @@ ApplicationWindow {
                                     MyOText { caption: qsTr("hog/time");   text: hogSpeed.toFixed(1); }
                                     MyOText { caption: qsTr("end sagita"); text: endSagita.toFixed(2); }
                                     MyOText { caption: qsTr("% done in this run"); text: percentDone.toFixed(2); }
+                                    MyOText { caption: qsTr("hogged"); text: hogged.toFixed(0); }
                                 }
                             }
                         }
@@ -325,6 +326,7 @@ ApplicationWindow {
                     Flow { spacing: 10; width: parent.width; 
                         MyOText { caption: qsTr("total to hog");   text: scopeView.model.toHog.toFixed(2); }
                         MyOText { caption: qsTr("left to hog"); text: scopeView.model.leftToHog.toFixed(2); }
+                        MyOText { caption: qsTr("Total spent time"); text: scopeView.model.totalHogTime; }
                     }
                 }
             }

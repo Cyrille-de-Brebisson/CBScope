@@ -23,7 +23,8 @@ void CBSModelHoggingWork::setScope(CBSModelScope *v)
 	if (v==_scope) return; _scope= v; 
 	connect(this, SIGNAL(gritChanged()), v, SLOT(emitHogTimeWithGritChanged()));
 	connect(this, SIGNAL(endSphereChanged()), v, SLOT(emitHogTimeWithGritChanged()));
-	connect(this, SIGNAL(hogSpeedChanged()), v, SLOT(emitHogTimeWithGritChanged())); 
+    connect(this, SIGNAL(hogSpeedChanged()), v, SLOT(emitHogTimeWithGritChanged())); 
+    connect(this, SIGNAL(hogTimeChanged()), v, SLOT(emittotalHogTimeChanged())); 
 }
 
 bool CBSModel::help()

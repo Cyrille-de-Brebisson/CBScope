@@ -197,11 +197,12 @@ class CBSModelHoggingWork : public CBSSaveLoadObject {
 public:
     CBSProp(QString, comments, Comments)
     CBSPropE(double, time, Time, emit hogSpeedChanged())                   // time spent to do this work.
-    CBSPropE(double, startSphere, StartSphere, emit hogSpeedChanged(); emit percentDoneChanged();)     // sphere radius at begining of the work
-    CBSPropE(double, endSphere, EndSphere, emit hogSpeedChanged(); emit endSagitaChanged(); emit percentDoneChanged(); emit endSphereSpherometerChanged(); ) // sphere radius at end of the work
+    CBSPropE(double, startSphere, StartSphere, emit hogSpeedChanged(); emit percentDoneChanged(); emit hoggedChanged())     // sphere radius at begining of the work
+    CBSPropE(double, endSphere, EndSphere, emit hogSpeedChanged(); emit endSagitaChanged(); emit percentDoneChanged(); emit endSphereSpherometerChanged(); emit hoggedChanged()) // sphere radius at end of the work
     CBSProp(double, grit, Grit)                                            // grit that was used
     Q_PROPERTY(double hogSpeed READ getHogSpeed NOTIFY hogSpeedChanged)    // calculated property. Speed of hoggin in mm^3/mn
     Q_PROPERTY(double endSagita READ getEndSagita NOTIFY endSagitaChanged) // based on endSphere
+    Q_PROPERTY(double hogged READ getHogged NOTIFY hoggedChanged) // based on endSphere
     Q_PROPERTY(double percentDone READ getPercentDone NOTIFY percentDoneChanged) // based on endSphere. But will not get notified if scope data changes. Probably not a big issue at this point in time? Else, add notify in the connect bellow
 	Q_PROPERTY(CBSModelScope * scope READ getScope WRITE setScope NOTIFY scopeChanged)
 	CBSModelScope *_scope; CBSModelScope *getScope() { return _scope; }
@@ -217,10 +218,19 @@ Q_SIGNALS:
     void scopeChanged();
     void endSphereSpherometerChanged();
     void percentDoneChanged();
+    void hoggedChanged();
 public:
     CBSModelHoggingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _startSphere(0.0), _endSphere(0.0), _grit(0.0), _scope(nullptr) { }
     QList<QString> Ignored() const { QList<QString> l; l.append("scope"); return l; }
     double getEndSagita() { if (_scope==nullptr) return 0.0; return sagita(_endSphere, getScopeDiameter(_scope)); }
+    double getHogged()
+    {
+        if (_scope==nullptr) return 0;
+        double v1= 0.0, v2= 0.0;
+        if (!doubleEq(_startSphere, 0.0)) v1= volumeSphereCap(_startSphere, sagita(_startSphere, getScopeDiameter(_scope)));
+        if (!doubleEq(_endSphere, 0.0)) v2= volumeSphereCap(_endSphere, sagita(_endSphere, getScopeDiameter(_scope)));
+        return (v2-v1); // end-start divided by time!
+    }
     double getHogSpeed() // work done / time spent doig it!
     {
         if (doubleEq(_time, 0.0) || _scope==nullptr) return 0;
@@ -477,6 +487,7 @@ public:
     Q_PROPERTY(double toHog READ getToHog NOTIFY toHogChanged)
     Q_PROPERTY(double sagita READ getSagita NOTIFY sagitaChanged)
     Q_PROPERTY(double hogTimeWithGrit READ getHogTimeWithGrit NOTIFY hogTimeWithGritChanged)
+    Q_PROPERTY(double totalHogTime READ getTotalHogTime NOTIFY totalHogTimeChanged)
     Q_PROPERTY(double nbZones READ getNbZones WRITE setNbZones NOTIFY nbZonesChanged)
     CBSProp(bool, slitIsMoving, SlitIsMoving)
     QML_OBJMODEL_PROPERTY(CBSModelHoggingWork, hoggings)
@@ -560,11 +571,13 @@ Q_SIGNALS:
 	void ronchiOffsetChanged();
 	void gradingChanged();
 	void fixedFocalChanged();
+    void totalHogTimeChanged();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
     void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); emit leftToHogChanged(); }
     void emitcogWeightChanged() { emit cogChanged(); emit cogBottomWeightsChanged(); emit cogTopWeightsChanged(); }
     void emitZoneChanged() { emit nbZonesChanged(); }
+    void emittotalHogTimeChanged() { emit totalHogTimeChanged(); }
 	void rezone()
 	{
 		m_zoneModel->clear();
@@ -642,6 +655,12 @@ public:
 		else for (int i=0; i<m_parabolizings->count(); i++) m_parabolizings->at(i)->setAdjustFocal(i==v ? std::nan("") : m_parabolizings->at(v)->_focale);
 		emit fixedFocalChanged();
 	}
+    double getTotalHogTime()
+    {
+      double ret= 0.0;
+      for (int i=0; i<m_hoggings->count(); i++) ret+= m_hoggings->at(i)->_time;
+      return ret;
+    }
 
 
     ///////////////////////////////////////////////////////////
