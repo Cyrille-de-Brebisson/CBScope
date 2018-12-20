@@ -42,5 +42,29 @@
         <file>Resources/help/CBScope_help_files/image029.png</file>
         <file>Resources/help/CBScope_help_files/image030.jpg</file>
         <file>Resources/help/CBScope_help_files/themedata.thmx</file>
+        <file>language/cbscope_cs.qm</file>
+        <file>language/cbscope_da.qm</file>
+        <file>language/cbscope_de.qm</file>
+        <file>language/cbscope_en.qm</file>
+        <file>language/cbscope_es.qm</file>
+        <file>language/cbscope_fi.qm</file>
+        <file>language/cbscope_fr.qm</file>
+        <file>language/cbscope_hr.qm</file>
+        <file>language/cbscope_hu.qm</file>
+        <file>language/cbscope_it.qm</file>
+        <file>language/cbscope_ja.qm</file>
+        <file>language/cbscope_ko.qm</file>
+        <file>language/cbscope_lt.qm</file>
+        <file>language/cbscope_lv.qm</file>
+        <file>language/cbscope_no.qm</file>
+        <file>language/cbscope_pl.qm</file>
+        <file>language/cbscope_pt-br.qm</file>
+        <file>language/cbscope_pt-pt.qm</file>
+        <file>language/cbscope_ru.qm</file>
+        <file>language/cbscope_sk.qm</file>
+        <file>language/cbscope_sr.qm</file>
+        <file>language/cbscope_sv.qm</file>
+        <file>language/cbscope_zh-cn.qm</file>
+        <file>language/cbscope_zh-tw.qm</file>
     </qresource>
 </RCC>

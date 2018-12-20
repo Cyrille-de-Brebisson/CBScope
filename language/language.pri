@@ -4,7 +4,7 @@ TRANSLATIONS+=  language/cbscope_en.ts \ # english
                 language/cbscope_cs.ts \ # czech
                 language/cbscope_da.ts \ # danish
                 language/cbscope_fi.ts \ # finnish
-                language/cbscope_fi.ts \ # french
+                language/cbscope_fr.ts \ # french
                 language/cbscope_de.ts \ # german
                 language/cbscope_hu.ts \ # hungarian
                 language/cbscope_it.ts \ # italian

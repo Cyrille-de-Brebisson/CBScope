@@ -868,6 +868,7 @@ public:
 	Q_PROPERTY(QString dbgMsg READ getDbgMsg WRITE setDbgMsg NOTIFY dbgMsgChanged)
 	Q_PROPERTY(QString warMsg READ getWarMsg WRITE setWarMsg NOTIFY warMsgChanged)
 	QML_OBJMODEL_PROPERTY(CBSModelScope, scopes)
+    Q_PROPERTY(bool canPrint READ getCanPrint NOTIFY canPrintChanged) // true if we can print
 Q_SIGNALS:
     void windowsPosXChanged();
     void windowsPosYChanged();
@@ -879,6 +880,7 @@ Q_SIGNALS:
 	void errMsgChanged();
 	void dbgMsgChanged();
 	void warMsgChanged();
+    void canPrintChanged();
 public:
     CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false)
     {
@@ -941,6 +943,7 @@ public:
 	void setDbgMsg(QString v) { lock.lock(); _dbgMsg= v; lock.unlock(); emit dbgMsgChanged(); }
 	QString getWarMsg() { lock.lock(); QString r(_warMsg); lock.unlock(); return r; }
 	void setWarMsg(QString v) { lock.lock(); _warMsg= v; lock.unlock(); emit warMsgChanged(); }
+    bool getCanPrint() { return CanPrint==1; }
 };
 
 //***********************************************
@@ -1025,7 +1028,6 @@ public:
 	CBSProp(int, nbEvals, NbEvals)
 	CBSProp(double, stepSize, StepSize)
 	Q_PROPERTY(bool calc READ getCalc NOTIFY calcChanged) // true if calculating!
-	Q_PROPERTY(bool canPrint READ getCanPrint NOTIFY canPrintChanged) // true if we can print
 Q_SIGNALS:
     void scopeChanged();
 	void showForcesChanged();
@@ -1042,7 +1044,6 @@ Q_SIGNALS:
 	void calcChanged();
 	void showSecondaryChanged();
 	void partsChanged();
-	void canPrintChanged();
 private:
 	bool hasPlopInit;
 	bool hasCalculated;
@@ -1068,7 +1069,6 @@ public:
 		createMirror(_scope->getDiametre(), _scope->getSecondary(), _scope->getThickness(), _scope->getYoung(), _scope->getPoisson(), _scope->getFocal(), _scope->getDensity(), _scope->getCellType()); 
 	}
 	Q_INVOKABLE void doMesStop();
-	bool getCanPrint() { return CanPrint==1; }
 	bool getCalc();
 	QBasicTimer timer;
 	void timerEvent(QTimerEvent *event) 

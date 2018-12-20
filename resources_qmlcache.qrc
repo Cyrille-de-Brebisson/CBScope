@@ -38,5 +38,29 @@
         <file alias="Resources/help/CBScope_help_files/image029.png">Resources/help/CBScope_help_files/image029.png</file>
         <file alias="Resources/help/CBScope_help_files/image030.jpg">Resources/help/CBScope_help_files/image030.jpg</file>
         <file alias="Resources/help/CBScope_help_files/themedata.thmx">Resources/help/CBScope_help_files/themedata.thmx</file>
+        <file alias="language/cbscope_cs.qm">language/cbscope_cs.qm</file>
+        <file alias="language/cbscope_da.qm">language/cbscope_da.qm</file>
+        <file alias="language/cbscope_de.qm">language/cbscope_de.qm</file>
+        <file alias="language/cbscope_en.qm">language/cbscope_en.qm</file>
+        <file alias="language/cbscope_es.qm">language/cbscope_es.qm</file>
+        <file alias="language/cbscope_fi.qm">language/cbscope_fi.qm</file>
+        <file alias="language/cbscope_fr.qm">language/cbscope_fr.qm</file>
+        <file alias="language/cbscope_hr.qm">language/cbscope_hr.qm</file>
+        <file alias="language/cbscope_hu.qm">language/cbscope_hu.qm</file>
+        <file alias="language/cbscope_it.qm">language/cbscope_it.qm</file>
+        <file alias="language/cbscope_ja.qm">language/cbscope_ja.qm</file>
+        <file alias="language/cbscope_ko.qm">language/cbscope_ko.qm</file>
+        <file alias="language/cbscope_lt.qm">language/cbscope_lt.qm</file>
+        <file alias="language/cbscope_lv.qm">language/cbscope_lv.qm</file>
+        <file alias="language/cbscope_no.qm">language/cbscope_no.qm</file>
+        <file alias="language/cbscope_pl.qm">language/cbscope_pl.qm</file>
+        <file alias="language/cbscope_pt-br.qm">language/cbscope_pt-br.qm</file>
+        <file alias="language/cbscope_pt-pt.qm">language/cbscope_pt-pt.qm</file>
+        <file alias="language/cbscope_ru.qm">language/cbscope_ru.qm</file>
+        <file alias="language/cbscope_sk.qm">language/cbscope_sk.qm</file>
+        <file alias="language/cbscope_sr.qm">language/cbscope_sr.qm</file>
+        <file alias="language/cbscope_sv.qm">language/cbscope_sv.qm</file>
+        <file alias="language/cbscope_zh-cn.qm">language/cbscope_zh-cn.qm</file>
+        <file alias="language/cbscope_zh-tw.qm">language/cbscope_zh-tw.qm</file>
     </qresource>
 </RCC>

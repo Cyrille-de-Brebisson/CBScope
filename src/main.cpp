@@ -3,12 +3,14 @@
 #include <QQuickStyle>
 #include <QIcon>
 #include "model.h"
+#include <QTranslator>
 
 static QGuiApplication *qtapp;
 QString getAppPath()
 {
     return qtapp->applicationDirPath();
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -28,10 +30,15 @@ int main(int argc, char *argv[])
 	qmlRegisterType<CBScopeCouderOverlay>("CBScopeCouderOverlay", 1, 0, "CBScopeCouderOverlay");
 
     QApplication app(argc, argv); qtapp= &app; app.setWindowIcon(iconApplication);
+    QTranslator translator;
+    translator.load(":/language/cbscope_"+QLocale::system().name()+".qm");
+    qApp->installTranslator(&translator);
+
     CBSModel::SingletonProvider(nullptr, nullptr); // Create the model and load files...
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
+    engine.retranslate();
     if (engine.rootObjects().isEmpty())
         return -1;
 
