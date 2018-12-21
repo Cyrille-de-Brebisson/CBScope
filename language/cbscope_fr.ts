@@ -341,7 +341,7 @@ Clicker sur Aide pour plus d'info</translation>
     <message>
         <location filename="../qml/main.qml" line="343"/>
         <source>nb zones (Suggest </source>
-        <translation>n# zones</translation>
+        <translation>n# zones (propose </translation>
     </message>
     <message>
         <location filename="../qml/main.qml" line="344"/>
