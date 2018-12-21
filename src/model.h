@@ -1,6 +1,4 @@
-//   Row wrap on small UI
 //   tab navigation
-//   indicate ROC offset and allow to fix other parabolization on that offset!
 //   find stroke that helped last time...
 //   Put camera on loader if mobile complains...
 //   current items on list views...
@@ -168,14 +166,19 @@ static double inline forwardOffsetForSecondary(double diagMinorAxis, double diag
 // they are 2 versions of the macro.
 // The normal version and the E version. The E version allows you to add code when the variable is changed
 // Talking about signals! Since ALL the signals HAVE to be together in Qt, you will still have to type the signal by hand :-(
-template <typename T> bool inline doubleEq(T d1, T d2) { return d1==d2; } // return true if the 2 numbers are equal with 10 significant digits
+template <typename T> bool inline doubleEq2(T d1, T d2) { return d1==d2; } // return true if the 2 numbers are equal with 10 significant digits
 static bool inline doubleEq(double d1, double d2) { return std::abs(d1-d2)<=std::abs((d1+d2)/2.0e10); } // return true if the 2 numbers are equal with 10 significant digits
+static bool inline doubleEq2(double d1, double &d2)
+{
+    if (isnan(d2) || d2<0.0) d2= 0.0; // make sure valid!
+    return doubleEq(d1, d2);
+}
 #define CBSPropE(type, name, Name, emits) \
     Q_PROPERTY(type name READ get##Name WRITE set##Name NOTIFY name##Changed) \
     type _##name; \
 public:\
     type get##Name() const { return _##name; } \
-    void set##Name(type v) { if (doubleEq(_##name,v)) return; _##name= v; emit name##Changed(); if (!signalsBlocked()) { emits; } }
+    void set##Name(type v) { if (doubleEq2(_##name,v)) return; _##name= v; emit name##Changed(); if (!signalsBlocked()) { emits; } }
 #define CBSProp(type, name, Name) CBSPropE(type, name, Name, {})
 
 
@@ -331,7 +334,10 @@ public:
 public:
     CBSPropE(double, scopeFocale, ScopeFocale, doCalculations()) // The scope data when the mesure was created as they can not be changed from there on.
     CBSPropE(double, scopeDiametre, ScopeDiametre, doCalculations())
-    CBSPropE(double, scopeConical, ScopeConical, doCalculations())
+    Q_PROPERTY(double scopeConical READ getScopeConical WRITE setScopeConical NOTIFY scopeConicalChanged)
+    double _scopeConical;
+    double getScopeConical() const { return _scopeConical; }
+    void setScopeConical(double v) { if (doubleEq(_scopeConical,v)) return; _scopeConical= v; emit scopeConicalChanged(); }
     CBSPropE(double, scopeSlitIsMoving, ScopeSlitIsMoving, doCalculations())
 Q_SIGNALS:
     void commentsChanged();
@@ -615,7 +621,7 @@ public:
     }
 
     // Various small getters
-    static int const _conical= -1.0;            // Used by parabolization hard set to -1 at the moment...
+    static int const _conical= -1.0;            // Used by parabolization hard set to 1 at the moment...
     double getSagita() { return ::sagita(_focal*2, _diametre); }                                      // get mirror sagita
     double getWeight() { return _diametre*_diametre/4.0*M_PI*_thickness*_density/1e6; }               // weight of the mirror...
     double getSecondaryOffset() { return -forwardOffsetForSecondary(_secondary, _secondaryToFocal); } // secondary offset toward primary
