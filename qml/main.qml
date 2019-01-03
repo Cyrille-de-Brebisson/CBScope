@@ -107,17 +107,18 @@ ApplicationWindow {
                     Button { id: scopeDelete
                         visible: CBSModel.scopes.count>1
                         text: qsTr("Delete")
-                        onClicked: CBSModel.scopes.remove(scopes.currentIndex);
+                        onClicked: { CBSModel.scopes.remove(scopes.currentIndex); scopes.currentIndex= 0; }
                     }
                 }
                 Text { text: qsTr("Comments") }
                 MyMultiText { width: parent.width; text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
                 Flow { spacing: 10;  id: scopeDiametreEdit; width: parent.width
                     MyText  { caption: qsTr("Diametre"); text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
-                    MyText  { caption: qsTr("Thicnkess"); text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
+                    MyText  { caption: qsTr("Thickness"); text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
                     MyOText { caption: qsTr("max zoom"); text: (50/25.4*scopeView.model.diametre).toFixed(0); }
                     MyOText { caption: qsTr("limiting magnitude"); text: (8.8+(5*Math.log(scopeView.model.diametre/25.4)/Math.log(10))).toFixed(0); }
                     MyOText { caption: qsTr("Resolution (ArcSec)"); text: (4.56/(scopeView.model.diametre/25.4)).toFixed(2); }
+                    MyOText { caption: qsTr("Nb Times Eye (5mm pupille)"); text: (scopeView.model.diametre*scopeView.model.diametre/25).toFixed(0); }
                 }
                 Flow { spacing: 10; width: parent.width
                     MyText { caption: qsTr("focal length"); text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
@@ -146,6 +147,14 @@ ApplicationWindow {
                                 onCurrentIndexChanged: { scopeView.model.density= CBSModel.materials(currentIndex-1, 2); scopeView.model.poisson= CBSModel.materials(currentIndex-1, 1); scopeView.model.young= CBSModel.materials(currentIndex-1, 0); }
                     }
                 }
+                Flow { spacing: 10; width: parent.width
+                    MyText  { caption: qsTr("top Len"); text: scopeView.model.cogTopLen; onTextChanged: scopeView.model.cogTopLen= Number(text); }
+                    MyText  { caption: qsTr("View angle"); text: scopeView.model.viewAngle; onTextChanged: scopeView.model.viewAngle= Number(text); }
+                    MyOText { caption: qsTr("radius top"); text: (Math.tan(scopeView.model.viewAngle/360*Math.PI)*(scopeView.model.focal-scopeView.model.secondaryToFocal+scopeView.model.cogTopLen)+scopeView.model.diametre/2).toFixed(0); }
+                    MyText  { caption: qsTr("Focusser height"); text: scopeView.model.focusserHeight; onTextChanged: scopeView.model.focusserHeight= text; }
+                    MyOText { caption: qsTr("Focusser play"); text: (scopeView.model.secondaryToFocal-scopeView.model.focusserHeight-(Math.tan(scopeView.model.viewAngle/360*Math.PI)*(scopeView.model.focal-scopeView.model.secondaryToFocal)+scopeView.model.diametre/2)).toFixed(0); }
+                }
+
                 Rectangle {
                     width: parent.width;
                     height: (scopeView.height-y) > (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) ? (scopeView.height-y) - (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) : 1;

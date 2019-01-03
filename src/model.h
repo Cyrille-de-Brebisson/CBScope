@@ -478,6 +478,7 @@ public:
     CBSProp(QString, secondariesToConcider, SecondariesToConcider) // for illumination  calculations
     CBSPropE(double, diametre, Diametre, emit nbZonesSuggestedChanged(); emit weightChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
     CBSPropE(double, thickness, Thickness, emit weightChanged())
+    CBSProp(double, viewAngle, ViewAngle)
     CBSPropE(double, density, Density, emit weightChanged())
     Q_PROPERTY(double weight READ getWeight NOTIFY weightChanged)
     CBSProp(double, young, Young)
@@ -485,6 +486,7 @@ public:
     CBSPropE(double, focal, Focal, emit nbZonesSuggestedChanged(); emit leftToHogChanged(); emit toHogChanged(); emit sagitaChanged(); emit hogTimeWithGritChanged())
     CBSPropE(double, secondary, Secondary, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
     CBSPropE(double, secondaryToFocal, SecondaryToFocal, emit nbZonesSuggestedChanged(); emit secondaryOffsetChanged())
+    CBSProp(double, focusserHeight, FocusserHeight)
     CBSProp(double, spherometerLegDistances, SpherometerLegDistances)
     CBSPropE(double, excludedAngle, ExcludedAngle, emit nbZonesSuggestedChanged())
     Q_PROPERTY(int nbZonesSuggested READ getNbZonesSuggested NOTIFY nbZonesSuggestedChanged)
@@ -578,6 +580,8 @@ Q_SIGNALS:
 	void gradingChanged();
 	void fixedFocalChanged();
     void totalHogTimeChanged();
+    void viewAngleChanged();
+    void focusserHeightChanged();
 public slots:
     void emitEpsChanged() { emit epsChanged(); }
     void emitHogTimeWithGritChanged() { emit hogTimeWithGritChanged(); emit leftToHogChanged(); }
@@ -595,7 +599,7 @@ public slots:
 	}
 public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
-                           _diametre(150), _thickness(25), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _spherometerLegDistances(56),
+                           _diametre(150), _thickness(25), _viewAngle(1.0), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _focusserHeight(100.0), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _fixedFocal(-1), _cellType(0),
                            _couderx(.5), _coudery(.5), _couderz(.80), _zone(0), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9),
 						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
@@ -623,7 +627,7 @@ public:
     // Various small getters
     static int const _conical= -1.0;            // Used by parabolization hard set to 1 at the moment...
     double getSagita() { return ::sagita(_focal*2, _diametre); }                                      // get mirror sagita
-    double getWeight() { return _diametre*_diametre/4.0*M_PI*_thickness*_density/1e6; }               // weight of the mirror...
+    double getWeight() { return (_diametre*_diametre/4.0*M_PI*_thickness-getToHog())*_density/1e6; }               // weight of the mirror...
     double getSecondaryOffset() { return -forwardOffsetForSecondary(_secondary, _secondaryToFocal); } // secondary offset toward primary
     double getToHog() { return volumeSphereCap(_focal*2, ::sagita(_focal*2, _diametre)); } // Total amount of material to hog for the mirror
     double getLeftToHog()                                                                  // amount of material left to hog to complete the mirror

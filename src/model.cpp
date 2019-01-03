@@ -335,17 +335,18 @@ void CBScopeIlumination::paint(QPainter *painter)
         QPoint pts[53*2+10]; int cnt= 0;                            // array of points that will be populated
         for (double fx= -rw/2.0; fx<=rw/2.0; fx+= 0.5)              // every 5mm of feild, calculate ilumination
         {
-            double v= calcOffAxisIllumination(_scope->_diametre, _scope->_focal, sec, _scope->_secondaryToFocal, std::abs(fx))-loss;
+            double v= calcOffAxisIllumination(_scope->_diametre, _scope->_focal, sec, _scope->_secondaryToFocal, std::abs(fx));
+            v= v-loss;
             int y= getY(v); pts[cnt].setY(y); pts[cnt++].setX(getX(fx)); // generate point
             if (abs(fx)<0.001 && pts[0].y()==y) alwaysmax= sec;          // test if all the numbers are at the same value (ie: no need to get bigger secondary)
         }
-        count++; // next secondary
         painter->save(); // save clip
         painter->setClipRect(addx, addy, w-2*addx, h-2*addy); // clip around graph area
         painter->drawPolyline(pts, cnt);    // draw curve
         painter->restore();                 // restore clip
         painter->drawText(secX, addy/2, n); // draw secondary size
         QFontMetrics fm(painter->font()); secX+= fm.width(n+" "); // spot for next secondary size drawing
+        count++; // next secondary
     }
 
     // Now, display eyepeices field of view
@@ -353,10 +354,15 @@ void CBScopeIlumination::paint(QPainter *painter)
     for (int i=0; i<_scope->get_eps()->count(); i++)          // for all EP
     {
         CBSModelEP *ep= _scope->get_eps()->at(i);
-        QPen p(colors[count%5]); p.setWidth(2);
-        painter->setPen(p);
+        QPen p(colors[count%5]); p.setWidth(2); painter->setPen(p);
         double f= ep->getField()/2.0; int x1= getX(-f), x2= getX(f); // calculate field
+        painter->save(); // save clip
+        painter->setClipRect(addx, addy, w-2*addx, h-2*addy); // clip around graph area
         painter->drawLine(x1, epsY, x2, epsY); epsY+= 3;             // draw it
+        p.setWidth(1); painter->setPen(p);
+        double at100p2= f+(_scope->_secondary/2.0-f)*_scope->_focusserHeight/_scope->_secondaryToFocal;
+        painter->drawLine(x2, addy, getX(at100p2), h-addy);
+        painter->restore(); // save clip
         QFontMetrics fm(painter->font());                            // draw EP name
         epsX-= fm.width(ep->getName()+" ");
         painter->drawText(epsX, addy/2, ep->getName());
