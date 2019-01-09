@@ -108,6 +108,7 @@ ApplicationWindow {
                         visible: CBSModel.scopes.count>1
                         text: qsTr("Delete")
                         onClicked: CBSModel.scopes.remove(scopes.currentIndex);
+                        onClicked: { CBSModel.scopes.remove(scopes.currentIndex); scopes.currentIndex= 0; }
                     }
                 }
                 Text { text: qsTr("Comments") }
@@ -146,6 +147,14 @@ ApplicationWindow {
                                 onCurrentIndexChanged: { scopeView.model.density= CBSModel.materials(currentIndex-1, 2); scopeView.model.poisson= CBSModel.materials(currentIndex-1, 1); scopeView.model.young= CBSModel.materials(currentIndex-1, 0); }
                     }
                 }
+                Flow { spacing: 10; width: parent.width
+                    MyText  { caption: qsTr("top Len"); text: scopeView.model.cogTopLen; onTextChanged: scopeView.model.cogTopLen= Number(text); }
+                    MyText  { caption: qsTr("View angle"); text: scopeView.model.viewAngle; onTextChanged: scopeView.model.viewAngle= Number(text); }
+                    MyOText { caption: qsTr("radius top"); text: (Math.tan(scopeView.model.viewAngle/360*Math.PI)*(scopeView.model.focal-scopeView.model.secondaryToFocal+scopeView.model.cogTopLen)+scopeView.model.diametre/2).toFixed(0); }
+                    MyText  { caption: qsTr("Focusser height"); text: scopeView.model.focusserHeight; onTextChanged: scopeView.model.focusserHeight= text; }
+                    MyOText { caption: qsTr("Focusser play"); text: (scopeView.model.secondaryToFocal-scopeView.model.focusserHeight-(Math.tan(scopeView.model.viewAngle/360*Math.PI)*(scopeView.model.focal-scopeView.model.secondaryToFocal)+scopeView.model.diametre/2)).toFixed(0); }
+                }
+
                 Rectangle {
                     width: parent.width;
                     height: (scopeView.height-y) > (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) ? (scopeView.height-y) - (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) : 1;
@@ -252,6 +261,7 @@ ApplicationWindow {
 					onSecondaryToFocalChanged:		scopeIlumination.update();
 					onSecondariesToConciderChanged: scopeIlumination.update();
 					onEpsChanged:					scopeIlumination.update();
+                    onSecondaryChanged:             scopeIlumination.update();
 				}
             }
         }
