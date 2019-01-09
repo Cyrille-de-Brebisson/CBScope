@@ -107,7 +107,6 @@ ApplicationWindow {
                     Button { id: scopeDelete
                         visible: CBSModel.scopes.count>1
                         text: qsTr("Delete")
-                        onClicked: CBSModel.scopes.remove(scopes.currentIndex);
                         onClicked: { CBSModel.scopes.remove(scopes.currentIndex); scopes.currentIndex= 0; }
                     }
                 }
@@ -115,10 +114,11 @@ ApplicationWindow {
                 MyMultiText { width: parent.width; text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
                 Flow { spacing: 10;  id: scopeDiametreEdit; width: parent.width
                     MyText  { caption: qsTr("Diametre"); text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
-                    MyText  { caption: qsTr("Thicnkess"); text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
+                    MyText  { caption: qsTr("Thickness"); text: scopeView.model.thickness; onTextChanged: scopeView.model.thickness= Number(text); }
                     MyOText { caption: qsTr("max zoom"); text: (50/25.4*scopeView.model.diametre).toFixed(0); }
                     MyOText { caption: qsTr("limiting magnitude"); text: (8.8+(5*Math.log(scopeView.model.diametre/25.4)/Math.log(10))).toFixed(0); }
                     MyOText { caption: qsTr("Resolution (ArcSec)"); text: (4.56/(scopeView.model.diametre/25.4)).toFixed(2); }
+                    MyOText { caption: qsTr("Nb Times Eye (5mm pupille)"); text: (scopeView.model.diametre*scopeView.model.diametre/25).toFixed(0); }
                 }
                 Flow { spacing: 10; width: parent.width
                     MyText { caption: qsTr("focal length"); text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
