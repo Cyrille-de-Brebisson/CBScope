@@ -118,7 +118,7 @@ ApplicationWindow {
                     MyOText { caption: qsTr("max zoom"); text: (50/25.4*scopeView.model.diametre).toFixed(0); }
                     MyOText { caption: qsTr("limiting magnitude"); text: (8.8+(5*Math.log(scopeView.model.diametre/25.4)/Math.log(10))).toFixed(0); }
                     MyOText { caption: qsTr("Resolution (ArcSec)"); text: (4.56/(scopeView.model.diametre/25.4)).toFixed(2); }
-                    MyOText { caption: qsTr("Nb Times Eye (5mm pupille)"); text: (scopeView.model.diametre*scopeView.model.diametre/25).toFixed(0); }
+                    MyOText { caption: qsTr("Nb Times Eye (5mm pupille)"); text: ((scopeView.model.diametre*scopeView.model.diametre-scopeView.model.secondary*scopeView.model.secondary)/25).toFixed(0); }
                 }
                 Flow { spacing: 10; width: parent.width
                     MyText { caption: qsTr("focal length"); text: scopeView.model.focal; onTextChanged: scopeView.model.focal= Number(text); }
