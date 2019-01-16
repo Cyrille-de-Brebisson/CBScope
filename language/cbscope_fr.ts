@@ -110,7 +110,7 @@
     <message>
         <location filename="../qml/main.qml" line="127"/>
         <source>sagita</source>
-        <translation></translation>
+        <translation>Flèche</translation>
     </message>
     <message>
         <location filename="../qml/main.qml" line="130"/>
@@ -292,7 +292,7 @@ Clicker sur Aide pour plus d&apos;info</translation>
     <message>
         <location filename="../qml/main.qml" line="315"/>
         <source>end sagita</source>
-        <translation>Profondeur</translation>
+        <translation>Flèche</translation>
     </message>
     <message>
         <location filename="../qml/main.qml" line="316"/>
