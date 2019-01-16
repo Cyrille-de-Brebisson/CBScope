@@ -514,7 +514,10 @@ public:
 	QML_OBJMODEL_PROPERTY(CBSQString, zoneModel)                       // list of the zones
 	CBSProp(bool, pause, Pause)                                        // pause webcam streaming
 	CBSProp(bool, ronchi, Ronchi)                                      // display ronchi
-	CBSProp(double, ronchiOffset, RonchiOffset)                        // out of focus for Ronchi
+    Q_PROPERTY(double ronchiOffset READ getRonchiOffset WRITE setRonchiOffset NOTIFY ronchiOffsetChanged) // out of focus for Ronchi
+    public: double _ronchiOffset;
+    double getRonchiOffset() const { return _ronchiOffset; }
+    void   setRonchiOffset(double v) { if (doubleEq(_ronchiOffset,v)) return; _ronchiOffset= v; emit ronchiOffsetChanged(); }
 	CBSProp(double, grading, Grading)                                  // 3.9 = 100 dpi or so
 
 	// Couder screen
