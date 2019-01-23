@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Generated Files">
       <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
@@ -70,16 +70,16 @@
     <Filter Include="qmlcachengen_loader">
       <UniqueIdentifier>{E0D8C965-CC5F-43d7-AD63-FAEF0BBC0F85}-qmlcache_loader</UniqueIdentifier>
       <ParseFiles>false</ParseFiles>
-    </Filter>
-    <Filter Include="Header Files\plop">
-      <UniqueIdentifier>{9c1c592b-bfb2-4884-93ba-2d39867023c2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\plop">
-      <UniqueIdentifier>{70305285-0893-4f45-a877-c5f150f536b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\QQmlObjectListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\gd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plop\grid_gen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
@@ -91,41 +91,68 @@
     <ClCompile Include="src\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\plop\grid_gen.cpp">
-      <Filter>Source Files\plop</Filter>
-    </ClCompile>
     <ClCompile Include="src\plop\plate.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\plate_global.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\plop_debug.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\plop_parser.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\plop_run.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\plot.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\plop\sparsemat.cpp">
-      <Filter>Source Files\plop</Filter>
-    </ClCompile>
-    <ClCompile Include="src\plop\gd.cpp">
-      <Filter>Source Files\plop</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\QQmlObjectListModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <ClInclude Include="src\plop\SparseStat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\gd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\grid_gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <QtMoc Include="src\model.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <ClInclude Include="src\plop\parm_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plate_global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_parms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plop_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\plot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plop\sparsemat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Intermediate\Debug\Win32\moc_predefs.h.cbt">
@@ -241,12 +268,113 @@
     <None Include="language\cbscope_zh-tw.ts">
       <Filter>Translation Files</Filter>
     </None>
+    <None Include=".\src\plop\makefile" />
+    <None Include=".\src\plop\plop.ide" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\cbscope.ico">
+    <None Include="Resources\help\CBScope_help.htm">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\cbscope.png">
+    <None Include="Resources\help\CBScope_help_files\colorschememapping.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\filelist.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\header.htm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icon.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image001.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image002.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image003.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image004.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image005.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image006.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image007.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image008.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image009.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image010.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image011.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image012.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image013.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image014.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image015.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image016.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image017.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image018.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image019.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image020.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image021.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image022.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image023.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image024.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image025.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image026.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image027.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image028.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image029.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\help\CBScope_help_files\image030.jpg">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="qml\qmldir">
@@ -255,12 +383,36 @@
     <QtRcc Include="resources_qmlcache.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
+    <None Include="Resources\help\CBScope_help_files\themedata.thmx">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="android\AndroidManifest.xml">
+      <Filter>Distribution Files</Filter>
+    </None>
     <None Include="qml\MyMultiText.qml">
       <Filter>Distribution Files</Filter>
     </None>
     <None Include="qml\MyOText.qml">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\build.gradle">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\gradle\wrapper\gradle-wrapper.jar">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\gradle\wrapper\gradle-wrapper.properties">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\gradlew.bat">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\gradlew">
+      <Filter>Distribution Files</Filter>
+    </None>
+    <None Include="android\res\values\libs.xml">
       <Filter>Distribution Files</Filter>
     </None>
   </ItemGroup>
@@ -287,38 +439,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\plop\global.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\plot.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\sparsemat.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\gd.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\grid_gen.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\parm_types.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\plate_global.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\plop_debug.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\plop_parms.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\plop_parser.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
-    <ClInclude Include="src\plop\SparseStat.h">
-      <Filter>Header Files\plop</Filter>
-    </ClInclude>
+    <ResourceCompile Include=".\CBScope_resource.rc" />
   </ItemGroup>
 </Project>

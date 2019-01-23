@@ -582,8 +582,15 @@ ApplicationWindow {
 							   model: ListModel { ListElement { name: "3 points" } 
 												  ListElement { name: "6 points" } 
 												  ListElement { name: "9 points" } 
+												  ListElement { name: "9 points fixed angles" } 
 												  ListElement { name: "18 points" }
-												  ListElement { name: "27 points" } ListElement { name: "36 points" } ListElement { name: "54 points" } } // does not work!
+												  ListElement { name: "18 points fixed angles" }
+												  ListElement { name: "27 points" } 
+												  ListElement { name: "27 points fixed angles" } 
+                                                  ListElement { name: "36 points" } 
+                                                  ListElement { name: "36 points fixed angles" } 
+                                                  ListElement { name: "54 points" }
+                                                  ListElement { name: "54 points fixed angles" } } 
 								textRole: "name";
 								currentIndex: scopeView.model.cellType 
 								onCurrentIndexChanged: scopeView.model.cellType= currentIndex;

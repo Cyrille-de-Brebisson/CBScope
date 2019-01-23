@@ -50,25 +50,111 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		alloc_plate_globals ();
 	}
 	int const maxSupportRings= 4;
-	struct { int nbPoints, n_mesh_rings;
-             int8_t nb_vars_to_opt; int8_t optimize_vars[4][3]; // nb, which, index, isvar;
-			 int basis_ring;
-             int n_num_support_rings; int8_t num_support[maxSupportRings]; double rel_support_radii[maxSupportRings]; int8_t rel_support_boud_vars[maxSupportRings];
-			 int n_basis_ring_found, basis_ring_found[6];
-			 int n_support_angle;  double support_angle[maxSupportRings];
-			 int nbVars; double varVals[4];
-             int n_parts; struct { int8_t type, quantity, point_type[3], ring_num[3], point_num[3]; } parts[5];
+	struct { int basis_ring, n_mesh_rings, n_num_support_rings; struct { double v; int boud_to_var, nb; } sup_radiis[9];
+             int n_parts; struct { int part_type, part_quantity, part_point_type[12], part_ring_num[12], part_point_num[12]; } parts[5];
+             int n_support_angle; struct { double v; int boud_to_var; } support_angles[9];
+             int n_basis_ring_found, basis_ring_found[9];
+             int n_optimize_vars; struct { int opt_var_which, opt_var_index, opt_var_is_var; double opt_var_step; } optimize_vars[10];
+             int n_variables, nbv; var_def vars[17];
 	       }
         const cellDefs[]={
-			//       opt vars                                     sup_rings nb, pts & diam                       basis_rng               angles          vars                       parts
-			{3,  8,  1,{{14, 0,0},          },                    3, 1, {3         }, {0.4          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 0,{                   },   0, {},                              },
-			{6,  12, 1,{{14, 0,0},          },                    3, 1, {6         }, {0.6          },{-1,0,0,0},    1, {3,      },      1, {0,  0,  0}, 0,{                   },   1, {{ 1, 3, {0, 0}, {0, 0}, {0, 1} } }},
-			{9,  12, 2,{{ 0,-1,1}, { 1,-1,1}},                    3, 3, {3,3,3     }, {0.0, 0.0, 0.0},{ 0,1,1,0},    1, {3,      },      3, {0, 30, 90}, 2,{0.2536,0.5597      },   1, {{ 0, 3, {0, 0, 0}, {0, 1, 2}, {0, 0, 2}} }},
-		    {18, 20, 2,{{14, 0,0}, {14, 1,0}},                    6, 2, {6,12      }, {0.37, 0.799  },{-1,-1,0,0},   1, {6,      },      2, {0, 15,  0}, 2,{0.325, 0.7798      },   2, {{ 0, 6, {0, 0, 0}, {0, 1, 1}, {0, 0, 11}}, { 1, 3, {1, 1}, {0, 0}, {0, 1} } }},
-		    {27, 20, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,9,12    }, {0.0, 0.0, 0.0},{ 0,1,2,0},    1, {3,      },      3, {30,20,15 }, 3,{0.33,0.666,0.8748  },   4, {{ 0, 3, {0, 0, 0}, {1, 2, 2}, {0, 0, 1}}, { 0, 3, {0, 0, 0}, {1, 2, 2}, {2, 2, 3} }, { 0, 3, {0, 0, 0}, {0, 0, 1}, {0, 1, 1} }, { 0, 3, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} } } },
-			{36, 24, 3,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}},           3, 3, {6,12,18   }, {0, 0, 0,     },{ 0,1,2,0},    1, {6,      },      0, {30,20,15 }, 3,{0.27,0.58,0.842    },   5, {{ 1, 6, {0, 0}, {0, 1}, {0, 0}}, { 1, 6, {0, 0}, {2, 2}, {0, 1} }, { 1, 6, {0, 0}, {1, 2}, {1, 2} }, { 0, 6, {1, 1, 1}, {0, 1, 2}, {0, 0, 0} }, { 1, 3, {1, 1}, {3, 3}, {0, 1} } } },
-			{54, 24, 4,{{ 0,-1,1}, {1,-1,1}, {2,-1,1}, {3,-1,1}}, 3, 4, {6,12,12,24}, {0, 0, 0,     },{ 0,1,2,3},    1, {6,      },      0, {30,20,15 }, 4,{.216,.478,.672,.886},   4, {{ 0, 6, {0, 0,0}, {0, 1,1}, {0, 0,11}}, { 0, 12, {0,0,0}, {2,3,3}, {0,1,0} }, { 0, 6, {1,1,1}, {0,1,1}, {0,0,11} }, { 1, 3, {1, 1}, {2, 2}, {0, 1} } } },
-		};
+              // 3 points
+              { 0, 8, 1, {{0.400000, -1, 3}, }, // mesh rings and support rings defs
+                0, {}, // parts
+                1, {{0.000000, -1}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                1, {{14, 0, 0, 0.010000},}, // vars to optimize
+                0, 0, {}, // vars
+              },
+              // 6 points
+              { 0, 12, 1, {{0.600000, -1, 6}, }, // mesh rings and support rings defs
+                1, {{1, 3, {0,0,0,},{0,0,0,},{0,1,0,}},}, // parts
+                1, {{0.000000, -1}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                1, {{14, 0, 0, 0.010000},}, // vars to optimize
+                0, 0, {}, // vars
+              },
+              // 9: variable_angles
+              { 0, 12, 3, {{0.000000, 0, 3}, {0.000000, 1, 3}, {0.000000, 1, 3}, }, // mesh rings and support rings defs
+                1, {{0, 3, {0,0,0,},{0,1,2,},{0,0,0,}},}, // parts
+                3, {{0.000000, -1}, {0.000000, 3}, {0.000000, 4}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                3, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 1.000000},}, // vars to optimize
+                5, 5, {{"r_inner", 0.303403, 0, 1, {0, 0.303403, 0}, {0, 0.000000, 0}},{"r_outer", 0.508024, 0, 1, {0, 0.508024, 0}, {0, 0.000000, 0}},{"angle", 34.060700, 0, 1, {0, 34.060700, 0}, {0, 0.000000, 0}},{"da1", 0.000000, 0, 2, {0, 0.000000, 0}, {1, 0.000000, 2}},{"da2", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 0.000000, 2}},}, // vars
+              },
+              // 9: fixed_angles
+              { 0, 12, 3, {{0.000000, 0, 3}, {0.000000, 1, 3}, {0.000000, 1, 3}, }, // mesh rings and support rings defs
+                1, {{0, 3, {0,0,0,},{0,1,2,},{0,0,2,}},}, // parts
+                3, {{0.000000, -1}, {30.000000, -1}, {90.000000, -1}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                2, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},}, // vars to optimize
+                2, 5, {{"r_inner", 0.253672, 0, 1, {0, 0.253672, 0}, {0, 0.000000, 0}},{"r_outer", 0.559738, 0, 1, {0, 0.559738, 0}, {0, 0.000000, 0}},{"angle", 40.213209, 0, 1, {0, 34.060700, 0}, {0, 0.000000, 0}},{"da1", 40.213043, 0, 2, {0, 0.000000, 0}, {1, 40.213043, 2}},{"da2", -40.213043, 0, 3, {0, 0.000000, 0}, {1, 40.213043, 2}},}, // vars
+              },
+              // 18: variable_angles
+              { 0, 20, 3, {{0.000000, 0, 6}, {0.000000, 1, 6}, {0.000000, 1, 6}, }, // mesh rings and support rings defs
+                2, {{0, 6, {0,0,0,1,1,0,},{0,1,2,0,0,0,},{0,0,0,0,1,0,}},{1, 3, {1,1,0,},{0,0,0,},{0,1,0,}},}, // parts
+                3, {{0.000000, -1}, {0.000000, 3}, {0.000000, 4}, }, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                3, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 1.000000},}, // vars to optimize
+                5, 5, {{"r_inner", 0.360449, 0, 1, {0, 0.360449, 0}, {0, 0.000000, 0}},{"r_outer", 0.795996, 0, 1, {0, 0.795996, 0}, {0, 0.000000, 0}},{"angle", 15.740600, 0, 1, {0, 15.740600, 0}, {0, 0.000000, 0}},{"a0p", 0.000000, 0, 2, {0, 0.000000, 0}, {1, 40.213043, 2}},{"a0m", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 40.213043, 2}},}, // vars
+              },
+              // 18: fixed_angles
+              { 0, 20, 2, {{0.371456, -1, 6}, {0.799131, -1, 12}, }, // mesh rings and support rings defs
+                2, {{0, 6, {0,0,0,1,1,0,},{0,1,1,0,0,0,},{0,0,11,0,1,0,}},{1, 3, {1,1,0,},{0,0,0,},{0,1,0,}},}, // parts
+                2, {{0.000000, -1}, {15.000000, -1}, }, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                2, {{14, 0, 0, 0.010000},{14, 1, 0, 0.010000},}, // vars to optimize
+                0, 5, {{"r_inner", 0.396028, 0, 1, {0, 0.360449, 0}, {0, 0.000000, 0}},{"r_outer", 0.794392, 0, 1, {0, 0.795996, 0}, {0, 0.000000, 0}},{"angle", 15.329860, 0, 1, {0, 15.740600, 0}, {0, 0.000000, 0}},{"a0p", 15.329860, 0, 2, {0, 0.000000, 0}, {1, 15.329860, 2}},{"a0m", -15.329860, 0, 3, {0, 0.000000, 0}, {1, 15.329860, 2}},}, // vars
+              },
+              // 27: variable_angles
+              { 0, 20, 9, {{0.000000, 0, 3}, {0.000000, 0, 3}, {0.000000, 1, 3}, {0.000000, 1, 3}, {0.000000, 2, 3}, {0.000000, 2, 3}, {0.000000, 3, 3}, {0.000000, 4, 3}, {0.000000, 4, 3}, }, // mesh rings and support rings defs
+                4, {{0, 3, {0,0,0,},{6,2,3,},{0,0,0,}},{0, 3, {0,0,0,},{0,4,7,},{0,0,0,}},{0, 3, {0,0,0,},{1,5,8,},{0,0,0,}},{0, 3, {1,1,1,},{0,1,2,},{0,0,0,}},}, // parts
+                9, {{0.000000, 9}, {0.000000, 10}, {0.000000, 11}, {0.000000, 12}, {0.000000, 13}, {0.000000, 14}, {60.000000, -1}, {0.000000, 15}, {0.000000, 16}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                9, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},{3, -1, 1, 0.010000},{4, -1, 1, 0.010000},{5, -1, 1, 1.000000},{6, -1, 1, 1.000000},{7, -1, 1, 1.000000},{8, -1, 1, 1.000000},}, // vars to optimize
+                17, 17, {{"r0", 0.343039, 0, 1, {0, 0.343039, 0}, {0, 0.000000, 0}},{"r1", 0.818302, 0, 1, {0, 0.818302, 0}, {0, 0.000000, 0}},{"r2", 0.775977, 0, 1, {0, 0.775977, 0}, {0, 0.000000, 0}},{"r3", 0.622112, 0, 1, {0, 0.622112, 0}, {0, 0.000000, 0}},{"r4", 0.767846, 0, 1, {0, 0.767846, 0}, {0, 0.000000, 0}},{"da0", 36.629300, 0, 1, {0, 36.629300, 0}, {0, 0.000000, 0}},{"da1", 14.148800, 0, 1, {0, 14.148800, 0}, {0, 0.000000, 0}},{"da2", 50.457300, 0, 1, {0, 50.457300, 0}, {0, 0.000000, 0}},{"da4", 34.313700, 0, 1, {0, 34.313700, 0}, {0, 0.000000, 0}},{"a0p", 60.000000, 0, 2, {0, 60.000000, 0}, {1, 0.000000, 5}},{"a0m", 60.000000, 0, 3, {0, 60.000000, 0}, {1, 0.000000, 5}},{"a1p", 60.000000, 0, 2, {0, 60.000000, 0}, {1, 0.000000, 6}},{"a1m", 60.000000, 0, 3, {0, 60.000000, 0}, {1, 0.000000, 6}},{"a2p", 60.000000, 0, 2, {0, 60.000000, 0}, {1, 0.000000, 7}},{"a2m", 60.000000, 0, 3, {0, 60.000000, 0}, {1, 0.000000, 7}},{"a4p", 60.000000, 0, 2, {0, 60.000000, 0}, {1, 0.000000, 8}},{"a4m", 60.000000, 0, 3, {0, 60.000000, 0}, {1, 0.000000, 8}},}, // vars
+              },
+              // 27: fixed_angles
+              { 0, 20, 3, {{0.000000, 0, 6}, {0.000000, 1, 9}, {0.000000, 2, 12}, }, // mesh rings and support rings defs
+                4, {{0, 3, {0,0,0,},{1,2,2,},{0,0,1,}},{0, 3, {0,0,0,},{1,2,2,},{2,2,3,}},{0, 3, {0,0,0,},{0,0,1,},{0,1,1,}},{0, 3, {1,1,1,},{0,1,2,},{0,0,0,}},}, // parts
+                3, {{30.000000, -1}, {20.000000, -1}, {15.000000, -1}, }, //support-angle (19)
+                1, {3, }, // basis-ring-size (21)
+                3, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},}, // vars to optimize
+                3, 17, {{"radius0", 0.331522, 0, 1, {0, 0.331522, 0}, {0, 0.000000, 0}},{"radius1", 0.666744, 0, 1, {0, 0.666744, 0}, {0, 0.000000, 0}},{"radius2", 0.874839, 0, 1, {0, 0.874839, 0}, {0, 0.000000, 0}},{"r3", 0.537722, 0, 1, {0, 0.622112, 0}, {0, 0.000000, 0}},{"r4", 0.764024, 0, 1, {0, 0.767846, 0}, {0, 0.000000, 0}},{"da0", 37.278965, 0, 1, {0, 36.629300, 0}, {0, 0.000000, 0}},{"da1", 12.758612, 0, 1, {0, 14.148800, 0}, {0, 0.000000, 0}},{"da2", 50.648333, 0, 1, {0, 50.457300, 0}, {0, 0.000000, 0}},{"da4", 33.240835, 0, 1, {0, 34.313700, 0}, {0, 0.000000, 0}},{"a0p", 97.278965, 0, 2, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a0m", 22.721035, 0, 3, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a1p", 72.758612, 0, 2, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a1m", 47.241388, 0, 3, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a2p", 110.648333, 0, 2, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a2m", 9.351667, 0, 3, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a4p", 93.240835, 0, 2, {0, 60.000000, 0}, {1, 33.240835, 8}},{"a4m", 26.759165, 0, 3, {0, 60.000000, 0}, {1, 33.240835, 8}},}, // vars
+              },
+              // 36: variable_angles
+              { 6, 24, 6, {{0.000000, 0, 6}, {0.000000, 1, 6}, {0.000000, 2, 6}, {0.000000, 4, 6}, {0.000000, 3, 6}, {0.000000, 3, 6}, }, // mesh rings and support rings defs
+                4, {{0, 6, {0,0,0,0,0,0,},{0,2,4,1,5,3,},{0,0,0,1,1,0,}},{0, 6, {0,0,0,1,1,0,},{1,5,3,0,1,0,},{1,1,0,0,0,0,}},{1, 6, {1,1,0,1,1,0,},{0,1,0,2,2,0,},{0,0,0,0,1,0,}},{1, 3, {1,1,0,},{2,2,0,},{0,1,0,}},}, // parts
+                6, {{0.000000, -1}, {0.000000, -1}, {30.000000, -1}, {30.000000, -1}, {0.000000, 7}, {0.000000, 8}, }, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                6, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},{3, -1, 1, 0.010000},{4, -1, 1, 0.010000},{7, -1, 1, 1.000000},}, // vars to optimize
+                9, 17, {{"r1", 0.279529, 0, 1, {0, 0.279529, 0}, {0, 0.000000, 0}},{"r2", 0.623028, 0, 1, {0, 0.623028, 0}, {0, 0.000000, 0}},{"r2b", 0.584620, 0, 1, {0, 0.584620, 0}, {0, 0.000000, 0}},{"r3", 0.860814, 0, 1, {0, 0.860814, 0}, {0, 0.000000, 0}},{"r3b", 0.850884, 0, 1, {0, 0.850884, 0}, {0, 0.000000, 0}},{"a2", 16.242500, 0, 1, {0, 16.242500, 0}, {0, 0.000000, 0}},{"m2", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 16.242500, 5}},{"a3", 10.593900, 0, 1, {0, 10.593900, 0}, {0, 0.000000, 0}},{"m3", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 10.585153, 7}},{"a0p", 97.278965, 0, 2, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a0m", 22.721035, 0, 3, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a1p", 72.758612, 0, 2, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a1m", 47.241388, 0, 3, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a2p", 110.648333, 0, 2, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a2m", 9.351667, 0, 3, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a4p", 93.240835, 0, 2, {0, 60.000000, 0}, {1, 33.240835, 8}},{"a4m", 26.759165, 0, 3, {0, 60.000000, 0}, {1, 33.240835, 8}},}, // vars
+              },
+              // 36: fixed_angles
+              { 6, 24, 3, {{0.000000, 0, 6}, {0.000000, 1, 12}, {0.000000, 2, 18}, }, // mesh rings and support rings defs
+                5, {{1, 6, {0,0,0,0,0,0,},{0,1,0,2,2,0,},{0,0,0,0,1,0,}},{1, 6, {0,0,0,0,0,0,},{2,2,0,1,2,0,},{0,1,0,1,2,0,}},{1, 6, {0,0,0,1,1,1,},{1,2,0,0,1,2,},{1,2,0,0,0,0,}},{0, 6, {1,1,1,1,1,0,},{0,1,2,3,3,0,},{0,0,0,0,1,0,}},{1, 3, {1,1,0,},{3,3,0,},{0,1,0,}},}, // parts
+                0, {}, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                3, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},}, // vars to optimize
+                3, 17, {{"r1", 0.270178, 0, 1, {0, 0.270178, 0}, {0, 0.000000, 0}},{"r2", 0.581761, 0, 1, {0, 0.581761, 0}, {0, 0.000000, 0}},{"r3", 0.842222, 0, 1, {0, 0.842222, 0}, {0, 0.000000, 0}},{"r3", 0.860814, 0, 1, {0, 0.860814, 0}, {0, 0.000000, 0}},{"r3b", 0.850884, 0, 1, {0, 0.850884, 0}, {0, 0.000000, 0}},{"a2", 16.242500, 0, 1, {0, 16.242500, 0}, {0, 0.000000, 0}},{"m2", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 16.242500, 5}},{"a3", 10.593900, 0, 1, {0, 10.593900, 0}, {0, 0.000000, 0}},{"m3", 0.000000, 0, 3, {0, 0.000000, 0}, {1, 10.585153, 7}},{"a0p", 97.278965, 0, 2, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a0m", 22.721035, 0, 3, {0, 60.000000, 0}, {1, 37.278965, 5}},{"a1p", 72.758612, 0, 2, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a1m", 47.241388, 0, 3, {0, 60.000000, 0}, {1, 12.758612, 6}},{"a2p", 110.648333, 0, 2, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a2m", 9.351667, 0, 3, {0, 60.000000, 0}, {1, 50.648333, 7}},{"a4p", 93.240835, 0, 2, {0, 60.000000, 0}, {1, 33.240835, 8}},{"a4m", 26.759165, 0, 3, {0, 60.000000, 0}, {1, 33.240835, 8}},}, // vars
+              },
+              // 54: variable_angles
+              { 6, 24, 4, {{0.000000, 0, 6}, {0.000000, 1, 12}, {0.000000, 2, 12}, {0.000000, 3, 24}, }, // mesh rings and support rings defs
+                4, {{0, 6, {0,0,0,0,0,0,},{0,1,1,2,3,3,},{0,0,11,0,1,0,}},{0, 12, {0,0,0,1,1,1,1,1,0,1,1,0,},{2,3,3,0,1,1,2,2,0,3,3,0,},{0,1,0,0,0,11,0,1,0,0,1,0,}},{0, 6, {1,1,1,1,1,0,},{0,1,1,2,2,0,},{0,0,11,0,1,0,}},{1, 3, {1,1,0,},{2,2,0,},{0,1,0,}},}, // parts
+                4, {{0.000000, -1}, {15.000000, -1}, {15.000000, -1}, {7.500000, -1}, }, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                4, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},{3, -1, 1, 0.010000},}, // vars to optimize
+                4, 17, {{"r0", 0.216033, 0, 1, {0, 0.216033, 0}, {0, 0.000000, 0}},{"r1", 0.478200, 0, 1, {0, 0.478200, 0}, {0, 0.000000, 0}},{"r2", 0.672383, 0, 1, {0, 0.672383, 0}, {0, 0.000000, 0}},{"r3", 0.886919, 0, 1, {0, 0.886919, 0}, {1, 15.329860, 2}},{"r3b", 0.841457, 0, 1, {0, 0.850884, 0}, {1, 15.329860, 2}},{"a2", 16.242500, 0, 1, {0, 16.242500, 0}, {0, 0.000000, 0}},{"m2", -16.242500, 0, 3, {0, 0.000000, 0}, {1, 16.242500, 5}},{"a3", 10.585153, 0, 1, {0, 10.593900, 0}, {0, 0.000000, 0}},{"m3", -10.585153, 0, 3, {0, 0.000000, 0}, {1, 10.585153, 7}},{"a0p", 97.002877, 0, 2, {0, 60.000000, 0}, {1, 37.002877, 5}},{"a0m", 22.997123, 0, 3, {0, 60.000000, 0}, {1, 37.002877, 5}},{"a1p", 72.851547, 0, 2, {0, 60.000000, 0}, {1, 12.851547, 6}},{"a1m", 47.148453, 0, 3, {0, 60.000000, 0}, {1, 12.851547, 6}},{"a2p", 110.707862, 0, 2, {0, 60.000000, 0}, {1, 50.707862, 7}},{"a2m", 9.292138, 0, 3, {0, 60.000000, 0}, {1, 50.707862, 7}},{"a4p", 93.322782, 0, 2, {0, 60.000000, 0}, {1, 33.322782, 8}},{"a4m", 26.677218, 0, 3, {0, 60.000000, 0}, {1, 33.322782, 8}},}, // vars
+              },
+              // 54: fixed_angles
+              { 6, 24, 4, {{0.000000, 0, 6}, {0.000000, 1, 12}, {0.000000, 2, 12}, {0.000000, 3, 24}, }, // mesh rings and support rings defs
+                4, {{0, 6, {0,0,0,0,0,0,},{0,1,1,2,3,3,},{0,0,11,0,1,0,}},{0, 12, {0,0,0,1,1,1,1,1,0,1,1,0,},{2,3,3,0,1,1,2,2,0,3,3,0,},{0,1,0,0,0,11,0,1,0,0,1,0,}},{0, 6, {1,1,1,1,1,0,},{0,1,1,2,2,0,},{0,0,11,0,1,0,}},{1, 3, {1,1,0,},{2,2,0,},{0,1,0,}},}, // parts
+                0, {}, //support-angle (19)
+                1, {6, }, // basis-ring-size (21)
+                4, {{0, -1, 1, 0.010000},{1, -1, 1, 0.010000},{2, -1, 1, 0.010000},{3, -1, 1, 0.010000},}, // vars to optimize
+                4, 17, {{"r0", 0.216033, 0, 1, {0, 0.216033, 0}, {0, 0.000000, 0}},{"r1", 0.478200, 0, 1, {0, 0.478200, 0}, {0, 0.000000, 0}},{"r2", 0.672383, 0, 1, {0, 0.672383, 0}, {0, 0.000000, 0}},{"r3", 0.886919, 0, 1, {0, 0.886919, 0}, {1, 15.329860, 2}},{"r3b", 0.841457, 0, 1, {0, 0.850884, 0}, {1, 15.329860, 2}},{"a2", 16.242500, 0, 1, {0, 16.242500, 0}, {0, 0.000000, 0}},{"m2", -16.242500, 0, 3, {0, 0.000000, 0}, {1, 16.242500, 5}},{"a3", 10.585153, 0, 1, {0, 10.593900, 0}, {0, 0.000000, 0}},{"m3", -10.585153, 0, 3, {0, 0.000000, 0}, {1, 10.585153, 7}},{"a0p", 97.002877, 0, 2, {0, 60.000000, 0}, {1, 37.002877, 5}},{"a0m", 22.997123, 0, 3, {0, 60.000000, 0}, {1, 37.002877, 5}},{"a1p", 72.851547, 0, 2, {0, 60.000000, 0}, {1, 12.851547, 6}},{"a1m", 47.148453, 0, 3, {0, 60.000000, 0}, {1, 12.851547, 6}},{"a2p", 110.707862, 0, 2, {0, 60.000000, 0}, {1, 50.707862, 7}},{"a2m", 9.292138, 0, 3, {0, 60.000000, 0}, {1, 50.707862, 7}},{"a4p", 93.322782, 0, 2, {0, 60.000000, 0}, {1, 33.322782, 8}},{"a4m", 26.677218, 0, 3, {0, 60.000000, 0}, {1, 33.322782, 8}},}, // vars
+              },
+        };
 
 		CBSModel::singleton->setErrMsg("");
 		CBSModel::singleton->setDbgMsg("");
@@ -124,14 +210,14 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		n_parts = cellDefs[_cellType].n_parts;
 		for (int i = 0; i < n_parts; i++)
 		{
-			part_type[i] = cellDefs[_cellType].parts[i].type;
-			part_quantity[i] = cellDefs[_cellType].parts[i].quantity;
-			for (int j = 0; j < part_quantity[i]; j++) part_point_type[i][j] = cellDefs[_cellType].parts[i].point_type[j];
-			for (int j = 0; j < part_quantity[i]; j++) part_ring_num[i][j] = cellDefs[_cellType].parts[i].ring_num[j];
-			for (int j = 0; j < part_quantity[i]; j++) part_point_num[i][j] = cellDefs[_cellType].parts[i].point_num[j];
+			part_type[i] = cellDefs[_cellType].parts[i].part_type;
+			part_quantity[i] = cellDefs[_cellType].parts[i].part_quantity;
+			for (int j = 0; j < part_quantity[i]; j++) part_point_type[i][j] = cellDefs[_cellType].parts[i].part_point_type[j];
+			for (int j = 0; j < part_quantity[i]; j++) part_ring_num[i][j] = cellDefs[_cellType].parts[i].part_ring_num[j];
+			for (int j = 0; j < part_quantity[i]; j++) part_point_num[i][j] = cellDefs[_cellType].parts[i].part_point_num[j];
 		}
 
-		basis_ring[0] = 3;
+		basis_ring[0] = cellDefs[_cellType].basis_ring;
 		basis_min[0] = 0;
 
 		// n-mesh-rings (11)
@@ -150,19 +236,19 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		*parm_list[14].bound_to_var = -1;
 		for (int i=0; i< cellDefs[_cellType].n_num_support_rings; i++) 
 		{
-			parm_list[14].dptr[i] = cellDefs[_cellType].rel_support_radii[i];
-			parm_list[14].bound_to_var[i] = cellDefs[_cellType].rel_support_boud_vars[i];
-		}
+			parm_list[14].dptr[i] = cellDefs[_cellType].sup_radiis[i].v;
+            parm_list[14].bound_to_var[i] = cellDefs[_cellType].sup_radiis[i].boud_to_var;
+        }
 		// num-support (17)
 		*parm_list[17].num_found = cellDefs[_cellType].n_num_support_rings;
 		parm_list[17].affects_basis = 0;
 		for (int i = 0; i < cellDefs[_cellType].n_num_support_rings; i++) parm_list[17].bound_to_var[i] = -1;
-		for (int i = 0; i < cellDefs[_cellType].n_num_support_rings; i++) parm_list[17].iptr[i] = cellDefs[_cellType].num_support[i];
+		for (int i = 0; i < cellDefs[_cellType].n_num_support_rings; i++) parm_list[17].iptr[i] = cellDefs[_cellType].sup_radiis[i].nb;
 		// support-angle (19)
 		*parm_list[19].num_found = cellDefs[_cellType].n_support_angle;
 		parm_list[19].affects_basis = 0;
-		for (int i = 0; i < cellDefs[_cellType].n_support_angle; i++) parm_list[19].bound_to_var[i] = -1;
-		for (int i = 0; i < cellDefs[_cellType].n_support_angle; i++) parm_list[19].dptr[i] = cellDefs[_cellType].support_angle[i];
+		for (int i = 0; i < cellDefs[_cellType].n_support_angle; i++) parm_list[19].bound_to_var[i] = cellDefs[_cellType].support_angles[i].boud_to_var;
+		for (int i = 0; i < cellDefs[_cellType].n_support_angle; i++) parm_list[19].dptr[i] = cellDefs[_cellType].support_angles[i].v;
 		// basis-ring-size (21)
 		*parm_list[21].num_found = cellDefs[_cellType].n_basis_ring_found;
 		parm_list[21].affects_basis = 0;
@@ -178,21 +264,16 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		n_scan_vars = 0;
 		n_scan_set_vars = 0;
 
-		n_optimize_vars = cellDefs[_cellType].nb_vars_to_opt;
-		for (int i = 0; i < n_optimize_vars; i++)
+        n_optimize_vars = cellDefs[_cellType].n_optimize_vars;
+        for (int i = 0; i < cellDefs[_cellType].n_optimize_vars; i++)
 		{
-			opt_var_which[i] =  cellDefs[_cellType].optimize_vars[i][0];
-			opt_var_index[i] =  cellDefs[_cellType].optimize_vars[i][1];
-			opt_var_is_var[i] = cellDefs[_cellType].optimize_vars[i][2];
-			opt_var_step[i] = 0.010000;
+			opt_var_which[i] =  cellDefs[_cellType].optimize_vars[i].opt_var_which;
+			opt_var_index[i] =  cellDefs[_cellType].optimize_vars[i].opt_var_index;
+			opt_var_is_var[i] = cellDefs[_cellType].optimize_vars[i].opt_var_is_var;
+			opt_var_step[i] = cellDefs[_cellType].optimize_vars[i].opt_var_step;
 		}
-		for (int i=0; i<cellDefs[_cellType].nbVars; i++)
-		{
-			strcpy(var_table[i].name, "ok");
-			var_table[i].value= cellDefs[_cellType].varVals[i];
-			var_table[i].affects_basis= 0;
-			var_table[i].var_def= 1;
-		}
+        n_variables = cellDefs[_cellType].n_variables;
+        for (int i=0; i<cellDefs[_cellType].nbv; i++) var_table[i]= cellDefs[_cellType].vars[i];
 
 		use_p_v_error = false;
         refocus_flag = true;
@@ -206,7 +287,7 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 
 		/////////////////////////////////////////////////////////////////////
 	#if 0
-		char buf[200];
+		char buf[2000];
 		sprintf(buf, "n_num_support_rings = %d;", n_num_support_rings); qDebug() << buf;
 		sprintf(buf, "n_mesh_rings = %d;", n_mesh_rings);              qDebug() << buf;
 
@@ -256,7 +337,9 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		}
 
 		sprintf(buf, "n_optimize_vars= %d;", n_optimize_vars); qDebug() << buf;
-		for (int i=0; i<n_optimize_vars; i++)
+        sprintf(buf, "n_variables= %d;", n_variables); qDebug() << buf;
+
+        for (int i=0; i<n_optimize_vars; i++)
 		{
 			sprintf(buf, "opt_var_which[%d]= %d;", i, opt_var_which[i]); qDebug() << buf;
 			sprintf(buf, "opt_var_index[%d]= %d;", i, opt_var_index[i]); qDebug() << buf;
@@ -265,16 +348,78 @@ void CBScopeMes::createMirror(double diametre, double secondary, double thicknes
 		}
 		int i=0; while (var_table[i].name[0]!=0)
 		{
-			sprintf(buf, "var_table[%d].name= %s;", i, var_table[i].name); qDebug() << buf;
-			sprintf(buf, "var_table[%d].value= %f;", i, var_table[i].value); qDebug() << buf;
-			sprintf(buf, "var_table[%d].affects_basis= %d;", i, var_table[i].affects_basis); qDebug() << buf;
-			sprintf(buf, "var_table[%d].var_def= %d;", i, var_table[i].var_def); qDebug() << buf;
-			i++;
+            sprintf(buf, "var_table[%d]= {\"%s\", %f, %d, %d, {%d, %f, %d}, {%d, %f, %d}};", i, var_table[i].name, var_table[i].value, var_table[i].affects_basis, var_table[i].var_def,
+                var_table[i].op1.opnd_type, var_table[i].op1.opnd_value, var_table[i].op1.opnd_which_var,
+                var_table[i].op2.opnd_type, var_table[i].op2.opnd_value, var_table[i].op2.opnd_which_var
+            ); qDebug() << buf;
+            i++;
 		}
 		sprintf(buf, "n_monte_vars= %d;", n_monte_vars); qDebug() << buf;
 		sprintf(buf, "n_scan_vars= %d;", n_scan_vars); qDebug() << buf;
 		sprintf(buf, "n_scan_set_vars= %d;", n_scan_set_vars); qDebug() << buf;
-	#endif
+
+        //////////////////////////////////////
+        // part 2
+        char buf2[200];
+        sprintf(buf, "  { %d, %d, %d, {", basis_ring[0], parm_list[11].iptr[0], *parm_list[14].num_found); // n_mesh_rings n_num_support_rings
+        for (int i = 0; i < *parm_list[14].num_found; i++)
+        {
+            sprintf(buf2, "{%f, %d, %d}, ", parm_list[14].dptr[i], parm_list[14].bound_to_var[i], parm_list[17].iptr[i]); strcat(buf, buf2);
+        }
+        strcat(buf, "}, // mesh rings and support rings defs"); qDebug() << buf;
+
+        // parts
+        sprintf(buf, "    %d, {", n_parts);
+        for (int i = 0; i < n_parts; i++)
+        {
+            sprintf(buf2, "{%d, %d, ", part_type[i], part_quantity[i]); strcat(buf, buf2);
+            strcat(buf, "{");
+            for (int j = 0; j < part_quantity[i]; j++) { sprintf(buf2, "%d,", part_point_type[i][j]); strcat(buf, buf2); }
+            strcat(buf, "},{");
+            for (int j = 0; j < part_quantity[i]; j++) { sprintf(buf2, "%d,", part_ring_num[i][j]); strcat(buf, buf2); }
+            strcat(buf, "},{");
+            for (int j = 0; j < part_quantity[i]; j++) { sprintf(buf2, "%d,", part_point_num[i][j]); strcat(buf, buf2); }
+            strcat(buf, "}},");
+        }
+        strcat(buf, "}, // parts"); qDebug() << buf;
+
+        // support-angle (19)
+        sprintf(buf, "    %d, {", *parm_list[19].num_found);
+        for (int i = 0; i < *parm_list[19].num_found; i++)
+        {
+            sprintf(buf2, "{%f, %d}, ", parm_list[19].dptr[i], parm_list[19].bound_to_var[i]); strcat(buf, buf2);
+        }
+        strcat(buf, "}, //support-angle (19)"); qDebug() << buf;
+
+        // basis-ring-size (21)
+        sprintf(buf, "    %d, {", *parm_list[21].num_found);
+        for (int i = 0; i < *parm_list[21].num_found; i++)
+        {
+            sprintf(buf2, "%d, ", parm_list[21].iptr[i]); strcat(buf, buf2);
+        }
+        strcat(buf, "}, // basis-ring-size (21)"); qDebug() << buf;
+
+        // vars to optimize
+        sprintf(buf, "    %d, {", n_optimize_vars);
+        for (int i = 0; i < n_optimize_vars; i++)
+        {
+            sprintf(buf2, "{%d, %d, %d, %f},", opt_var_which[i], opt_var_index[i], opt_var_is_var[i], opt_var_step[i]); strcat(buf, buf2);
+        }
+        strcat(buf, "}, // vars to optimize"); qDebug() << buf;
+
+        // vars
+        int nbv = 0; while (var_table[nbv].name[0] != 0) nbv++;
+        sprintf(buf, "    %d, %d, {", n_variables, nbv);
+        for (int i = 0; i < nbv; i++)
+        {
+            sprintf(buf2, "{\"%s\", %f, %d, %d, {%d, %f, %d}, {%d, %f, %d}},", var_table[i].name, var_table[i].value, var_table[i].affects_basis, var_table[i].var_def,
+                var_table[i].op1.opnd_type, var_table[i].op1.opnd_value, var_table[i].op1.opnd_which_var,
+                var_table[i].op2.opnd_type, var_table[i].op2.opnd_value, var_table[i].op2.opnd_which_var
+            ); strcat(buf, buf2);
+        }
+        strcat(buf, "}, // vars"); qDebug() << buf;
+        qDebug() << "  },";
+        #endif
 
 		/////////////////////////////////////////////////////////////////////
 		mutex.unlock();
