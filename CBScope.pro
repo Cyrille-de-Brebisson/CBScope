@@ -145,6 +145,7 @@ mac {
     #COPY_COMMAND_POST =
     MAKEDIR_COMMAND = mkdir -p
 
+    QMAKE_INFO_PLIST = ios/Info.plist
 
 }
 
