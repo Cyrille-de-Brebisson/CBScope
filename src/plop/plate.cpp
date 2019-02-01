@@ -189,58 +189,31 @@ void tri_int (
 	double *mx_p,
 	double *my_p,
 	double *mxy_p)
-{	int j;
+{
 	double area;
-	double mx;
-	double my;
-	double mxy;
 	double xcg;
 	double ycg;
-	double tri_x [tri_pts];
-	double tri_y [tri_pts];
+    double tri_x_0 = x[corners[i_tri][0]], tri_x_1 = x[corners[i_tri][1]], tri_x_2 = x[corners[i_tri][2]];
+    double tri_y_0 = y[corners[i_tri][0]], tri_y_1 = y[corners[i_tri][1]], tri_y_2 = y[corners[i_tri][2]];
 
-	xcg = 0;
-	ycg = 0;
-	for (j = 0; j < tri_pts; j++)
-	{	tri_x [j] = x [corners [i_tri] [j]];
-		tri_y [j] = y [corners [i_tri] [j]];
-		xcg += tri_x [j];
-		ycg += tri_y [j];
-	}
-	xcg /= tri_pts;
-	ycg /= tri_pts;
-	for (j = 0; j < tri_pts; j++)
-	{	tri_x_cg [j] = tri_x [j] - xcg;
-		tri_y_cg [j] = tri_y [j] - ycg;
-	}
-	area = 0;
-	mx = 0;
-	my = 0;
-	mxy = 0;
-	for (j = 0; j < tri_pts; j++)
-	{	area += tri_x_cg [j] * (tri_y_cg [(j + 1) % tri_pts] - tri_y_cg [(j + tri_pts - 1) % tri_pts]);
-		mx += tri_x_cg [j] * tri_x_cg [j];
-		my += tri_y_cg [j] * tri_y_cg [j];
-		mxy += tri_x_cg [j] * tri_y_cg [j];
-	}
-	area *= .5;
-	mx *= area / 12.0;
-	my *= area / 12.0;
-	mxy *= area / 12.0;
+    xcg= (tri_x_0 + tri_x_1 + tri_x_2) * (1.0/3.0); if (xcg_p!=nullptr) *xcg_p= xcg;
+    ycg= (tri_y_0 + tri_y_1 + tri_y_2) * (1.0/3.0); if (ycg_p!=nullptr) *ycg_p= ycg;
+    tri_x_0 -= xcg; tri_x_1 -= xcg; tri_x_2 -= xcg;
+    tri_y_0 -= ycg; tri_y_1 -= ycg; tri_y_2 -= ycg;
+    if (tri_x_cg!=nullptr) { tri_x_cg[0]= tri_x_0; tri_x_cg[1]= tri_x_1; tri_x_cg[2]= tri_x_2; }
+    if (tri_x_cg!=nullptr) { tri_y_cg[0]= tri_y_0; tri_y_cg[1]= tri_y_1; tri_y_cg[2]= tri_y_2; }
+
+    *area_p= area= (tri_x_0*(tri_y_1-tri_y_2) + tri_x_1*(tri_y_2-tri_y_0) + tri_x_2*(tri_y_0-tri_y_1))*0.5;
+
+    if (mx_p!=nullptr)  *mx_p=  (tri_x_0*tri_x_0 + tri_x_1*tri_x_1 + tri_x_2*tri_x_2)*area*(1.0/12.0);
+    if (my_p!=nullptr)  *my_p=  (tri_y_0*tri_y_0 + tri_y_1*tri_y_1 + tri_y_2*tri_y_2)*area*(1.0/12.0);
+    if (mxy_p!=nullptr) *mxy_p= (tri_x_0*tri_y_0 + tri_x_1*tri_y_1 + tri_x_2*tri_y_2)*area*(1.0/12.0);
 
 #ifdef debug
 	printf ("tri int %g %g %g %g %g %g\n", xcg, ycg, area, mx, my, mxy);
 	printf ("x cg %g %g %g ycg %g %g %g\n", tri_x_cg [0], tri_x_cg [1], tri_x_cg [2], 
 	tri_y_cg [0], tri_y_cg [1], tri_y_cg [2]);
 #endif
-
-	*xcg_p = xcg;
-	*ycg_p = ycg;
-	*area_p = area;
-	*mx_p = mx;
-	*my_p = my;
-	*mxy_p = mxy;
-	
 }
 
 void mat_inv (

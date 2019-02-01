@@ -66,5 +66,6 @@
         <file>language/cbscope_sv.qm</file>
         <file>language/cbscope_zh-cn.qm</file>
         <file>language/cbscope_zh-tw.qm</file>
+        <file>qml/MyJoystick.qml</file>
     </qresource>
 </RCC>

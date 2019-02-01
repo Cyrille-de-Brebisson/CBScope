@@ -724,17 +724,16 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 		int type= _scope->getVirtualCouderType(); // type of filtering to do...
 		if (type<0 || type>4) _scope->setVirtualCouderType(type= 0); // more sanity check
 		tt.count(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, bot*dpi, type); // count the pixels
-		int maxz1= 1, maxz2= 1;
-		for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz1) maxz1= tt.Z1[i]; if (tt.Z2[i]>maxz2) maxz2= tt.Z2[i]; } // max on each sides..
-		if (maxz2>maxz1) maxz1= maxz2; // equalize We could have only one max as a mater of fact, but since I added this later on and was not sure if it was a good idea, I am leaving it here so far
+		int maxz;
+		for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz) maxz= tt.Z1[i]; if (tt.Z2[i]>maxz) maxz= tt.Z2[i]; } // max on each sides..
 		for (int i=0; i<256/tt.bucket; i++) // for each bucket fo ilumination counting...
 		{
 			uint32_t *s= (uint32_t*)(tempImage.bits()+(tempImage.height()-i-1)*tempImage.bytesPerLine()); // point in the picture to the correct line/pow
-			int x= tt.Z1[i]*16/maxz1;                 // nb pixels to draw for left zone
+			int x= tt.Z1[i]*16/maxz;                 // nb pixels to draw for left zone
 			for (int j=16-x; --j>=0;) *s++= 0xffffffff; // draw white first
 			while (--x>=0) *s++= 0xff000000;                   // then black
 			*s++= 0xff0000ff;                          // and a blue vertical line
-			int x2= tt.Z2[i]*16/maxz2;                // same for the right zone, but inverted
+			int x2= tt.Z2[i]*16/maxz;                // same for the right zone, but inverted
 			x= x2; while (--x>=0) *s++= 0xff000000;
 			for (int j=16-x2; --j>=0;) *s++= 0xffffffff;
 		}

@@ -476,7 +476,7 @@ void calc_rms_new (
 	*err_vis_p_v = vis_z_max - vis_z_min;
 
 	for (itri = 0; itri < n_tri; itri++) {
-		tri_int (itri, corners, x, y, tri_x_cg, tri_y_cg, &xcg, &ycg, &area, &mx, &my, &mxy);
+		tri_int (itri, corners, x, y, nullptr, nullptr, nullptr, nullptr, &area, nullptr, nullptr, nullptr);
 		for (icorner = 0; icorner < tri_pts; icorner++) {
 			ipt = corners [itri] [icorner];
 			tx [icorner] = x [ipt];
@@ -771,7 +771,7 @@ void refocus_points (
 	}
 	load_refocus_functions (ref_type, n_functions, n_points, x, y, tmp_function_vals);
 	for (itri = 0; itri < n_tri; itri++) {
-		tri_int (itri, corners, x, y, tri_x_cg, tri_y_cg, &xcg, &ycg, &area, &mx, &my, &mxy);
+		tri_int (itri, corners, x, y, nullptr, nullptr, nullptr, nullptr, &area, nullptr, nullptr, nullptr);
 		for (icorner = 0; icorner < tri_pts; icorner++) {
 			ipt = corners [itri] [icorner];
 			tx [icorner] = x [ipt];
