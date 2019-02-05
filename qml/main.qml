@@ -550,8 +550,8 @@ ApplicationWindow {
 						}
 					}
                     MyJoystick { id: stick; x:0; y:0; width:100; height:80; caption: qsTr("mirror") }
-                    Text { x: 0; y: 200; text: "pos "+stick.xpos.toFixed(2)+" "+stick.ypos.toFixed(2); }
-                    Text { x: 0; y: 220; text: stick.speed+" speed "+stick.xspeed.toFixed(2)+" "+stick.yspeed.toFixed(2); }
+                    Text { x: 0; y: 200; text: "pos "+stick.xpos.toFixed(2)+" "+stick.ypos.toFixed(2)+" "+stick.zpos.toFixed(2); }
+                    Text { x: 0; y: 220; text: stick.speed+" speed "+stick.xspeed.toFixed(2)+" "+stick.yspeed.toFixed(2)+" "+stick.zspeed.toFixed(2); }
                     Button { x:parent.width-120+30; y: 0; width:30; height: 30; text: "^"; onPressed: parent.viewer().button(0); }
 					Button { x:parent.width-120+30; y:60; width:30; height: 30; text: "V"; onPressed: parent.viewer().button(1); }
 					Button { x:parent.width-120+ 0; y:30; width:30; height: 30; text: "<"; onPressed: parent.viewer().button(2); }

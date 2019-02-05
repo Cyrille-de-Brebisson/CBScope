@@ -10,12 +10,14 @@ Rectangle { id: root
     property double speed: 0.1
     property double xspeed: 0
     property double yspeed: 0
+    property double zspeed: 0
 
     Timer {
-        interval: 100; running: root.xspeed!=0 || root.yspeed!=0; repeat: true
+        interval: 100; running: root.xspeed!=0 || root.yspeed!=0 || root.zspeed!=0; repeat: true
         onTriggered: {
             if (xpos+xspeed>=-overallow && xpos+xspeed<=1+overallow) xpos+= xspeed;
             if (ypos+yspeed>=-overallow && ypos+yspeed<=1+overallow) ypos+= yspeed;
+            if (zpos+zspeed>=0 && zpos+zspeed<=1) zpos+= zspeed;
         }
     }
 
@@ -81,7 +83,7 @@ Rectangle { id: root
              onPositionChanged: doMouseChange()
              onReleased: doMouseChange()
              onPressed: doMouseChange()
-             onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) scopeView.model.couderz+= 0.05; if (wheel.angleDelta.y<0) scopeView.model.couderz-= 0.05; }
+             onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) root.zpos+= root.speed; if (wheel.angleDelta.y<0) root.zpos-= root.speed; }
          }
 
          Rectangle { id: joy
@@ -93,4 +95,44 @@ Rectangle { id: root
               radius: width*0.5
          }
     }
+
+    Rectangle { id: zoom
+         width: parent.width/5
+         height: parent.height-parent.border.width*4-txt.height
+         x: parent.width-parent.border.width*2-width;
+         y: parent.border.width*2+txt.height
+         border.color: "Black"
+         color: "Gray"
+         border.width: 1
+
+         MouseArea {
+             anchors.fill: parent
+             acceptedButtons: Qt.LeftButton
+             hoverEnabled: true
+             function doMouseChange() {
+                 if (pressed) {
+                    joy2.y= Math.min(height-joy2.height, Math.max(0, mouseY-joy2.height/2))
+                    var y= mouseY-height/2
+                    root.zspeed= y/height*speed;
+                } else {
+                    joy2.y= (parent.height-joy2.height)/2;
+                    root.zspeed= 0;
+                }
+             }
+             onPositionChanged: doMouseChange()
+             onReleased: doMouseChange()
+             onPressed: doMouseChange()
+             onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) root.zpos+= root.speed; if (wheel.angleDelta.y<0) root.zpos-= root.speed; }
+         }
+
+         Rectangle { id: joy2
+              width: parent.width-2
+              height: width
+              x: 1
+              y: (parent.height-height)/2
+              color: "Black"
+              radius: width*0.5
+         }
+    }
+
 }
