@@ -29,22 +29,7 @@ void CBSModelHoggingWork::setScope(CBSModelScope *v)
 
 bool CBSModel::help()
 {
-    QString temp(QStandardPaths::writableLocation(QStandardPaths::TempLocation)+"/CBScope");
-    QDir(temp).mkdir(".");
-    QDir(temp+"/CBScope_help_files").mkdir(".");
-    if (!QFile::copy(":/Resources/help/CBScope_help.htm", temp+"/CBScope_help.htm")) goto er;
-    {
-        QDirIterator it(":/Resources/help/CBScope_help_files");
-        while (it.hasNext()) {
-            QString s = it.next();
-            if (it.fileInfo().isDir()) continue;
-            if (!QFile::copy(s, temp+"/CBScope_help_files/"+it.fileName())) goto er;
-        }
-        QDesktopServices::openUrl(QUrl(temp+"/CBScope_help.htm"));
-        return true;
-    }
-    er:
-    QDesktopServices::openUrl(QUrl("https://github.com/Cyrille-de-Brebisson/CBScope/wiki/Help"));
+    QDesktopServices::openUrl(QUrl("https://github.com/Cyrille-de-Brebisson/CBScope/wiki/0.1:-Help"));
     return false;
 }
 
@@ -416,7 +401,7 @@ void CBScopeMesure::paint(QPainter *painter)
 
     // get curve points and draw verticals...
     painter->setPen(QPen(QColor(0, 0, 0)));
-    QPoint *pts= new QPoint[iNbZone+1];
+    QPoint *pts= new QPoint[size_t(iNbZone+1)];
     for (int iZ=0; iZ<iNbZone+1; iZ++)
     {
         pts[iZ]= getP(_mesure->_Hz[iZ], _mesure->_surf[iZ]);
@@ -434,7 +419,7 @@ void CBScopeMesure::paint(QPainter *painter)
                                       " dFocale="+QString::number(_mesure->_focale*10.0, 'f', 2)+
                                       " glass to remove="+QString::number(_mesure->_glassToRemove, 'f', 2)+"mm^3");
 
-    QString s(" diametre:"+QString::number(_mesure->_scopeDiametre, 'f', 2)+" focale:"+QString::number(_mesure->_scopeFocale, 'f', 2)+(_mesure->_scopeSlitIsMoving?" mobile slit":" fixed slit")+" zones: ");
+    QString s(" diametre:"+QString::number(_mesure->_scopeDiametre, 'f', 2)+" focale:"+QString::number(_mesure->_scopeFocale, 'f', 2)+((_mesure->_scopeSlitIsMoving!=0)?" mobile slit":" fixed slit")+" zones: ");
     for (int i=0; i<iNbZone; i++) s+= QString::number(_mesure->_Hz[i], 'f', 2)+" ("+QString::number(_mesure->_idealReadings[i], 'f', 2)+") "; s+= QString::number(_mesure->_Hz[iNbZone], 'f', 2);
 	painter->drawText(0, h-4, s);
 
@@ -465,14 +450,14 @@ void CBSModelParabolizingWork::doCalculations()
     int iNbZone= m_zones->count()-1;
     if (iNbZone<=1) return;
 
-    if (_surf  !=nullptr) delete[] _surf  ; _surf  = new double[10+  iNbZone+1]; //10+ because I think that I have an overflow somewhere...
-    if (_profil!=nullptr) delete[] _profil; _profil= new double[10+  iNbZone];
-    if (_lf1000!=nullptr) delete[] _lf1000; _lf1000= new double[10+  iNbZone];
-    if (_mesc  !=nullptr) delete[] _mesc  ; _mesc  = new double[10+  iNbZone];
-    if (_Hz    !=nullptr) delete[] _Hz    ; _Hz    = new double[10+  iNbZone+1];
-    if (_Hm4F  !=nullptr) delete[] _Hm4F  ; _Hm4F  = new double[10+  iNbZone];
-    if (_RelativeSurface  !=nullptr) delete[] _RelativeSurface  ; _RelativeSurface  = new double[iNbZone];
-	if (_idealReadings!=nullptr) delete[] _idealReadings; _idealReadings= new double[iNbZone];
+    if (_surf  !=nullptr) delete[] _surf  ; _surf  = new double[size_t(10+  iNbZone+1)]; //10+ because I think that I have an overflow somewhere...
+    if (_profil!=nullptr) delete[] _profil; _profil= new double[size_t(10+  iNbZone  )];
+    if (_lf1000!=nullptr) delete[] _lf1000; _lf1000= new double[size_t(10+  iNbZone  )];
+    if (_mesc  !=nullptr) delete[] _mesc  ; _mesc  = new double[size_t(10+  iNbZone  )];
+    if (_Hz    !=nullptr) delete[] _Hz    ; _Hz    = new double[size_t(10+  iNbZone+1)];
+    if (_Hm4F  !=nullptr) delete[] _Hm4F  ; _Hm4F  = new double[size_t(10+  iNbZone  )];
+    if (_RelativeSurface  !=nullptr) delete[] _RelativeSurface  ; _RelativeSurface  = new double[size_t(iNbZone)];
+    if (_idealReadings!=nullptr) delete[] _idealReadings; _idealReadings= new double[size_t(iNbZone)];
     _Std=0.;
 
     double dRay=2.*_scopeFocale;
@@ -496,12 +481,12 @@ void CBSModelParabolizingWork::doCalculations()
         double _Hm=(_Hz[i+1]+_Hz[i])/2.0;
         _Hm4F[i]=_Hm/dRay/2.;
         double _Hm2R;
-        if (_scopeSlitIsMoving)
+        if (_scopeSlitIsMoving!=0)
              _Hm2R=-_scopeConical*sqr(_Hm)/2./dRay;
         else
             _Hm2R=-_scopeConical*(sqr(_Hm)/dRay + sqr(sqr(_Hm)) /2. /dRay/sqr(dRay));
 		if (i==0) _idealReadings[0]= _Hm2R; else _idealReadings[i]= _Hm2R-_idealReadings[0];
-        _mesc[i]=(m_mesures->at(int(i))->asDouble()-_Hm2R)*(_scopeSlitIsMoving?2.0:1.0);
+        _mesc[i]=(m_mesures->at(int(i))->asDouble()-_Hm2R)*((_scopeSlitIsMoving!=0)?2.0:1.0);
         if (a>_mesc[i]) a= _mesc[i]; if (b<_mesc[i]) b= _mesc[i];
     }
 	_idealReadings[0]= 0.0;
@@ -657,7 +642,7 @@ struct TZoneData { // structure that does the counting and image modification...
       {
         int g= (76*s[2]+150*s[1]+29*s[0])/256; // s[0]:b s[1]:g s[2]:r
         zs[g/bucket]++; 
-        s[0]= s[1]= s[2]= g;
+        s[0]= s[1]= s[2]= uchar(g);
         s+= 4; x1++;
       }
       break;
@@ -666,7 +651,7 @@ struct TZoneData { // structure that does the counting and image modification...
       {
         int g= (s[2]+s[1]+s[0])/3; // s[0]:b s[1]:g s[2]:r
         zs[g/bucket]++; 
-        s[0]= s[1]= s[2]= g;
+        s[0]= s[1]= s[2]= uchar(g);
         s+= 4; x1++;
       }
       break;
@@ -709,12 +694,18 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 	TZoneData tt;
 	// center
 	imagew= tempImage.width(); imageh= tempImage.height(); // save data for later as they are needed by "user click"
-	c= QPoint(int(imagew*_scope->_couderx),int(imageh*(inverted ? _scope->_coudery : (1.0-_scope->_coudery))));
-	dpi= 100*_scope->_couderz/25.4; // scaling factor
 	if (_scope->getDiametre()*dpi>2*imagew) _scope->_couderz= imagew*25.4/(100*_scope->getDiametre());
-	if (_scope->_couderx<0 || _scope->_couderx>1) _scope->_couderx= 0.5;
-	if (_scope->_coudery<0 || _scope->_coudery>1) _scope->_coudery= 0.5;
-	if (_scope->get_zones()->count()!=0 && !_scope->_ronchi && imageh>256/tt.bucket) // no zones, no work....
+    if (_scope->_couderx<0) _scope->setCouderx(0);
+    if (_scope->_couderx>1) _scope->setCouderx(1);
+    if (_scope->_coudery<0) _scope->setCoudery(0);
+    if (_scope->_coudery>1) _scope->setCoudery(1);
+    if (_scope->_couderz<0) _scope->setCouderz(0);
+    if (_scope->_couderz>1) _scope->setCouderz(1);
+
+	center= c= QPoint(int(imagew*_scope->_couderx),int(imageh*((!inverted) ? _scope->_coudery : (1.0-_scope->_coudery)))); // center....
+    this->dpi= dpi= (_scope->_couderz*1.4+0.1)*imageh/(_scope->_diametre);
+
+    if (_scope->get_zones()->count()!=0 && !_scope->_ronchi && imageh>256/tt.bucket) // no zones, no work....
 	{
 		double bot= 10; // find the "horizontal" cut line for the zones...
 		if (_scope->get_zones()->at(0)->_val<1) bot= _scope->get_zones()->at(1)->_val*0.7;
@@ -723,12 +714,12 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 		if (z<0 || z>_scope->get_zones()->count()-1) _scope->setZone(z=0); // sanity check
 		int type= _scope->getVirtualCouderType(); // type of filtering to do...
 		if (type<0 || type>4) _scope->setVirtualCouderType(type= 0); // more sanity check
-		tt.count(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, bot*dpi, type); // count the pixels
-		int maxz;
+        tt.count(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, int(bot*dpi), type); // count the pixels
+        int maxz= 0;
 		for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz) maxz= tt.Z1[i]; if (tt.Z2[i]>maxz) maxz= tt.Z2[i]; } // max on each sides..
 		for (int i=0; i<256/tt.bucket; i++) // for each bucket fo ilumination counting...
 		{
-			uint32_t *s= (uint32_t*)(tempImage.bits()+(tempImage.height()-i-1)*tempImage.bytesPerLine()); // point in the picture to the correct line/pow
+            uint32_t *s= reinterpret_cast<uint32_t*>(tempImage.bits()+(tempImage.height()-i-1)*tempImage.bytesPerLine()); // point in the picture to the correct line/pow
 			int x= tt.Z1[i]*16/maxz;                 // nb pixels to draw for left zone
 			for (int j=16-x; --j>=0;) *s++= 0xffffffff; // draw white first
 			while (--x>=0) *s++= 0xff000000;                   // then black
@@ -743,11 +734,11 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 	{
 		int w= int(_scope->getDiametre()*dpi)/2*2;
 		int line= (w+31)/32;
-		if (ronchisize!=w || diam!=_scope->getDiametre() || roc!=_scope->getFocal()*2.0 || grad!= _scope->getGrading() || off!= _scope->getRonchiOffset())
+        if (ronchisize!=w || !doubleEq(diam,_scope->getDiametre()) || !doubleEq(roc, _scope->getFocal()*2.0) || !doubleEq(grad, _scope->getGrading()) || !doubleEq(off, _scope->getRonchiOffset()))
 		{
 			if (ronchi!=nullptr) delete[] ronchi;
-			ronchi= new uint32_t[line*w];
-			memset(ronchi, 0, line*w*4);
+            ronchi= new uint32_t[size_t(line*w)];
+            memset(ronchi, 0, size_t(line*w*4));
 			ronchisize= w;
 			diam= _scope->getDiametre(); roc= _scope->getFocal()*2.0; grad= _scope->getGrading(); off= _scope->getRonchiOffset();
 			ronchiCalcWithAllowableDeviation(diam, roc, grad, off, dpi, ronchi, line, 0.0, false, false, 0);
@@ -804,10 +795,19 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
             filter->vco.inverted= true;
         #endif
         double dpi; QPoint c;
+        if (filter->getScope()!=nullptr && filter->getScope()->_imgcouderz<0.98)
+        {
+            double z= (filter->getScope()->_imgcouderz+0.3)/1.3;
+            int w= int(tempImage.width()*z);
+            int h= int(tempImage.height()*z);
+            int x= int((tempImage.width()-w)*filter->getScope()->_imgcouderx);
+            int y= int((tempImage.height()-h)*filter->getScope()->_imgcoudery);
+            tempImage= tempImage.copy(x, y, w, h);
+        }
         filter->vco.draw(tempImage, filter->getScope(), dpi, c);
 		if (filter->getScope()!=nullptr)
 		{
-  			QPainter p(&tempImage);
+            QPainter p(&tempImage);
             filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
 		}
 	}
@@ -843,7 +843,7 @@ static double calcDeviationForScaledMirrorZone(double scaledMirrorZone, double s
 static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCurvature, double gratingFreq, double gratingOffset, double scalingFactor, 
 			uint32_t *imageData, int lineWidth, double allowableParabolicDeviation, bool includeDeviation, bool invertBands, double zoneSqrt) 
 {
-	int scaledMirrorRadius = mirrorDia / 2 * scalingFactor;
+    int scaledMirrorRadius = int(mirrorDia / 2 * scalingFactor);
 	int scaledMirrorRadiusSquared = scaledMirrorRadius * scaledMirrorRadius;
 	double scaledRadiusOfCurvature = radiusOfCurvature * scalingFactor;
 	double scaledGratingOffset = gratingOffset * scalingFactor;

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Generated Files">
       <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
@@ -167,6 +167,12 @@
     <ClCompile Include="release\qml_AppTheme_qml.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="debug\qml_MyJoystick_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyJoystick_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
     <ClCompile Include="debug\qml_MyMultiText_qml.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -215,6 +221,9 @@
       <Filter>Translation Files</Filter>
     </None>
     <None Include="language\cbscope_fi.ts">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="language\cbscope_fr.ts">
       <Filter>Translation Files</Filter>
     </None>
     <None Include="language\cbscope_hr.ts">
@@ -273,6 +282,78 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\help\CBScope_help.htm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_cs.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_da.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_de.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_en.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_es.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_fi.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_fr.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_hr.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_hu.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_it.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_ja.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_ko.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_lt.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_lv.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_no.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_pl.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_pt-br.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_pt-pt.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_ru.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_sk.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_sr.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_sv.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_zh-cn.qm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="language\cbscope_zh-tw.qm">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\help\CBScope_help_files\colorschememapping.xml">
@@ -391,6 +472,9 @@
     <None Include="android\AndroidManifest.xml">
       <Filter>Distribution Files</Filter>
     </None>
+    <None Include="qml\MyJoystick.qml">
+      <Filter>Distribution Files</Filter>
+    </None>
     <None Include="qml\MyMultiText.qml">
       <Filter>Distribution Files</Filter>
     </None>
@@ -418,6 +502,9 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="qml\AppTheme.qml">
+      <Filter>qmlcachegen</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qml\MyJoystick.qml">
       <Filter>qmlcachegen</Filter>
     </CustomBuild>
     <CustomBuild Include="qml\MyMultiText.qml">

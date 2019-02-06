@@ -338,7 +338,7 @@ public:
     double _scopeConical;
     double getScopeConical() const { return _scopeConical; }
     void setScopeConical(double v) { if (doubleEq(_scopeConical,v)) return; _scopeConical= v; emit scopeConicalChanged(); }
-    CBSPropE(double, scopeSlitIsMoving, ScopeSlitIsMoving, doCalculations())
+    CBSPropE(int, scopeSlitIsMoving, ScopeSlitIsMoving, doCalculations())
 Q_SIGNALS:
     void commentsChanged();
     void timeChanged();
@@ -351,7 +351,7 @@ Q_SIGNALS:
 	void adjustFocalChanged();
 public:
     CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _adjustFocal(std::nan("")),
-      _scopeFocale(0.0), _scopeDiametre(0.0), _scopeConical(-1.0), _scopeSlitIsMoving(true),
+      _scopeFocale(0.0), _scopeDiametre(0.0), _scopeConical(-1.0), _scopeSlitIsMoving(1),
       _lf1000(nullptr), _mesc(nullptr), _Hm4F(nullptr), _RelativeSurface(nullptr),
       _surf(nullptr), _profil(nullptr), _Hz(nullptr), _idealReadings(nullptr),
       _Std(0.0), _Lambda(0.0), _GlassMax(0.0), _WeightedLambdaRms(0.0), _WeightedStrehl(0.0), _LfRoMax(0.0), _glassToRemove(0.0), _focale(0.0)
@@ -510,7 +510,10 @@ public:
     CBSProp(double, couderx, Couderx)
     CBSProp(double, coudery, Coudery)
     CBSProp(double, couderz, Couderz)
-	CBSProp(int, zone, Zone)                                           // zone being couder analyzed at the moment
+    CBSProp(double, imgcouderx, imgCouderx)
+    CBSProp(double, imgcoudery, imgCoudery)
+    CBSProp(double, imgcouderz, imgCouderz)
+    CBSProp(int, zone, Zone)                                           // zone being couder analyzed at the moment
 	QML_OBJMODEL_PROPERTY(CBSQString, zoneModel)                       // list of the zones
 	CBSProp(bool, pause, Pause)                                        // pause webcam streaming
 	CBSProp(bool, ronchi, Ronchi)                                      // display ronchi
@@ -564,6 +567,9 @@ Q_SIGNALS:
     void couderxChanged();
     void couderyChanged();
     void couderzChanged();
+    void imgcouderxChanged();
+    void imgcouderyChanged();
+    void imgcouderzChanged();
     void showCouderRedChanged();
     void showCouderBlueChanged();
     void showCouderOrangeChanged();
@@ -604,7 +610,7 @@ public:
     CBSModelScope(QObject *parent=nullptr): CBSSaveLoadObject(parent), _secondariesToConcider("19 25 35 50 63 70 80 88 100"),
                            _diametre(150), _thickness(25), _viewAngle(1.0), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _focusserHeight(100.0), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _fixedFocal(-1), _cellType(0),
-                           _couderx(.5), _coudery(.5), _couderz(.80), _zone(0), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9),
+                           _couderx(.5), _coudery(.5), _couderz(.80), _imgcouderx(0.5), _imgcoudery(0.5), _imgcouderz(1), _zone(0), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9),
 						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
                            _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0)
     {
@@ -1096,8 +1102,9 @@ public:
   class CBVirtualCouderOverlayInternal
   {
 	  uint32_t *ronchi; int ronchisize;
-	  double diam, roc, grad, off;
+      double diam, roc, grad, off, dpi;
 	  int imagew, imageh; // these get set in the CBScopeVirtualCouderRunnable::run function...
+	  QPoint center;
   public:
       bool inverted;
       CBVirtualCouderOverlayInternal(bool inverted): ronchi(nullptr), ronchisize(0), imagew(-1), imageh(-1), inverted(inverted) {}
@@ -1105,25 +1112,11 @@ public:
 	  void userclick(CBSModelScope *_scope, double x, double y) // find which zone the used clicked in and select it...
 	  {
 		  if (_scope==nullptr || imagew==-1 || imageh==-1) return;
-		  QPoint c(int(imagew*_scope->_couderx),int(imageh*(1.0-_scope->_coudery)));
 		  QPoint p1(int(imagew*x),int(imageh*(1.0-y)));
-		  c= c-p1; double r= sqrt(c.x()*c.x()+c.y()*c.y());
-		  double dpi= 100*_scope->_couderz/25.4;
+		  QPoint c= center-p1; double r= sqrt(c.x()*c.x()+c.y()*c.y());
 		  r= r/dpi;
 		  for (int i=0; i<_scope->get_zones()->count(); i++)
 			  if (r<=_scope->get_zones()->at(i)->_val) { _scope->setZone(i-1); return; }
-	  }
-	  void button(CBSModelScope *_scope, int b)
-	  {
-		  if (_scope==nullptr || imagew==-1 || imageh==-1) return;
-		  double dx= 1./double(imagew), dy= 1./double(imageh);
-		  if (b==0) _scope->setCoudery(_scope->getCoudery()-dy);
-		  if (b==1) _scope->setCoudery(_scope->getCoudery()+dy);
-		  if (b==2) _scope->setCouderx(_scope->getCouderx()-dx);
-		  if (b==3) _scope->setCouderx(_scope->getCouderx()+dx);
-		  if (dy<dx) dx= dy;
-		  if (b==4) _scope->setCouderz(_scope->getCouderz()-dx);
-		  if (b==5) _scope->setCouderz(_scope->getCouderz()+dx);
 	  }
 	  void draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c);
   };
@@ -1148,7 +1141,6 @@ public:
 	QImage *pausedFrame; // non null if we are paused...
 	CBVirtualCouderOverlayInternal vco;
 	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); }
-	Q_INVOKABLE void button(int b) { vco.button(_scope, b); }
 };
 
 class CBScopeCouderOverlay : public QQuickPaintedItem
@@ -1157,10 +1149,13 @@ class CBScopeCouderOverlay : public QQuickPaintedItem
 public:
 	CBSPropE(CBSModelScope*, scope, Scope,
 										update();
-										connect(v, SIGNAL(couderxChanged()), this, SLOT(update()));
-										connect(v, SIGNAL(couderyChanged()), this, SLOT(update()));
-										connect(v, SIGNAL(couderzChanged()), this, SLOT(update()));
-										connect(v, SIGNAL(zoneChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(couderxChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(couderyChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(couderzChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(imgcouderxChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(imgcouderyChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(imgcouderzChanged()), this, SLOT(update()));
+                                        connect(v, SIGNAL(zoneChanged()), this, SLOT(update()));
 										connect(v, SIGNAL(ronchiChanged()), this, SLOT(update()));
 										connect(v, SIGNAL(ronchiOffsetChanged()), this, SLOT(update()));
 										connect(v, SIGNAL(gradingChanged()), this, SLOT(update())); )
@@ -1173,7 +1168,6 @@ public:
 	void paint(QPainter *painter);
 	CBVirtualCouderOverlayInternal vco;
 	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); update(); }
-	Q_INVOKABLE void button(int b) { vco.button(_scope, b); update(); }
 	QRect irect;
 	Q_INVOKABLE QPointF mapPointToSourceNormalized(QPoint p)
 	{

@@ -485,6 +485,7 @@ ApplicationWindow {
 					 }
 					 CheckBox { y: (parent.height-height)/2; text: qsTr("Pause"); checked: scopeView.model.pause; onCheckedChanged: scopeView.model.pause= checked }
 					 CheckBox { id: ronchi; y: (parent.height-height)/2; text: qsTr("Ronchi"); checked: scopeView.model.ronchi; onCheckedChanged: scopeView.model.ronchi= checked }
+                     // The next 2 ones are only visible in Ronchi mode...
 					 MyText { caption: qsTr("defocal"); visible: ronchi.checked; text: scopeView.model.ronchiOffset; onTextChanged: scopeView.model.ronchiOffset= Number(text); }
 					 MyText { caption: qsTr("grading"); visible: ronchi.checked; text: scopeView.model.grading; onTextChanged: scopeView.model.grading= Number(text); }
 				}
@@ -507,7 +508,7 @@ ApplicationWindow {
 							Text   { y: (parent.height-height)/2; text: qsTr("Comments"); }
 							MyText { y: (parent.height-height)/2; text: parent.parent.parent.mesure.comments; onTextChanged: parent.parent.parent.mesure.comments= text; }
 						}
-						CBScopeMesure {
+                        CBScopeMesure { // couder mesure display in couder mode (not Ronchi)
 							id: couderDisplay2
 							mesure: parent.parent.mesure
 							width: parent.width; height: parent.height-y;
@@ -524,7 +525,7 @@ ApplicationWindow {
 						if (userImagecouder.source!="") return userImagecouder;
 						return undefined;
 					}
-					CBScopeCouderOverlay {
+                    CBScopeCouderOverlay { // This is used when the user drags/drop an image here....
 						visible: source!=""
 						id: userImagecouder; scope: scopeView.model;
 						width: parent.width; height: parent.height;
@@ -532,11 +533,10 @@ ApplicationWindow {
 							anchors.fill: parent
 							acceptedButtons: Qt.LeftButton | Qt.RightButton
 							onClicked: { var p= parent.mapPointToSourceNormalized(Qt.point(mouseX, mouseY)); parent.parent.viewer().userclick(p.x, p.y); }
-							onPositionChanged: if (pressed) { var p2= parent.mapPointToSourceNormalized(Qt.point(mouseX, mouseY)); scopeView.model.couderx= p2.x; scopeView.model.coudery= p2.y; }
 							onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) scopeView.model.couderz+= 0.05; if (wheel.angleDelta.y<0) scopeView.model.couderz-= 0.05; }
 						}
 					}
-					VideoOutput { id: videoOutput
+                    VideoOutput { id: videoOutput // This is used for live video display
 						width: parent.width; height: parent.height;
 						source: camera
 						visible: cameras.currentIndex!=-1
@@ -545,20 +545,28 @@ ApplicationWindow {
 							anchors.fill: parent
 							acceptedButtons: Qt.LeftButton | Qt.RightButton
 							onClicked: { var p= parent.mapPointToSourceNormalized(Qt.point(mouseX, mouseY)); parent.parent.viewer().userclick(p.x, p.y); }
-							onPositionChanged: if (pressed) { var p2= parent.mapPointToSourceNormalized(Qt.point(mouseX, mouseY)); scopeView.model.couderx= p2.x; scopeView.model.coudery= p2.y; }
 							onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) scopeView.model.couderz+= 0.05; if (wheel.angleDelta.y<0) scopeView.model.couderz-= 0.05; }
 						}
 					}
-                    MyJoystick { id: stick; x:0; y:0; width:100; height:80; caption: qsTr("mirror") }
-                    Text { x: 0; y: 200; text: "pos "+stick.xpos.toFixed(2)+" "+stick.ypos.toFixed(2)+" "+stick.zpos.toFixed(2); }
-                    Text { x: 0; y: 220; text: stick.speed+" speed "+stick.xspeed.toFixed(2)+" "+stick.yspeed.toFixed(2)+" "+stick.zspeed.toFixed(2); }
-                    Button { x:parent.width-120+30; y: 0; width:30; height: 30; text: "^"; onPressed: parent.viewer().button(0); }
-					Button { x:parent.width-120+30; y:60; width:30; height: 30; text: "V"; onPressed: parent.viewer().button(1); }
-					Button { x:parent.width-120+ 0; y:30; width:30; height: 30; text: "<"; onPressed: parent.viewer().button(2); }
-					Button { x:parent.width-120+60; y:30; width:30; height: 30; text: ">"; onPressed: parent.viewer().button(3); }
-					Button { x:parent.width-120+90; y:15; width:30; height: 30; text: "+"; onPressed: parent.viewer().button(5); }
-					Button { x:parent.width-120+90; y:45; width:30; height: 30; text: "-"; onPressed: parent.viewer().button(4); }
-				}
+                    MyJoystick {
+                        x:0; y:0; width:100; height:80; caption: qsTr("mirror");
+                        onXposChanged: scopeView.model.couderx= xpos;
+                        onYposChanged: scopeView.model.coudery= ypos;
+                        onZposChanged: scopeView.model.couderz= zpos;
+                        xpos: scopeView.model.couderx;
+                        ypos: scopeView.model.coudery;
+                        zpos: scopeView.model.couderz;
+                    }
+                    MyJoystick {
+                        x:0; y:80; width:100; height:80; caption: qsTr("image");
+                        onXposChanged: scopeView.model.imgcouderx= xpos;
+                        onYposChanged: scopeView.model.imgcoudery= ypos;
+                        onZposChanged: scopeView.model.imgcouderz= zpos;
+                        xpos: scopeView.model.imgcouderx;
+                        ypos: scopeView.model.imgcoudery;
+                        zpos: scopeView.model.imgcouderz;
+                    }
+                }
 			}
         }
 

@@ -5,7 +5,7 @@ Rectangle { id: root
     property alias caption: txt.text
     property double xpos: 0.5
     property double ypos: 0.5
-    property double overallow: 0.4
+    property double overallow: 0
     property double zpos: 0.5
     property double speed: 0.1
     property double xspeed: 0
@@ -15,9 +15,10 @@ Rectangle { id: root
     Timer {
         interval: 100; running: root.xspeed!=0 || root.yspeed!=0 || root.zspeed!=0; repeat: true
         onTriggered: {
-            if (xpos+xspeed>=-overallow && xpos+xspeed<=1+overallow) xpos+= xspeed;
-            if (ypos+yspeed>=-overallow && ypos+yspeed<=1+overallow) ypos+= yspeed;
-            if (zpos+zspeed>=0 && zpos+zspeed<=1) zpos+= zspeed;
+			if (speed>0.1) speed= 0.1; if (speed<0.001) speed= 0.001;
+            if (xpos+xspeed*0.5>=-overallow && xpos+xspeed<=1+overallow*0.5) xpos+= xspeed*0.5;
+            if (ypos+yspeed*0.5>=-overallow && ypos+yspeed<=1+overallow*0.5) ypos+= yspeed*0.5;
+            if (zpos+zspeed>=0 && zpos+zspeed<=1) zpos+= zspeed*0.5;
         }
     }
 
@@ -27,19 +28,37 @@ Rectangle { id: root
 
     Text { id: txt; x: parent.border.width*2; y: parent.border.width; }
 
-    Button {
-        property bool noAdaptFontSize: true
-        font.pixelSize: txt.font.pixelSize*3/4
-        x: txt.width+txt.x*2; y: parent.border.width; width: parent.width-parent.border.width*2-x; height: txt.height
-        text: qsTr("Speed");
-        onClicked: {
-            if (Math.abs(root.speed-0.1 )<1e-6) { root.speed= 0.01; text= qsTr("slow"); }
-            else if (Math.abs(root.speed-0.01)<1e-6) { root.speed= 0.05; text= qsTr("medium"); }
-            else if (Math.abs(root.speed-0.05)<1e-6) { root.speed= 0.1; text= qsTr("fast"); }
-        }
-
+	// speed stick
+    Rectangle { 
+         x: txt.width+txt.x*2; y: parent.border.width; width: parent.width-parent.border.width*2-x; height: txt.height
+         border.color: "Black"
+         color: "Gray"
+         border.width: 1
+		 Text { anchors.fill: parent; text: "spd"+(speed*1000).toFixed(0); }
+         MouseArea {
+             anchors.fill: parent
+             acceptedButtons: Qt.LeftButton
+             hoverEnabled: true
+             function doMouseChange() {
+                    var x= mouseX/width/10; if (x<0.001) x= 0.001; if (x>0.1) x= 0.1;
+                    root.speed= x;
+             }
+             onPositionChanged: if (pressed) doMouseChange()
+             onReleased: doMouseChange()
+             onPressed: doMouseChange()
+             onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) root.speed+= 0.01; if (wheel.angleDelta.y<0) root.speed-= 0.01; }
+         }
+         Rectangle { id: joy3
+              width: parent.height-2
+              height: width
+              x: (parent.width-width)*(speed*10)
+              y: 1
+              color: "Black"
+              radius: width*0.5
+         }
     }
 
+	// x/y stick
     Rectangle { id: stick
          width: parent.height-parent.border.width*4-txt.height
          height: width
@@ -96,6 +115,7 @@ Rectangle { id: root
          }
     }
 
+	// Z joystick
     Rectangle { id: zoom
          width: parent.width/5
          height: parent.height-parent.border.width*4-txt.height
