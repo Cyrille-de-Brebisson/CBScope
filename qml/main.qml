@@ -26,6 +26,7 @@ ApplicationWindow {
     minimumHeight: 500
     property int fontSize: CBSModel.windowsFont
     property bool fontBold: CBSModel.windowsFontBold
+    color: "black"
 
     // recursive set font to all controls
     function setFont(parentElement) {
@@ -36,6 +37,7 @@ ApplicationWindow {
                 parentElement.children[i].font.bold = Qt.binding(function() { return window.fontBold })
                 parentElement.children[i].font.pixelSize = Qt.binding(function() { return window.fontSize })
             }
+            if (parentElement.children[i].font) parentElement.children[i].font.color= "white"
             setFont(parentElement.children[i]);
         }
     }
@@ -80,9 +82,10 @@ ApplicationWindow {
             onClicked: { mode= !mode; if (mode) { startTime= new Date().getTime(); time= 0; } }
             Timer { running: chrono.mode
                 interval: 1000; repeat: true;
-                onTriggered: chrono.time= new Date().getTime()-chrono.startTime;
+                onTriggered: chrono.time= CBSModel.shouldBeep(new Date().getTime()-chrono.startTime, beepAt.text);
             }
         }
+        MyText { id: beepAt; caption: qsTr("beepAt"); }
     }
 
     //*******************************************************
@@ -103,14 +106,14 @@ ApplicationWindow {
                 Row { spacing: 10;
                     width: parent.width
                     MyText { caption: qsTr("scope Name"); text: scopeView.model.name; onTextChanged: scopeView.model.name= text }
-                    Rectangle { width: parent.width-scopeDelete.width-x-parent.spacing; height: parent.height }
+                    Rectangle { color: "black"; width: parent.width-scopeDelete.width-x-parent.spacing; height: parent.height }
                     Button { id: scopeDelete
                         visible: CBSModel.scopes.count>1
                         text: qsTr("Delete")
                         onClicked: { CBSModel.scopes.remove(scopes.currentIndex); scopes.currentIndex= 0; }
                     }
                 }
-                Text { text: qsTr("Comments") }
+                Text { color: "white"; text: qsTr("Comments") }
                 MyMultiText { width: parent.width; text: scopeView.model.comments; onTextChanged: scopeView.model.comments= text; }
                 Flow { spacing: 10;  id: scopeDiametreEdit; width: parent.width
                     MyText  { caption: qsTr("Diametre"); text: scopeView.model.diametre; onTextChanged: scopeView.model.diametre= Number(text); }
@@ -158,9 +161,10 @@ ApplicationWindow {
                 Rectangle {
                     width: parent.width;
                     height: (scopeView.height-y) > (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) ? (scopeView.height-y) - (scopeTextArea.height+scopeBottomRow.height+2*parent.spacing) : 1;
-                    color: height===1 ? "Black" : "white"
+                    color: height!==1 ? "Black" : "white"
                 }
                 TextArea { id: scopeTextArea; width: parent.width;
+                    color: "white"
                     text: qsTr("CBScope is an application designed by Cyrille.de.brebisson@gmail.com to help amateur telescope makers build telescopes.\n"+
                                "Parts of the application code comes from other similar apps and I wich to thank: Etienne de Foras (Foucault), David Lewis (Plop) and Mel Bartels (Secondary illumination and Ronchi).\n"+
                                "Click on the Help button bellow for help on how to use this app");
@@ -176,7 +180,7 @@ ApplicationWindow {
                         currentIndex: window.fontSize-10
                         onCurrentIndexChanged: CBSModel.windowsFont= window.fontSize= currentIndex+10;
                     }
-                    CheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked }
+                    MyCheckBox { id: headerCb; text: qsTr("Bold"); checked: window.fontBold; onCheckedChanged: CBSModel.windowsFontBold= window.fontBold= checked; }
                 }
                 Popup { id: receiveScopePopup; x: 50; y: 50; width: parent.width-2*x; height: parent.height-2*y; modal: true; focus: true; clip: true;
                         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
@@ -203,6 +207,7 @@ ApplicationWindow {
                 width: parent.width
                 height: parent.height-y-10
                 border.width: 3; radius: 2; border.color: "Blue"
+                color: "black"
                 ListView {
                     id: epListView
                     clip: true
@@ -212,8 +217,9 @@ ApplicationWindow {
                     delegate: Rectangle {
                         Component.onCompleted: setFont(this)
                         width: parent.width
-                        border.width: 3; radius: 2; border.color: "Black"
+                        border.width: 3; radius: 2; border.color: "white"
                         height: col2.height+3*border.width
+                        color: "black"
                         Column {
                             id: col2
                             clip: true
@@ -222,7 +228,7 @@ ApplicationWindow {
                             Row {
                                 spacing: 10; width: parent.width;
                                 MyText { caption: qsTr("name"); text: name; onTextChanged: name= text; }
-                                Rectangle { height: parent.height; width: parent.width-x-rowEp5.width-parent.spacing; }
+                                Rectangle { color: "black"; height: parent.height; width: parent.width-x-rowEp5.width-parent.spacing; }
                                 Button { id: rowEp5; text: qsTr("Delete"); onPressed: scopeView.model.epsRemove(index); }
                             }
                             Row { spacing: 10; width: parent.width;
@@ -248,7 +254,7 @@ ApplicationWindow {
             width: window.width; height: parent.height;
             Flow { spacing: 10; width: parent.width;
                 MyText { caption: qsTr("possible Secondaries"); text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
-                CheckBox { text: qsTr("2\" focusser"); checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked; }
+                MyCheckBox { text: qsTr("2\" focusser");  checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked;  }
             }
             CBScopeIlumination { id: scopeIlumination
                 width: parent.width; height: parent.height-y;
@@ -276,6 +282,7 @@ ApplicationWindow {
                 width: parent.width;
                 height: parent.height-y-bottomInfo.height-10
                 border.width: 3; radius: 4; border.color: "Blue";
+                color: "black"
                 Column {
                     width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width; x: parent.border.width; y: parent.border.width
                     clip: true;
@@ -288,17 +295,18 @@ ApplicationWindow {
                         delegate:  Rectangle {
                             Component.onCompleted: setFont(this)
                             width: parent.width
-                            border.width: 3; radius: 4; border.color: "Black";
+                            border.width: 3; radius: 4; border.color: "white";
                             height: col.height+2*border.width
+                            color: "black"
                             Column {
                                 id: col
                                 clip: true
                                 width: parent.width-2*parent.border.width; x: parent.border.width; y: parent.border.width
                                 Row {
                                     spacing: 10; width: parent.width; //height: rowHog2.height
-                                    Text   { text: qsTr("comments"); }
+                                    Text   { color: "white"; text: qsTr("comments"); }
                                     MyMultiText { text: comments; onTextChanged: comments= text; }
-                                    Rectangle { height: 10; width: parent.width-x-deleteHog.width-parent.spacing; }
+                                    Rectangle { color: "black"; height: 10; width: parent.width-x-deleteHog.width-parent.spacing; }
                                     Button { id: deleteHog; text: qsTr("Delete"); onPressed: scopeView.model.hoggingsRemove(index); }
                                 }
                                 Flow { spacing: 10; width: parent.width
@@ -325,6 +333,7 @@ ApplicationWindow {
                 id: bottomInfo
                 border.width: 3; radius: 4; border.color: "Black";
                 width: parent.width; height: bottomInfoCol.height+2*border.width
+                color: "black"
                 Column {
                     id: bottomInfoCol
                     clip: true
@@ -351,14 +360,15 @@ ApplicationWindow {
                 spacing: 10
                 MyText   { id: nbZonesSuggest; caption: qsTr("nb zones (Suggest ")+scopeView.model.nbZonesSuggested+")"; text: scopeView.model.nbZones; onTextChanged: scopeView.model.nbZones= Number(text); }
                 Button   { y: (parent.height-height)/2; text: qsTr("Auto calc zones"); onPressed: popup.open() }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("Slit is moving"); checked: scopeView.model.slitIsMoving; onCheckedChanged: scopeView.model.slitIsMoving= checked }
-                CheckBox { y: (parent.height-height)/2; text: qsTr("large View"); checked: false; onCheckedChanged: { parabolizingColumn.mesureHeight= checked?250:180; } }
+                MyCheckBox { text: qsTr("Slit is moving"); y: (parent.height-height)/2; checked: scopeView.model.slitIsMoving; onCheckedChanged: scopeView.model.slitIsMoving= checked }
+                MyCheckBox { text: qsTr("large View"); y: (parent.height-height)/2; checked: false; onCheckedChanged: { parabolizingColumn.mesureHeight= checked?250:180; } }
             }
-            Text { text: qsTr("Enter zones boundaries from 0 (or hole radius) to mirror radius") }
+            Text { color: "white"; text: qsTr("Enter zones boundaries from 0 (or hole radius) to mirror radius") }
             Rectangle {
                 border.width: 3; radius: 4; border.color: "Blue";
                 width: parent.width
                 height: nbZonesSuggest.height+2*border.width
+                color: "black";
                 ListView {
                     model: scopeView.model.zones; orientation: Qt.Horizontal;
                     width: parent.width-2*parent.border.width; 
@@ -373,7 +383,8 @@ ApplicationWindow {
             Rectangle {
                 width: parent.width
                 height: parent.height-y
-                border.width: 3; radius: 4; border.color: "Black";
+                border.width: 3; radius: 4; border.color: "White";
+                color: "black";
                 Button { x: (parent.width-width)/2; id: addMesBut; y: parent.border.width; text: qsTr("add measure"); onPressed: scopeView.model.addParabolizing() }
                 ListView { 
                     clip: true;
@@ -383,6 +394,7 @@ ApplicationWindow {
                     delegate: Rectangle {
                         Component.onCompleted: setFont(this)
                         border.width: 3; radius: 4; border.color: "Blue";
+                        color: "black";
                         width: parent.width; height: parabolizingColumn.mesureHeight
                         Column {
                             clip: true;
@@ -390,15 +402,15 @@ ApplicationWindow {
                             ListView { 
                                 model: mesures; orientation: Qt.Horizontal;
                                 width: parent.width; height: nbZonesSuggest.height
-                                delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+                                delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "White"; }
                             }
                             Row {
                                 spacing: 10; width: parent.width
                                 MyText { caption: qsTr("time"); text: time; onTextChanged: time= text; }
-                                Text   { y: (parent.height-height)/2; text: qsTr("Comments"); }
+                                Text   { color: "white"; y: (parent.height-height)/2; text: qsTr("Comments"); }
                                 MyMultiText { y: (parent.height-height)/2; text: comments; onTextChanged: comments= text; }
-				                CheckBox { text: qsTr("fixTo"); checked: scopeView.model.fixedFocal===index; onClicked: scopeView.model.fixedFocal= (checked ? index : -1); }
-                                Rectangle { height: parent.height; width: parent.width-x-rowMes5.width-parent.spacing; }
+                                MyCheckBox { text: qsTr("fixTo"); checked: scopeView.model.fixedFocal===index; onClicked: scopeView.model.fixedFocal= (checked ? index : -1); }
+                                Rectangle { color: "black"; height: parent.height; width: parent.width-x-rowMes5.width-parent.spacing; }
                                 Button { id: rowMes5; y: (parent.height-height)/2; text: qsTr("Delete"); onPressed: scopeView.model.parabolizings.remove(index); }
                             }
                             CBScopeMesure {
@@ -430,6 +442,7 @@ ApplicationWindow {
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Red Zones"); checked: scopeView.model.showCouderRed; onCheckedChanged: scopeView.model.showCouderRed= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("Show Blue Zones"); checked: scopeView.model.showCouderBlue; onCheckedChanged: scopeView.model.showCouderBlue= checked }
                 CheckBox { y: (parent.height-height)/2; text: qsTr("zoom/2"); checked: scopeCouder.zoom; onCheckedChanged: scopeCouder.zoom= checked }
+                CheckBox { y: (parent.height-height)/2; text: qsTr("Rotate"); checked: scopeView.model.couderRotate; onCheckedChanged: scopeView.model.couderRotate= checked }
                 Button   { visible: CBSModel.canPrint; y: (parent.height-height)/2; text: qsTr("Print Couder Mask"); onPressed: scopeView.model.printCouder() }
             }
             Connections {
@@ -439,6 +452,7 @@ ApplicationWindow {
                 onShowCouderRedChanged: scopeCouder.update()
                 onShowCouderBlueChanged: scopeCouder.update()
                 onShowCouderOrangeChanged: scopeCouder.update()
+                onCouderRotateChanged: scopeCouder.update()
             }
         }
 
@@ -456,7 +470,7 @@ ApplicationWindow {
 				width: window.width; height: parent.height;
 				Flow {
 					spacing: 10; width: parent.width
-					Text { y: (parent.height-height)/2; text: qsTr("Camera") }
+                    Text { color: "white"; y: (parent.height-height)/2; text: qsTr("Camera") }
 					ComboBox { id: cameras; y: (parent.height-height)/2;
 							   model: QtMultimedia.availableCameras
 							   textRole: "displayName";
@@ -466,13 +480,13 @@ ApplicationWindow {
 									else { camera.stop(); camera.deviceId= ""; }
 							   }
 							   currentIndex: -1
-					 }
+                    }
 					ComboBox { visible: !ronchi.checked; id: zoneToUse; y: (parent.height-height)/2;
 							   model: scopeView.model.zoneModel
 							   textRole: "val";
 							   currentIndex: scopeView.model.zone
 							   onCurrentIndexChanged: scopeView.model.zone= currentIndex
-					 }
+                    }
 					ComboBox { visible: !ronchi.checked; y: (parent.height-height)/2; 
 							   model: ListModel { ListElement { name: qsTr("Grayscale") } 
 												  ListElement { name: qsTr("Red+Blue+Green") } 
@@ -483,14 +497,15 @@ ApplicationWindow {
 								currentIndex: scopeView.model.virtualCouderType
 								onCurrentIndexChanged: scopeView.model.virtualCouderType= currentIndex; 
 					 }
-					 CheckBox { y: (parent.height-height)/2; text: qsTr("Pause"); checked: scopeView.model.pause; onCheckedChanged: scopeView.model.pause= checked }
-					 CheckBox { id: ronchi; y: (parent.height-height)/2; text: qsTr("Ronchi"); checked: scopeView.model.ronchi; onCheckedChanged: scopeView.model.ronchi= checked }
+                     MyCheckBox { text: qsTr("Pause"); y: (parent.height-height)/2; checked: scopeView.model.pause; onCheckedChanged: scopeView.model.pause= checked }
+                     MyCheckBox { text: qsTr("Ronchi"); id: ronchi; y: (parent.height-height)/2; checked: scopeView.model.ronchi; onCheckedChanged: scopeView.model.ronchi= checked }
                      // The next 2 ones are only visible in Ronchi mode...
 					 MyText { caption: qsTr("defocal"); visible: ronchi.checked; text: scopeView.model.ronchiOffset; onTextChanged: scopeView.model.ronchiOffset= Number(text); }
 					 MyText { caption: qsTr("grading"); visible: ronchi.checked; text: scopeView.model.grading; onTextChanged: scopeView.model.grading= Number(text); }
 				}
 				Rectangle { visible: !ronchi.checked;
 					width: parent.width; height: 180; 
+                    color: "black";
 					property CBSModelParabolizingWork mesure: scopeView.model.parabolizings.get(scopeView.model.parabolizings.count-1)
 					border.width: 3; radius: 4; border.color: "Blue";
 					Column {
@@ -499,13 +514,13 @@ ApplicationWindow {
 						ListView {
 							model: parent.parent.mesure.mesures; orientation: Qt.Horizontal;
 							width: parent.width; height: nbZonesSuggest.height
-							delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+                            delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "white"; }
 						}
 						Row {
 							spacing: 10; width: parent.width
-							Text   { y: (parent.height-height)/2; text: qsTr("time"); }
+                            Text   { color: "white"; y: (parent.height-height)/2; text: qsTr("time"); }
 							MyText { y: (parent.height-height)/2; text: parent.parent.parent.mesure.time; onTextChanged: parent.parent.parent.mesure.time= text; }
-							Text   { y: (parent.height-height)/2; text: qsTr("Comments"); }
+                            Text   { color: "white"; y: (parent.height-height)/2; text: qsTr("Comments"); }
 							MyText { y: (parent.height-height)/2; text: parent.parent.parent.mesure.comments; onTextChanged: parent.parent.parent.mesure.comments= text; }
 						}
                         CBScopeMesure { // couder mesure display in couder mode (not Ronchi)
@@ -516,10 +531,24 @@ ApplicationWindow {
 						Connections { target: couderDisplay2.mesure; onMesuresChanged: couderDisplay2.update(); } // redraw when mesure change...
 					}
 				}    
-				Camera { id: camera; deviceId: "nocamera"; Component.onCompleted: camera.stop(); }
+                Camera {
+                    id: camera; deviceId: "nocamera";
+                    Component.onCompleted: camera.stop();
+                    exposure {
+                        exposureCompensation: -1.0
+                        manualIso: 1200
+                        manualShutterSpeed: 0.1
+                    }
+                    imageProcessing {
+                        brightness: 0
+                        contrast: 0
+                        saturation: 0
+                    }
+                }
 				Rectangle { id: virtualCouderControl
 					width: parent.width; height: parent.height-y;
-					function viewer()
+                    color: "black";
+                    function viewer()
 					{
 						if (cameras.currentIndex!=-1) return vcouder;
 						if (userImagecouder.source!="") return userImagecouder;
@@ -548,23 +577,50 @@ ApplicationWindow {
 							onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) scopeView.model.couderz+= 0.05; if (wheel.angleDelta.y<0) scopeView.model.couderz-= 0.05; }
 						}
 					}
-                    MyJoystick {
-                        x:0; y:0; width:100; height:80; caption: qsTr("mirror");
-                        onXposChanged: scopeView.model.couderx= xpos;
-                        onYposChanged: scopeView.model.coudery= ypos;
-                        onZposChanged: scopeView.model.couderz= zpos;
-                        xpos: scopeView.model.couderx;
-                        ypos: scopeView.model.coudery;
-                        zpos: scopeView.model.couderz;
-                    }
-                    MyJoystick {
-                        x:0; y:80; width:100; height:80; caption: qsTr("image");
-                        onXposChanged: scopeView.model.imgcouderx= xpos;
-                        onYposChanged: scopeView.model.imgcoudery= ypos;
-                        onZposChanged: scopeView.model.imgcouderz= zpos;
-                        xpos: scopeView.model.imgcouderx;
-                        ypos: scopeView.model.imgcoudery;
-                        zpos: scopeView.model.imgcouderz;
+                    Column {
+                        MyJoystick {
+                            x:0; width:100; height:80; caption: qsTr("mirror");
+                            onXposChanged: scopeView.model.couderx= xpos;
+                            onYposChanged: scopeView.model.coudery= ypos;
+                            onZposChanged: scopeView.model.couderz= zpos;
+                            xpos: scopeView.model.couderx;
+                            ypos: scopeView.model.coudery;
+                            zpos: scopeView.model.couderz;
+                        }
+                        MyJoystick {
+                            x:0; width:100; height:80; caption: qsTr("image");
+                            onXposChanged: scopeView.model.imgcouderx= xpos;
+                            onYposChanged: scopeView.model.imgcoudery= ypos;
+                            onZposChanged: scopeView.model.imgcouderz= zpos;
+                            xpos: scopeView.model.imgcouderx;
+                            ypos: scopeView.model.imgcoudery;
+                            zpos: scopeView.model.imgcouderz;
+                        }
+                        Button { text: qsTr("Save"); onPressed: scopeView.model.takePicture(); visible: videoOutput.visible; }
+                        Row { visible: camera.imageProcessing.isAvailable
+                            Text { color: "white"; text: "brightness" }
+                            Slider { from: -1; to: 1; value: camera.imageProcessing.brightness; onValueChanged: camera.imageProcessing.brightness= value; }
+                        }
+                        Row { visible: camera.imageProcessing.isAvailable
+                            Text { color: "white"; text: "contrast" }
+                            Slider { from: -1; to: 1; value: camera.imageProcessing.contrast; onValueChanged: camera.imageProcessing.contrast= value; }
+                        }
+                        Row { visible: camera.imageProcessing.isAvailable
+                            Text { color: "white"; text: "saturation" }
+                            Slider { from: -1; to: 1; value: camera.imageProcessing.saturation; onValueChanged: camera.imageProcessing.saturation= value; }
+                        }
+                        Row {
+                            Text { color: "white"; text: "exposureCompensation" }
+                            Slider { from: -1; to: 1; value: camera.exposure.exposureCompensation; onValueChanged: camera.exposure.exposureCompensation= value; }
+                        }
+                        Row {
+                            Text { color: "white"; text: "manualShutterSpeed" }
+                            Slider { from: 0.01; to: 1; value: camera.exposure.manualShutterSpeed; onValueChanged: camera.exposure.manualShutterSpeed= value; }
+                        }
+                        Row {
+                            Text { color: "white"; text: "manualIso" }
+                            Slider { from: 100; to: 1600; stepSize: 100; value: camera.exposure.manualIso; onValueChanged: camera.exposure.manualIso= value; }
+                        }
                     }
                 }
 			}
@@ -655,7 +711,7 @@ ApplicationWindow {
 					delegate: Row { spacing: 10; Component.onCompleted: setFont(this); 
 						onWidthChanged: cogLists.maxw= Math.max(cogLists.maxw, width);
 						MyText { caption: qsTr("text"); text: comment; onTextChanged: comment= text; }
-						MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+                        MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "white"; }
 						Button { text: qsTr("delete"); onPressed: scopeView.model.bottomWeightsRemove(index); }
 					}
 				}
@@ -670,7 +726,7 @@ ApplicationWindow {
 					delegate: Row { spacing: 10; Component.onCompleted: setFont(this); 
 						onWidthChanged: cogLists.maxw= Math.max(cogLists.maxw, width);
 						MyText { caption: qsTr("text"); text: comment; onTextChanged: comment= text; }
-						MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "Black"; }
+                        MyText { caption: qsTr("weight"); text: val; onTextChanged: val= text; fontcol: error ? "Red" : "white"; }
                         Button { text: qsTr("delete"); onPressed: scopeView.model.topWeightsRemove(index); }
 					}
 				}
@@ -702,6 +758,7 @@ ApplicationWindow {
                 width: parent.width
                 id: tabBar
                 currentIndex: scopeView.currentIndex
+                background: Rectangle { color: "black" }
                 TabButton {  width: implicitWidth; text: qsTr("Scope") }
                 TabButton {  width: implicitWidth; text: qsTr("EP") }
                 TabButton {  width: implicitWidth; text: qsTr("Secondary") }

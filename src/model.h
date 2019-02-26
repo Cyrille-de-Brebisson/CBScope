@@ -30,6 +30,8 @@
 #include "QQmlObjectListModel.h"
 #include <QAbstractVideoFilter>
 #include <QBasicTimer>
+#include <QFileDialog>
+#include <QApplication>
 #ifndef IOS
 #include <QPrinter>
 #include <QPrintDialog>
@@ -528,6 +530,7 @@ public:
 	CBSProp(bool, showCouderBlue, ShowCouderBlue) // my zone style display
     CBSProp(bool, showCouderOrange, ShowCouderOrange) // my zone style display
     CBSProp(int, virtualCouderType, VirtualCouderType) // 0: Grayscale, 1: RGB/3, 2:R, 3:G, 4:B
+    CBSProp(bool, couderRotate, CouderRotate) // if true, rotate the couder screen by 90 degree
 
 	// Properties for COG pages
     QML_OBJMODEL_PROPERTY(CBSQString, bottomWeights)
@@ -573,6 +576,7 @@ Q_SIGNALS:
     void showCouderRedChanged();
     void showCouderBlueChanged();
     void showCouderOrangeChanged();
+    void couderRotateChanged();
     void virtualCouderTypeChanged();
     void cogBotLenChanged();
     void cogTopLenChanged();
@@ -611,8 +615,8 @@ public:
                            _diametre(150), _thickness(25), _viewAngle(1.0), _density(2.23), _young(6400.0), _poisson(0.2), _focal(750), _secondary(35), _secondaryToFocal(150/2+80), _focusserHeight(100.0), _spherometerLegDistances(56),
                            _excludedAngle(2.0), _slitIsMoving(true), _fixedFocal(-1), _cellType(0),
                            _couderx(.5), _coudery(.5), _couderz(.80), _imgcouderx(0.5), _imgcoudery(0.5), _imgcouderz(1), _zone(0), _pause(false), _ronchi(false), _ronchiOffset(0.0), _grading(3.9),
-						   _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0),
-                           _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0)
+                           _showCouderRed(true), _showCouderBlue(true),  _showCouderOrange(false), _virtualCouderType(0), _couderRotate(false),
+                           _cogTopLen(100.0), _cogBotLen(50.0), _cogWeight(1.0), pictureRequested(false)
     {
         m_hoggings= new QQmlObjectListModel<CBSModelHoggingWork>(this);
         m_parabolizings= new QQmlObjectListModel<CBSModelParabolizingWork>(this);
@@ -768,7 +772,7 @@ public:
         calcZones(0, m_zones->count()-1);
         emit nbZonesChanged();
     }
-      void paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange); // Draw a couder mask
+      void paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange, bool rotate=false); // Draw a couder mask
     Q_INVOKABLE void printCouder(); // Print the couder mask
 	Q_INVOKABLE void email(); // send the scope by email...
 
@@ -827,6 +831,18 @@ public:
       double cog= (2*b*body+body*w+_cogBotLen*w-_cogTopLen*w);
       double d2= (2*b+2*t+2*w);
       if (d2==0.0) return 0.0; else return body-(cog/d2);
+    }
+
+    bool pictureRequested;
+    QImage *savedImage;
+    Q_INVOKABLE void takePicture()
+    {
+        if (pictureRequested) return;
+        savedImage= nullptr; pictureRequested= true;
+        while (savedImage!=nullptr) ;
+        QString fileName = QFileDialog::getSaveFileName(nullptr, tr("Save Image File"), QString(), tr("Images (*.png)"));
+        if (!fileName.isEmpty()) savedImage->save(fileName);
+        pictureRequested= false; delete savedImage; savedImage= nullptr;
     }
 
     //////////////////////////////////////////////////
@@ -954,6 +970,16 @@ public:
       return props[index][prop];
     }
     Q_INVOKABLE bool help();
+    Q_INVOKABLE double shouldBeep(double time, QString beepAt)
+    {
+        int tme= int(time/1000.0);
+        QStringList l(beepAt.split(" ", QString::SkipEmptyParts)); // split string in tokens and look at each token separately
+        foreach(QString const &s, l) {
+          bool ok; int t= s.toInt(&ok);
+          if (ok) { if (t==tme) QApplication::beep(); }
+        }
+        return time;
+    }
     QMutex lock;
 	QString _errMsg, _dbgMsg, _warMsg;
 	QString getErrMsg() { lock.lock(); QString r(_errMsg); lock.unlock(); return r; }

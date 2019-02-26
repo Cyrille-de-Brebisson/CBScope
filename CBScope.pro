@@ -179,7 +179,9 @@ DISTFILES += \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.properties \
     android/gradlew.bat \
-    qml/MyJoystick.qml
+    qml/MyJoystick.qml \
+    qml/MyCheckBox.qml \
+    qml/MyCheckBox.qml
 
 HEADERS +=
 

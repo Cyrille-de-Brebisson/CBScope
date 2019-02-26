@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <RCC>
     <qresource prefix="/">
         <file alias="qml/qmldir">qml/qmldir</file>

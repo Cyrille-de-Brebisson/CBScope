@@ -36,11 +36,22 @@ bool CBSModel::help()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Couder painting functions...
 
+static void flippts(QPoint *pts, int sze, bool flip, QPoint &c)
+{
+    if (!flip) return;
+    while (--sze>=0)
+    {
+        int x= (pts[sze].x()-c.x());
+        int y= (pts[sze].y()-c.y());
+        pts[sze].setX(y+c.x());
+        pts[sze].setY(x+c.y());
+    }
+}
 // Draw blue type zones. ie: arc of disks from angle a1 to a2 of radiis z1 to z2 centered at c. yflip specifies if the zone is on top or bottom...
 // zones with a 0 radii is treated differently (see output)
 // angles are in degree. I do not remember where the 0 point is!
 // arcs are drawn using lines...
-static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, double a2, int dpi, int yflip) 
+static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, double a2, int dpi, int yflip, bool xyflip)
 {
   int const steps= 20;
   a1= a1*M_PI/180.0;
@@ -51,11 +62,12 @@ static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, doubl
   for (int i=0; i<steps; i++) { pts[pc++]= QPoint(c.x()+int(z1*sin(a)/25.4*dpi), c.y()+yflip*int(z1*cos(a)/25.4*dpi)); a+= asteps; } // draw first arc going up
   for (int i=0; i<steps; i++) { a-= asteps; pts[pc++]= QPoint(c.x()+int(z2*sin(a)/25.4*dpi), c.y()+yflip*int(z2*cos(a)/25.4*dpi)); } // draw second arc going down
   pts[pc++]= pts[0]; // join the ends
+  flippts(pts, pc, xyflip, c);
   p->drawPolyline(pts, pc); // draw
 }
 
 // Draw orange type zones. not used anymore.
-static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, double a2, double a3, double a4, int dpi, int flip)
+static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, double a2, double a3, double a4, int dpi, int flip, bool xyflip)
 {
   // x²+y²=r² -> y=sqrt(r²-x²), x=sqrt(r²-y²)
   int const steps= 20;
@@ -70,19 +82,20 @@ static void zone2(QPainter *p, double z1, double z2, QPoint &c, double a1, doubl
   a= a4; asteps= (a4-a3)/steps;
   for (int i=0; i<steps+1; i++) { pts[pc++]= QPoint(c.x()+flip*int(z2*sin(a)/25.4*dpi), c.y()+int(z2*cos(a)/25.4*dpi)); a-= asteps; } // draw second arc going down
   pts[pc++]= pts[0]; // join the ends
+  flippts(pts, pc, xyflip, c);
   p->drawPolyline(pts, pc); // draw
 }
 
 // Draw red type zones 
 // z1 and z2 are the inner/outter diameters. y1 and y2 the top/bottom of the zones. c is the center. yflip indicate top/bottom drawing
-static void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double y2, int dpi, int yflip)
+static void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double y2, int dpi, int yflip, bool xyflip)
 {
     if (z1>1.0 && z1<y2) // special case when y2 is too large
     {
         double a1= acos(y1/z2)*180.0/M_PI, a2= acos(y2/z2)*180.0/M_PI;
         if (std::isnan(a2)) a2= 30.0;
-        zone2(p, z1, z2, c, a1, a2, dpi, yflip);
-        zone2(p, z1, z2, c, a1+180.0, a2+180.0, dpi, yflip);
+        zone2(p, z1, z2, c, a1, a2, dpi, yflip, xyflip);
+        zone2(p, z1, z2, c, a1+180.0, a2+180.0, dpi, yflip, xyflip);
         return;
     }
     // x²+y²=r² -> y=sqrt(r²-x²), x=sqrt(r²-y²)
@@ -105,8 +118,11 @@ static void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double
             pts[pc++]= QPoint(c.x()+int(x/25.4*dpi), c.y()+yflip*int(y/25.4*dpi));
         }
         pts[pc++]= pts[0]; // join the ends
+        flippts(pts, pc, xyflip, c);
         p->drawPolyline(pts, pc); // draw
+        flippts(pts, pc, xyflip, c);
         for (int i=0; i<pc; i++) pts[i]= QPoint(c.x()-(pts[i].x()-c.x()), c.y()-(pts[i].y()-c.y())); // reverse
+        flippts(pts, pc, xyflip, c);
         p->drawPolyline(pts, pc); // draw the 2nd part
     } else { // center zone!
         for (int i=0; i<steps; i++) // draw first arc going up
@@ -123,12 +139,13 @@ static void zone(QPainter *p, double z1, double z2, QPoint &c, double y1, double
             y+= ystep;
         }
         pts[pc++]= pts[0]; // join the ends
+        flippts(pts, pc, xyflip, c);
         p->drawPolyline(pts, pc); // draw
     }
 }
 
 // Draw the Couder screen on the painter at DPI. c is the center of the mirror
-void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange)
+void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool showRed, bool showBlue, bool showOrange, bool rotateCouder)
 {
     QBrush brush(QColor(0, 0, 0, 0));
     painter->setBrush(brush);
@@ -146,28 +163,29 @@ void CBSModelScope::paintCouder(QPainter *painter, QPoint &c, double dpi, bool s
     if (showRed)
     {  // Paint in red the "normal" couder zones
         painter->setPen(QPen(QColor(255, 0, 0)));
-        for (int i=0; i<m_zones->count()-1; i++) zone(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 2.5, bot, int(dpi), (i&1)==0?1:-1);
+        for (int i=0; i<m_zones->count()-1; i++) zone(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 2.5, bot, int(dpi), (i&1)==0?1:-1, rotateCouder);
     }
     if (showBlue)
     {  // paint my zones style in blue (top/bottom)
         painter->setPen(QPen(QColor(0, 0, 255)));
         bot*= 0.8;
-        zone(painter, m_zones->at(0)->_val, m_zones->at(1)->_val, c, 2.5, bot, int(dpi), 1);
-        for (int i=1; i<m_zones->count()-1; i++) zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, -30.0, 30.0, int(dpi), (i&1)==0?1:-1);
+        zone(painter, m_zones->at(0)->_val, m_zones->at(1)->_val, c, 2.5, bot, int(dpi), 1, rotateCouder);
+        for (int i=1; i<m_zones->count()-1; i++) zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, -30.0, 30.0, int(dpi), (i&1)==0?1:-1, rotateCouder);
     }
     if (showOrange)
     {  // Paint in Orange last zone style... not used at the moment
         painter->setPen(QPen(QColor(255,165,0)));
         bot*= 0.8;
-        zone(painter, m_zones->at(0)->_val, m_zones->at(1)->_val, c, 2.5, bot, int(dpi), 1);
+        zone(painter, m_zones->at(0)->_val, m_zones->at(1)->_val, c, 2.5, bot, int(dpi), 1, rotateCouder);
         for (int i=1; i<m_zones->count()-1; i++)
         {
           double a1= asin(bot/m_zones->at(i)->_val)*180.0/M_PI;
           double a2= asin(bot/m_zones->at(i+1)->_val)*180.0/M_PI;
-          zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 90.0-a1, 90.0+a1, 90.0-a2, 90.0+a2, int(dpi), 1);
-          zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 90.0-a1, 90.0+a1, 90.0-a2, 90.0+a2, int(dpi), -1);
+          zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 90.0-a1, 90.0+a1, 90.0-a2, 90.0+a2, int(dpi), 1, rotateCouder);
+          zone2(painter, m_zones->at(i)->_val, m_zones->at(i+1)->_val, c, 90.0-a1, 90.0+a1, 90.0-a2, 90.0+a2, int(dpi), -1, rotateCouder);
         }
     }
+    if (rotateCouder) painter->rotate(-90);
 }
 
 // Print a couder screen on the printer. Pop up a print dialog box...
@@ -184,7 +202,7 @@ void CBSModelScope::printCouder()
     QPainter painter;
     painter.begin(&printer);
     painter.beginNativePainting();
-    paintCouder(&painter, c, dpi, _showCouderRed, _showCouderBlue, _showCouderOrange);
+    paintCouder(&painter, c, dpi, _showCouderRed, _showCouderBlue, _showCouderOrange, _couderRotate);
     painter.endNativePainting();
     painter.end();
 #endif
@@ -238,7 +256,7 @@ void CBScopeCouder::paint(QPainter *painter)
   painter->drawRect(0, 0, w, h);
   if (_scope==nullptr) return;
   QPoint c(w/2, h/2);
-  _scope->paintCouder(painter, c, _zoom?96/2:96, _scope->getShowCouderRed(), _scope->getShowCouderBlue(), _scope->getShowCouderOrange());
+  _scope->paintCouder(painter, c, _zoom?96/2:96, _scope->getShowCouderRed(), _scope->getShowCouderBlue(), _scope->getShowCouderOrange(), _scope->getCouderRotate());
 }
 
 //////////////////////////////////////////////////////////////
@@ -788,6 +806,9 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
       tempImage =qt_imageFromVideoFrame(*inputframe);
       if (pause) filter->pausedFrame= new QImage(tempImage);
     }
+
+    if (filter!=nullptr && filter->getScope()!=nullptr && filter->getScope()->pictureRequested && filter->getScope()->savedImage==nullptr)
+        filter->getScope()->savedImage= new QImage(tempImage);
 
     if (filter!=nullptr)
 	{
