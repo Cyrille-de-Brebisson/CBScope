@@ -229,7 +229,7 @@ ApplicationWindow {
                                 spacing: 10; width: parent.width;
                                 MyText { caption: qsTr("name"); text: name; onTextChanged: name= text; }
                                 Rectangle { color: "black"; height: parent.height; width: parent.width-x-rowEp5.width-parent.spacing; }
-                                Button { id: rowEp5; text: qsTr("Delete"); onPressed: scopeView.model.epsRemove(index); }
+                                Button { id: rowEp5; text: qsTr("Delete"); onPressed: scopeView.model.epRemove(index); }
                             }
                             Row { spacing: 10; width: parent.width;
                                 MyText { caption: qsTr("focal"); text: focal; onTextChanged: focal= Number(text); }
