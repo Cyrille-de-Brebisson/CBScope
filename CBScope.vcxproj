@@ -453,6 +453,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="debug\qml_MyCheckBox_qml.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyCheckBox_qml.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+
     <ClCompile Include="debug\qmlcache_loader.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -676,6 +685,26 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\qml_main_qml.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\qml_main_qml.cpp;%(Outputs)</Outputs>
     </CustomBuild>
+
+    <CustomBuild Include="qml\MyCheckBox.qml">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\qmlcachegen.exe --resource=./resources.qrc -o release\qml_MyCheckBox_qml.cpp qml\MyCheckBox.qml</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\qmlcachegen.exe --resource=./resources.qrc -o release\qml_MyCheckBox_qml.cpp qml\MyCheckBox.qml</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">qmlcachegen qml/MyCheckBox.qml</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">qmlcachegen qml/MyCheckBox.qml</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\qmlcachegen.exe --resource=./resources.qrc -o debug\qml_MyCheckBox_qml.cpp qml\MyCheckBox.qml</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\qmlcachegen.exe --resource=./resources.qrc -o debug\qml_MyCheckBox_qml.cpp qml\MyCheckBox.qml</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">qmlcachegen qml/MyCheckBox.qml</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">qmlcachegen qml/MyCheckBox.qml</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="resources.qrc">

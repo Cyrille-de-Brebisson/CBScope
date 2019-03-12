@@ -466,24 +466,68 @@ void LockPlopData(int) { lock.lock(); }
 void UnlockPlopData() { lock.unlock(); }
 void UpdateSparseStat(int n) { if (mesToUse==nullptr) return; mesToUse->setMatrixProgresses(double(n)/100); } // track bar for solving matrix max = SparseStateSteps
 
+void CBScopeMes::printPLOP()
+{
+#if CanPrint
+	QPrinter printer;//(QPrinter::HighResolution);
+	QPrintDialog dialog(&printer, nullptr);
+	dialog.setWindowTitle(tr("Print support"));
+	if (dialog.exec() != QDialog::Accepted) return;
+	QRect area(printer.pageRect());
+	QPainter painter;
+	painter.begin(&printer);
+	painter.beginNativePainting();
 
-void CBScopeMes::paint(QPainter *painter)
+	int dpi= printer.resolution();
+	QRect r(printer.pageRect());
+	QPoint c= r.center();
+
+	paint(&painter, true, c, dpi);
+	// add numerical data...
+	painter.setPen(QPen(QColor(0, 0, 0)));
+	QSize s= r.size()/20;
+	c= r.topLeft()+QPoint(s.width(),s.height());
+	if (mesToUse!=nullptr)
+	{
+		painter.drawText(c, "P-V err: "+QString::number(floor(mesToUse->getErrPv()*1e8)/100)+"nm lam/"+QString::number(floor(555e-6/mesToUse->getErrPv())));
+		QFontMetrics fm(painter.font());                            // draw EP name
+		c.setY(c.y()+fm.height());
+		painter.drawText(c, "RMS err: "+QString::number(floor(mesToUse->getErrRms()*1e8)/100)+"nm lam/"+QString::number(floor(555e-6/mesToUse->getErrRms())));
+		c.setY(c.y()+fm.height());
+
+		if (_cellType!=0)
+			for (int i = 0; i < n_parts; i++)
+			{	
+				QString parts;
+				int ncorners = part_type_num_corners [part_type [i]];
+				double x[3], y[3], l[3];
+				for (int j = 0; j < ncorners; j++) polar_to_euc (part_corner_radius [i] [j], part_corner_angle [i] [j], &x[j], &y[j]);
+				for (int j=0; j<ncorners; j++) l[j]= sqrt((x[(j+1)%ncorners]-x[j])*(x[(j+1)%ncorners]-x[j])+(y[(j+1)%ncorners]-y[j])*(y[(j+1)%ncorners]-y[j]));
+				if (part_type [i]==0) parts+= "triangle: cog_radius "+QString::number(part_cg_radius[i], 'f', 1)+" length1 "+QString::number(l[0], 'f', 1)+" length2 "+QString::number(l[1], 'f', 1)+" length3 "+QString::number(l[2], 'f', 1);
+				else parts+= "bar: cog_radius "+QString::number(part_cg_radius[i], 'f', 1)+" length1 "+QString::number(l[0], 'f', 1);
+				painter.drawText(c, parts);
+				c.setY(c.y()+fm.height());
+			}
+		else painter.drawText(c, "3 points at "+QString::number(support_radii[0], 'f', 1)+"mm radius");
+	}
+	painter.endNativePainting();
+	painter.end();
+#endif
+}
+
+void CBScopeMes::paint(QPainter *painter, bool print, QPoint c, double dpi)
 {
 	QBrush brush(QColor(200, 200, 200));
 	painter->setBrush(brush);
 	painter->setPen(QPen(QColor(0, 0, 0)));
 	painter->setRenderHint(QPainter::Antialiasing);
 
-	QSizeF itemSize = size();
-	int w= int(itemSize.width());
-	int h= int(itemSize.height());
-	painter->drawRect(0, 0, w, h);
+	if (!print) painter->drawRect(0, 0, c.x()*2+1, c.y()*2+1);
 	if (plate_plot_n_triangles==0) return;
 	mutex.lock();
 
-	QPoint c(w/2, h/2);
 	double const zs[]= {100.0, 75.0, 50.0, 25.0, 10.0, 5.0};
-	double dpi= 96.0/25.4*zs[int(_zoom)]/100;
+	dpi= dpi/25.4*zs[int(_zoom)]/100;
 	if (_showMesh || _showForces)
 	{
 		if (_showMesh) painter->setPen(QPen(QColor(0,0,0))); else painter->setPen(QPen(QColor(0,0,0,0)));

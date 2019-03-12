@@ -681,6 +681,8 @@ ApplicationWindow {
 				MyOText { caption: "RMS err"; text: (scopeSupport.errRms*1e6).toFixed(2)+"nm lam/"+(555e-6/scopeSupport.errRms).toFixed(0) }
 			}
 			MyOText { y: parent.height-height; caption: "parts"; text: scopeSupport.parts }
+			Button  { visible: CBSModel.canPrint; y: 0; x: parent.width-width; text: qsTr("Print"); onPressed: scopeSupport.printPLOP() }
+
         }
 
         //********************************

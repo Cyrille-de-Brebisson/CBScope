@@ -1099,8 +1099,17 @@ public:
 		_showParts(true), _showSupports(true), _showSecondary(true), _zoom(1.0), _matrixProgresses(0.0), _errRms(0.0), _errPV(0.0), _refocusFL(0.0),
 		_nbEvals(-1), _stepSize(0), hasPlopInit(false), hasCalculated(false), _radius(0.0), _secondary(0.0), _cellType(0)
 	{ }
-    void paint(QPainter *painter);
-    CBSModelScope *getScope() { return _scope; }
+	void paint(QPainter *painter, bool print, QPoint c, double dpi);
+	void inline paint(QPainter *painter) 
+	{ 
+		QSizeF itemSize = size();
+		int w= int(itemSize.width());
+		int h= int(itemSize.height());
+		QPoint c(w/2, h/2);
+		paint(painter, false, c, 96.0); 
+	}
+	Q_INVOKABLE void printPLOP();
+	CBSModelScope *getScope() { return _scope; }
     void setScope(CBSModelScope *s)
     {
       if (s==_scope) return; _scope= s;
