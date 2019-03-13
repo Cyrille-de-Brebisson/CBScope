@@ -489,8 +489,13 @@ void CBScopeMes::printPLOP()
 	c= r.topLeft()+QPoint(s.width(),s.height());
 	if (mesToUse!=nullptr)
 	{
+		QFontMetrics fm(painter.font());                            
+		painter.drawText(c, _scope->getName()); c.setY(c.y()+fm.height());
+		QString t; t.sprintf("Diameter:%d Focal:%d Thickness:%d Secondary:%d", int(_scope->getDiametre()), int(_scope->getFocal()), int(_scope->getThickness()), int(_scope->getSecondary()), _scope->getDensity(), int(_scope->getYoung()), _scope->getPoisson());
+		painter.drawText(c, t); c.setY(c.y()+fm.height());
+		t.sprintf("%.2fg/cm^3 young:%d Poisson:%.2f", _scope->getDensity(), int(_scope->getYoung()), _scope->getPoisson());
+		painter.drawText(c, t); c.setY(c.y()+fm.height());
 		painter.drawText(c, "P-V err: "+QString::number(floor(mesToUse->getErrPv()*1e8)/100)+"nm lam/"+QString::number(floor(555e-6/mesToUse->getErrPv())));
-		QFontMetrics fm(painter.font());                            // draw EP name
 		c.setY(c.y()+fm.height());
 		painter.drawText(c, "RMS err: "+QString::number(floor(mesToUse->getErrRms()*1e8)/100)+"nm lam/"+QString::number(floor(555e-6/mesToUse->getErrRms())));
 		c.setY(c.y()+fm.height());
