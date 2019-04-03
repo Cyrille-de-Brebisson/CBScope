@@ -750,6 +750,46 @@ ApplicationWindow {
 				}
 			}
 		}
+
+        //********************************
+        // X/Y table page
+        //********************************
+        Column { spacing: 10; width: parent.width; height: parent.height;
+            Flow { spacing: 10; width: parent.width;
+                MyText { caption: qsTr("X"); text: CBSModel.tableX; onTextChanged: CBSModel.setTableX(Number(text)); }
+                MyText { caption: qsTr("Y"); text: CBSModel.tableY; onTextChanged: CBSModel.setTableY(Number(text)); }
+                MyText { caption: qsTr("Z"); text: CBSModel.tableZ; onTextChanged: CBSModel.setTableZ(Number(text)); }
+                MyText { caption: qsTr("X steps/mm"); text: CBSModel.tableXSteps; onTextChanged: CBSModel.tableXSteps= Number(text); }
+                MyText { caption: qsTr("Y steps/mm"); text: CBSModel.tableYSteps; onTextChanged: CBSModel.tableYSteps= Number(text); }
+                MyText { caption: qsTr("Z steps/mm"); text: CBSModel.tableZSteps; onTextChanged: CBSModel.tableZSteps= Number(text); }
+            }
+            Flow { spacing: 10; width: parent.width;
+                MyText { id: xytableBtnGoX; caption: qsTr("go X"); text: CBSModel.tableX; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
+                MyText { id: xytableBtnGoY; caption: qsTr("go Y"); text: CBSModel.tableY; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
+                MyText { id: xytableBtnGoZ; caption: qsTr("go Z"); text: CBSModel.tableZ; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
+                Button { text: qsTr("Go"); onPressed: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
+            }
+            ComboBox { textRole: "val"; model: CBSModel.coms; currentIndex: 0; onCurrentIndexChanged: CBSModel.setCom(currentIndex); }
+            Flow { spacing: 10; width: parent.width;
+                Button { id: xybx1; text: "+X"; } Button { id: xybx2; text: "-X"; }
+                Button { id: xyby1; text: "+Y"; } Button { id: xyby2; text: "-Y"; }
+                Button { id: xybz1; text: "+Z"; } Button { id: xybz2; text: "-Z"; }
+            }
+            Timer { 
+                function move() 
+                {
+                    CBSModel.comMove(100, xybx1.pressed ? 0.025 : (xybx2.pressed ? -0.025 : 0), xyby1.pressed ? 0.025 : (xyby2.pressed ? -0.025 : 0), xybz1.pressed ? 0.025 : (xybz2.pressed ? -0.025 : 0))
+                }
+				running: xybx1.pressed || xybx2.pressed || xyby1.pressed || xyby2.pressed || xybz1.pressed || xybz2.pressed
+                onRunningChanged: 
+                {
+                    console.log(running);
+                    if (running) move() // when running is turned on, do a first move as the trigger will only come 100ms after!
+                }
+                interval: 100; repeat: true;
+                onTriggered: move()
+            }
+        }
     }
 
     //********************************
@@ -771,6 +811,7 @@ ApplicationWindow {
                 TabButton {  width: implicitWidth; text: qsTr("Support") }
                 TabButton {  width: implicitWidth; text: qsTr("COG") }
                 TabButton {  width: implicitWidth; text: qsTr("Notes") }
+                TabButton {  width: implicitWidth; text: qsTr("Coms") }
             }
     }
 }

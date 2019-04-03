@@ -1,4 +1,4 @@
-QT += quick quickcontrols2 printsupport multimedia multimedia-private
+QT += quick quickcontrols2 printsupport multimedia multimedia-private serialport
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use

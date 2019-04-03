@@ -106,7 +106,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>Intermediate\Release\Win32\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -115,7 +115,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -125,7 +125,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2.lib;$(QTDIR)\lib\Qt5Quick.lib;$(QTDIR)\lib\Qt5PrintSupport.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Multimedia.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Qml.lib;$(QTDIR)\lib\Qt5Network.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;Qt5Concurrent.lib;Qt5MultimediaWidgets.lib;Qt5QuickWidgets.lib;Qt5Gui.lib;Qt5UiTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2.lib;$(QTDIR)\lib\Qt5Quick.lib;$(QTDIR)\lib\Qt5PrintSupport.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Multimedia.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Qml.lib;$(QTDIR)\lib\Qt5Network.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;Qt5Concurrent.lib;Qt5MultimediaWidgets.lib;Qt5QuickWidgets.lib;Qt5Gui.lib;Qt5UiTools.lib;Qt5SerialPort.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -148,13 +148,13 @@
     <QtMoc>
       <QTDIR>$(QTDIR)</QTDIR>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
-      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</Define>
+      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</Define>
       <CompilerFlavor>msvc</CompilerFlavor>
       <Include>./Intermediate/$(Configuration)/$(Platform)/moc_predefs.h</Include>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
       <InputFile>%(FullPath)</InputFile>
       <DynamicSource>output</DynamicSource>
-      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</IncludePath>
+      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</IncludePath>
     </QtMoc>
     <QtRcc>
       <InitFuncName>resources_qmlcache</InitFuncName>
@@ -167,7 +167,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>Intermediate\Release\Win32\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -176,7 +176,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -186,7 +186,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2.lib;$(QTDIR)\lib\Qt5Quick.lib;$(QTDIR)\lib\Qt5PrintSupport.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Multimedia.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Qml.lib;$(QTDIR)\lib\Qt5Network.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;Qt5Concurrent.lib;Qt5MultimediaWidgets.lib;Qt5QuickWidgets.lib;Qt5Gui.lib;Qt5UiTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2.lib;$(QTDIR)\lib\Qt5Quick.lib;$(QTDIR)\lib\Qt5PrintSupport.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Multimedia.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Qml.lib;$(QTDIR)\lib\Qt5Network.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;Qt5Concurrent.lib;Qt5MultimediaWidgets.lib;Qt5QuickWidgets.lib;Qt5Gui.lib;Qt5UiTools.lib;Qt5SerialPort.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -209,13 +209,13 @@
     <QtMoc>
       <QTDIR>$(QTDIR)</QTDIR>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
-      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</Define>
+      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;NDEBUG;QT_NO_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;NDEBUG;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</Define>
       <CompilerFlavor>msvc</CompilerFlavor>
       <Include>./Intermediate/$(Configuration)/$(Platform)/moc_predefs.h</Include>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
       <InputFile>%(FullPath)</InputFile>
       <DynamicSource>output</DynamicSource>
-      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</IncludePath>
+      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Release\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</IncludePath>
     </QtMoc>
     <QtRcc>
       <InitFuncName>resources_qmlcache</InitFuncName>
@@ -228,7 +228,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>Intermediate\Debug\Win32\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -237,7 +237,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -247,7 +247,7 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2d.lib;$(QTDIR)\lib\Qt5Quickd.lib;$(QTDIR)\lib\Qt5PrintSupportd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Multimediad.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Qmld.lib;$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;Qt5Concurrentd.lib;Qt5MultimediaWidgetsd.lib;Qt5QuickWidgetsd.lib;Qt5Guid.lib;Qt5UiToolsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2d.lib;$(QTDIR)\lib\Qt5Quickd.lib;$(QTDIR)\lib\Qt5PrintSupportd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Multimediad.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Qmld.lib;$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;Qt5Concurrentd.lib;Qt5MultimediaWidgetsd.lib;Qt5QuickWidgetsd.lib;Qt5Guid.lib;Qt5UiToolsd.lib;Qt5SerialPortd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -269,13 +269,13 @@
     <QtMoc>
       <QTDIR>$(QTDIR)</QTDIR>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
-      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</Define>
+      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</Define>
       <CompilerFlavor>msvc</CompilerFlavor>
       <Include>./Intermediate/$(Configuration)/$(Platform)/moc_predefs.h</Include>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
       <InputFile>%(FullPath)</InputFile>
       <DynamicSource>output</DynamicSource>
-      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</IncludePath>
+      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</IncludePath>
     </QtMoc>
     <QtRcc>
       <QTDIR>$(QTDIR)</QTDIR>
@@ -288,7 +288,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>Intermediate\Debug\Win32\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -297,7 +297,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -307,7 +307,7 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2d.lib;$(QTDIR)\lib\Qt5Quickd.lib;$(QTDIR)\lib\Qt5PrintSupportd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Multimediad.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Qmld.lib;$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;Qt5Concurrentd.lib;Qt5MultimediaWidgetsd.lib;Qt5QuickWidgetsd.lib;Qt5Guid.lib;Qt5UiToolsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QTDIR)\lib\Qt5QuickControls2d.lib;$(QTDIR)\lib\Qt5Quickd.lib;$(QTDIR)\lib\Qt5PrintSupportd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Multimediad.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Qmld.lib;$(QTDIR)\lib\Qt5Networkd.lib;$(QTDIR)\lib\Qt5Cored.lib;$(QTDIR)\lib\qtmaind.lib;Qt5Concurrentd.lib;Qt5MultimediaWidgetsd.lib;Qt5QuickWidgetsd.lib;Qt5Guid.lib;Qt5UiToolsd.lib;Qt5SerialPortd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'" %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -329,13 +329,13 @@
     <QtMoc>
       <QTDIR>$(QTDIR)</QTDIR>
       <OutputFile>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</OutputFile>
-      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;%(PreprocessorDefinitions)</Define>
+      <Define>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;QT_DEPRECATED_WARNINGS;_DEBUG;QT_QUICKCONTROLS2_LIB;QT_QUICK_LIB;QT_PRINTSUPPORT_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_QML_LIB;QT_CORE_LIB;QT_CONCURRENT_LIB;QT_MULTIMEDIAWIDGETS_LIB;QT_QUICKWIDGETS_LIB;QT_GUI_LIB;QT_UITOOLS_LIB;QT_SERIALPORT_LIB;%(PreprocessorDefinitions)</Define>
       <CompilerFlavor>msvc</CompilerFlavor>
       <Include>./Intermediate/$(Configuration)/$(Platform)/moc_predefs.h</Include>
       <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
       <InputFile>%(FullPath)</InputFile>
       <DynamicSource>output</DynamicSource>
-      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;%(AdditionalIncludeDirectories)</IncludePath>
+      <IncludePath>.\GeneratedFiles\$(ConfigurationName);.\GeneratedFiles;.;src;$(QTDIR)\include;$(QTDIR)\include\QtQuickControls2;$(QTDIR)\include\QtQuick;$(QTDIR)\include\QtPrintSupport;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtMultimedia\5.12.0;$(QTDIR)\include\QtMultimedia\5.12.0\QtMultimedia;$(QTDIR)\include\QtMultimedia;$(QTDIR)\include\QtGui\5.12.0;$(QTDIR)\include\QtGui\5.12.0\QtGui;$(QTDIR)\include\QtQml;$(QTDIR)\include\QtCore\5.12.0;$(QTDIR)\include\QtCore\5.12.0\QtCore;$(QTDIR)\include\QtCore;Intermediate\Debug\Win32;\include;$(QTDIR)\mkspecs\win32-msvc;$(QTDIR)\include\QtConcurrent;$(QTDIR)\include\QtMultimediaWidgets;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtSerialPort;%(AdditionalIncludeDirectories)</IncludePath>
     </QtMoc>
     <QtRcc>
       <QTDIR>$(QTDIR)</QTDIR>
@@ -461,7 +461,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-
     <ClCompile Include="debug\qmlcache_loader.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -685,7 +684,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\qml_main_qml.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\qml_main_qml.cpp;%(Outputs)</Outputs>
     </CustomBuild>
-
     <CustomBuild Include="qml\MyCheckBox.qml">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">qml\MyCheckBox.qml;%(AdditionalInputs)</AdditionalInputs>
@@ -704,7 +702,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\qml_MyCheckBox_qml.cpp;%(Outputs)</Outputs>
     </CustomBuild>
-
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="resources.qrc">

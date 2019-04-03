@@ -39,6 +39,8 @@
 #else
 #define CanPrint 0
 #endif
+#include <QSerialPort>
+#include <QSerialPortInfo>
 
 // ********************************************************
 // Most of our objects will derive from this savable object
@@ -291,9 +293,10 @@ Q_SIGNALS:
   void errorChanged();
   void commentChanged();
 public:
+  void *data;
   QString _val;
   bool _error;
-  CBSQString(QObject *parent=nullptr): CBSSaveLoadObject(parent), _val("0"), _error(false), _doubleVal(0.0) { }
+  CBSQString(QObject *parent=nullptr): CBSSaveLoadObject(parent), data(nullptr), _val("0"), _error(false), _doubleVal(0.0) { }
   ~CBSQString() { } // Will this work?
   double _doubleVal;
   QString getVal() { return _val; }
@@ -904,6 +907,19 @@ public:
 	Q_PROPERTY(QString warMsg READ getWarMsg WRITE setWarMsg NOTIFY warMsgChanged)
 	QML_OBJMODEL_PROPERTY(CBSModelScope, scopes)
     Q_PROPERTY(bool canPrint READ getCanPrint NOTIFY canPrintChanged) // true if we can print
+    // coms...
+    QML_OBJMODEL_PROPERTY(CBSQString, coms)
+    Q_PROPERTY(double tableX READ getTableX NOTIFY tableXChanged)
+    Q_PROPERTY(double tableY READ getTableY NOTIFY tableYChanged)
+    Q_PROPERTY(double tableZ READ getTableZ NOTIFY tableZChanged)
+    double _tableX, _tableY, _tableZ;
+    double getTableX() { return _tableX; }
+    double getTableY() { return _tableY; }
+    double getTableZ() { return _tableZ; }
+    CBSProp(double, tableXSteps, TableXSteps)
+    CBSProp(double, tableYSteps, TableYSteps)
+    CBSProp(double, tableZSteps, TableZSteps)
+    CBSProp(QString, comIn, ComIn)
 Q_SIGNALS:
     void windowsPosXChanged();
     void windowsPosYChanged();
@@ -916,10 +932,20 @@ Q_SIGNALS:
 	void dbgMsgChanged();
 	void warMsgChanged();
     void canPrintChanged();
+    void tableXChanged();
+    void tableYChanged();
+    void tableZChanged();
+    void tableXStepsChanged();
+    void tableYStepsChanged();
+    void tableZStepsChanged();
+    void comInChanged();
 public:
-    CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false)
+    CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false), _tableX(0.0), _tableY(0.0), _tableZ(0.0)
     {
         m_scopes= new QQmlObjectListModel<CBSModelScope>(this);
+        m_coms= new QQmlObjectListModel<CBSQString>(this);
+        QList<QSerialPortInfo> ports= QSerialPortInfo::availablePorts();
+        for (int i=0; i<ports.count(); i++) { CBSQString *s= new CBSQString(m_coms); s->data= new QSerialPortInfo(ports.at(i)); s->setVal(ports.at(i).portName()); m_coms->append(s); }
         loadFile(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/CBScopes.scopes"); // load file
         qDebug() << "end of load";
         if (m_scopes->count()==0) // If nothing, create default scope
@@ -989,6 +1015,57 @@ public:
 	QString getWarMsg() { lock.lock(); QString r(_warMsg); lock.unlock(); return r; }
 	void setWarMsg(QString v) { lock.lock(); _warMsg= v; lock.unlock(); emit warMsgChanged(); }
     bool getCanPrint() { return CanPrint==1; }
+    QSerialPort serial;
+public slots:
+    void comReadData()
+    {
+        QString t;
+        const QByteArray data = serial.readAll();
+		if (data.count()==0) return;
+		qDebug() << "data in serial" << data;
+		for (int i=0; i<data.count(); i++)
+        {
+            if ((data.at(i)&0x80)==0) t+= data.at(i);
+            else t+= "$"+QString::number(data.at(i)&0x7f, 16);
+        }
+        _comIn+= t;
+        emit comInChanged();
+    }
+	void timerEvent(QTimerEvent *event)
+	{
+		comReadData();
+	}
+public:
+    Q_INVOKABLE void setCom(int port)
+    {
+		_comIn= ""; emit comInChanged();
+        if (serial.isOpen()) serial.close();
+        serial.setPort(*reinterpret_cast<QSerialPortInfo*>(m_coms->at(port)->data));
+        serial.setBaudRate(9600);
+        serial.setStopBits(QSerialPort::OneStop);
+        serial.setDataBits(QSerialPort::Data8);
+        serial.open(QIODevice::ReadWrite);
+		serial.readAll();
+		//startTimer(100);
+    }
+    Q_INVOKABLE void comMove(int t, double X, double Y, double Z)
+    {
+        int x= X*_tableXSteps;
+        int y= Y*_tableYSteps;
+        int z= Z*_tableZSteps;
+        _tableX+= x/_tableXSteps; emit tableXChanged();
+        _tableY+= y/_tableYSteps; emit tableYChanged(); 
+        _tableZ+= z/_tableZSteps; emit tableZChanged(); 
+        if (t==0) t= qMax(qMax(abs(x), abs(y)), abs(z)); // if t= 0. assume max 1 step per ms...
+        static unsigned char id= 0x80;
+        if (id==0xff) id= 0x80; else id++;
+        unsigned char out[9]= { id, (unsigned char)(t&0x7f), (unsigned char)((t>>7)&0x7f), (unsigned char)(x&0x7f), (unsigned char)((x>>7)&0x7f), (unsigned char)(y&0x7f), (unsigned char)((y>>7)&0x7f), (unsigned char)(z&0x7f), (unsigned char)((z>>7)&0x7f) };
+        serial.write((char*)out, 9);
+    }
+    Q_INVOKABLE void setTableX(double v) { _tableX= v; emit tableXChanged(); }
+    Q_INVOKABLE void setTableY(double v) { _tableY= v; emit tableYChanged(); }
+    Q_INVOKABLE void setTableZ(double v) { _tableZ= v; emit tableZChanged(); }
+    Q_INVOKABLE void goTable(double x, double y, double z)  { comMove(0, x-_tableX, y-_tableY, z-_tableZ); }
 };
 
 //***********************************************

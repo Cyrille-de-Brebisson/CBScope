@@ -5,6 +5,7 @@ Row { id: root
     property alias text: textField.text
     property alias caption: captionField.text
     signal onTextChanged(var text)
+    signal enter(var text)
     property alias fontcol: textInput.color
     y: (parent.height-height)/2;
     Text {
@@ -29,6 +30,8 @@ Row { id: root
             width: Math.max(20,contentWidth)
             color: "white"
             onTextChanged: root.textChanged(text)
+            Keys.onReturnPressed: root.enter(text)
+            Keys.onEnterPressed: root.enter(text)
         }
     }
 }

@@ -112,6 +112,12 @@
     <ClCompile Include="src\plop\sparsemat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="debug\qml_MyCheckBox_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="release\qml_MyCheckBox_qml.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\QQmlObjectListModel.h">
@@ -203,6 +209,7 @@
     <ClCompile Include="release\qmlcache_loader.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <CustomBuild Include="qml\MyCheckBox.qml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="language\cbscope_cs.ts">
