@@ -42,6 +42,19 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 
+#ifdef Q_OS_WIN
+#include <windows.h> // for Sleep
+#endif
+static inline void qSleep(int ms)
+{
+#ifdef Q_OS_WIN
+    Sleep(uint(ms));
+#else
+    struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };
+    nanosleep(&ts, NULL);
+#endif
+}
+
 // ********************************************************
 // Most of our objects will derive from this savable object
 // This provides the load and saveProperties functions that auto load/save QObject properties from a JSon object
@@ -909,17 +922,24 @@ public:
     Q_PROPERTY(bool canPrint READ getCanPrint NOTIFY canPrintChanged) // true if we can print
     // coms...
     QML_OBJMODEL_PROPERTY(CBSQString, coms)
-    Q_PROPERTY(double tableX READ getTableX NOTIFY tableXChanged)
-    Q_PROPERTY(double tableY READ getTableY NOTIFY tableYChanged)
-    Q_PROPERTY(double tableZ READ getTableZ NOTIFY tableZChanged)
-    double _tableX, _tableY, _tableZ;
+    Q_PROPERTY(double tableX READ getTableX WRITE setTableX NOTIFY tableXChanged)
+    Q_PROPERTY(double tableY READ getTableY WRITE setTableY NOTIFY tableYChanged)
+    double _tableX, _tableY;
     double getTableX() { return _tableX; }
     double getTableY() { return _tableY; }
-    double getTableZ() { return _tableZ; }
     CBSProp(double, tableXSteps, TableXSteps)
     CBSProp(double, tableYSteps, TableYSteps)
-    CBSProp(double, tableZSteps, TableZSteps)
-    CBSProp(QString, comIn, ComIn)
+    Q_PROPERTY(double tableXSlack READ getTableXSlack WRITE setTableXSlack NOTIFY tableXSlackChanged)
+    Q_PROPERTY(double tableYSlack READ getTableYSlack WRITE setTableYSlack NOTIFY tableYSlackChanged)
+    double _tableXSlack, _tableYSlack;
+    double getTableXSlack() { return _tableXSlack; }
+    double getTableYSlack() { return _tableYSlack; }
+    Q_PROPERTY(int tableLed1 READ getTableLed1 WRITE setTableLed1 NOTIFY tableLed1Changed)
+    Q_PROPERTY(int tableLed2 READ getTableLed2 WRITE setTableLed2 NOTIFY tableLed2Changed)
+    int _tableLed1, _tableLed2;
+    int getTableLed1() { return _tableLed1; }
+    int getTableLed2() { return _tableLed2; }
+    CBSProp(double, tableSpd, TableSpd)
 Q_SIGNALS:
     void windowsPosXChanged();
     void windowsPosYChanged();
@@ -938,9 +958,15 @@ Q_SIGNALS:
     void tableXStepsChanged();
     void tableYStepsChanged();
     void tableZStepsChanged();
-    void comInChanged();
+    void tableXSlackChanged();
+    void tableYSlackChanged();
+    void tableZSlackChanged();
+    void tableSpdChanged();
+    void tableLed1Changed();
+    void tableLed2Changed();
 public:
-    CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false), _tableX(0.0), _tableY(0.0), _tableZ(0.0)
+    CBSModel(QObject *parent=nullptr): CBSSaveLoadObject(parent), _windowsPosX(-1), _windowsPosY(-1), _windowsWidth(-1), _windowsHeight(-1), _windowsFlags(-1), _windowsFont(12), _windowsFontBold(false), 
+        _tableX(0.0), _tableY(0.0), _tableXSlack(0.0), _tableYSlack(0.0), _tableSpd(0.1), _tableLed1(0), _tableLed2(0)
     {
         m_scopes= new QQmlObjectListModel<CBSModelScope>(this);
         m_coms= new QQmlObjectListModel<CBSQString>(this);
@@ -1015,57 +1041,75 @@ public:
 	QString getWarMsg() { lock.lock(); QString r(_warMsg); lock.unlock(); return r; }
 	void setWarMsg(QString v) { lock.lock(); _warMsg= v; lock.unlock(); emit warMsgChanged(); }
     bool getCanPrint() { return CanPrint==1; }
+
+// Table movements...
     QSerialPort serial;
-public slots:
-    void comReadData()
-    {
-        QString t;
-        const QByteArray data = serial.readAll();
-		if (data.count()==0) return;
-		qDebug() << "data in serial" << data;
-		for (int i=0; i<data.count(); i++)
-        {
-            if ((data.at(i)&0x80)==0) t+= data.at(i);
-            else t+= "$"+QString::number(data.at(i)&0x7f, 16);
-        }
-        _comIn+= t;
-        emit comInChanged();
-    }
-	void timerEvent(QTimerEvent *event)
-	{
-		comReadData();
-	}
-public:
+    QByteArray serialData;
     Q_INVOKABLE void setCom(int port)
     {
-		_comIn= ""; emit comInChanged();
         if (serial.isOpen()) serial.close();
         serial.setPort(*reinterpret_cast<QSerialPortInfo*>(m_coms->at(port)->data));
-        serial.setBaudRate(9600);
+        //serial.setBaudRate(9600);
+        serial.setBaudRate(115200);
         serial.setStopBits(QSerialPort::OneStop);
         serial.setDataBits(QSerialPort::Data8);
         serial.open(QIODevice::ReadWrite);
-		serial.readAll();
-		//startTimer(100);
+        serial.readAll();
+        startTimer(50);
+        setTable(1, _tableX, _tableY, _tableLed1, _tableLed2);           // set table pos
+        setTable(3, _tableXSlack, _tableYSlack, _tableLed1, _tableLed2); // set table slack
     }
-    Q_INVOKABLE void comMove(int t, double X, double Y, double Z)
+    void setTable(int command, double X, double Y, int led1, int led2)
     {
-        int x= X*_tableXSteps;
-        int y= Y*_tableYSteps;
-        int z= Z*_tableZSteps;
-        _tableX+= x/_tableXSteps; emit tableXChanged();
-        _tableY+= y/_tableYSteps; emit tableYChanged(); 
-        _tableZ+= z/_tableZSteps; emit tableZChanged(); 
-        if (t==0) t= qMax(qMax(abs(x), abs(y)), abs(z)); // if t= 0. assume max 1 step per ms...
-        static unsigned char id= 0x80;
-        if (id==0xff) id= 0x80; else id++;
-        unsigned char out[9]= { id, (unsigned char)(t&0x7f), (unsigned char)((t>>7)&0x7f), (unsigned char)(x&0x7f), (unsigned char)((x>>7)&0x7f), (unsigned char)(y&0x7f), (unsigned char)((y>>7)&0x7f), (unsigned char)(z&0x7f), (unsigned char)((z>>7)&0x7f) };
-        serial.write((char*)out, 9);
+        if (!serial.isOpen()) return;
+        int x= X*_tableXSteps, y= Y*_tableYSteps;
+        int t= 1000000/(_tableSpd*_tableXSteps); // speed in steps/µs
+        byte out[12]= { (led1>>1)|0x80, led2>>1, command };
+        for (int i=0; i<3; i++) out[i+3]= (t>>(7*i))&0x7f;
+        for (int i=0; i<3; i++) out[i+6]= (x>>(7*i))&0x7f;
+        for (int i=0; i<3; i++) out[i+9]= (y>>(7*i))&0x7f;
+        serial.write((char*)out, 12);
+        //qDebug() << "serial<<" << out[0] << out[1] << out[2] << out[3] << out[4] << out[5] << out[6] << out[7] << out[8] << out[9] << out[10] << out[11];
     }
-    Q_INVOKABLE void setTableX(double v) { _tableX= v; emit tableXChanged(); }
-    Q_INVOKABLE void setTableY(double v) { _tableY= v; emit tableYChanged(); }
-    Q_INVOKABLE void setTableZ(double v) { _tableZ= v; emit tableZChanged(); }
-    Q_INVOKABLE void goTable(double x, double y, double z)  { comMove(0, x-_tableX, y-_tableY, z-_tableZ); }
+    Q_INVOKABLE void stopTable() { setTable(2, 0, 0, _tableLed1, _tableLed2); }
+    Q_INVOKABLE void goTable(double X, double Y) { setTable(0, X, Y, _tableLed1, _tableLed2); }
+    Q_INVOKABLE void goTable2(double X, double Y) 
+    { 
+        if (X==0 && Y==0) stopTable(); 
+        if (X==0) X=_tableX; if (Y==0) Y=_tableY;
+        setTable(0, X, Y, _tableLed1, _tableLed2); 
+    }
+    void setTableX(double v) { if (v==_tableX) return; setTable(1, v, _tableY, _tableLed1, _tableLed2); }
+    void setTableY(double v) { if (v==_tableY) return; setTable(1, _tableX, v, _tableLed1, _tableLed2); }
+    void setTableXSlack(double v) { _tableXSlack= v; setTable(3, _tableXSlack, _tableYSlack, _tableLed1, _tableLed2); }
+    void setTableYSlack(double v) { _tableYSlack= v; setTable(3, _tableXSlack, _tableYSlack, _tableLed1, _tableLed2); }
+    void setTableLed1(int v) { _tableLed1= v; stopTable(); }
+    void setTableLed2(int v) { _tableLed2= v; stopTable(); }
+public slots:
+	void timerEvent(QTimerEvent *event)
+	{
+        const QByteArray data = serial.readAll();
+        serialData.append(data);
+        //if (serialData.count()!=0) qDebug() << "data in serial" << serialData;
+        int x, y; bool hasChanged= false;
+        while (true)
+        {
+            if (serialData.count()==0) break;
+            if ((serialData.at(0)&0x80)==0) { serialData.remove(0, 1); redo: continue; }
+            if (serialData.count()<6) break;
+            *serialData.data()^= 0x80;
+            for (int i=0; i<6; i++) if ((serialData.at(i)&0x80)!=0) { serialData.remove(0, i-1); goto redo; }
+            x= serialData.at(0)+((int)serialData.at(1)<<7)+((int)serialData.at(2)<<14); if ((serialData.at(2)&0x40)!=0) x|= 0xffe00000;
+            y= serialData.at(3)+((int)serialData.at(4)<<7)+((int)serialData.at(5)<<14); if ((serialData.at(5)&0x40)!=0) y|= 0xffe00000;
+            hasChanged= true;
+            serialData.remove(0, 6);
+        }
+        if (hasChanged)
+        {
+            if (x/_tableXSteps!=_tableX) { _tableX= x/_tableXSteps; emit tableXChanged(); }
+            if (y/_tableYSteps!=_tableY) { _tableY= y/_tableYSteps; emit tableYChanged(); }
+        }
+    }
 };
 
 //***********************************************
@@ -1230,7 +1274,7 @@ public:
 		  for (int i=0; i<_scope->get_zones()->count(); i++)
 			  if (r<=_scope->get_zones()->at(i)->_val) { _scope->setZone(i-1); return; }
 	  }
-	  void draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c);
+	  void draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c, bool hide);
   };
 class CBScopeVirtualCouder;
 class CBScopeVirtualCouderRunnable : public  QVideoFilterRunnable
@@ -1244,11 +1288,15 @@ class CBScopeVirtualCouder : public QAbstractVideoFilter
 {
     Q_OBJECT
     CBSProp(CBSModelScope*, scope, Scope)
+    CBSProp(bool, enabled, Enabled)
+    CBSProp(bool, hide_rest, Hide_rest)
 Q_SIGNALS:
 	void scopeChanged();
+    void enabledChanged();
+    void hide_restChanged();
 	void finished(QObject *result);
 public:
-    CBScopeVirtualCouder(QObject *p= nullptr): QAbstractVideoFilter(p), _scope(nullptr), pausedFrame(nullptr), vco(false) { }
+    CBScopeVirtualCouder(QObject *p= nullptr): QAbstractVideoFilter(p), _scope(nullptr), pausedFrame(nullptr), vco(false), _enabled(true), _hide_rest(false) { }
     QVideoFilterRunnable *createFilterRunnable() { return new CBScopeVirtualCouderRunnable(this); }
 	QImage *pausedFrame; // non null if we are paused...
 	CBVirtualCouderOverlayInternal vco;

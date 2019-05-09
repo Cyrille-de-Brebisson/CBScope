@@ -545,7 +545,7 @@ void CBSModelParabolizingWork::doCalculations()
 	_focale= find_minimum(a,b,dReso,calc_less_ptv);
 	if (!std::isnan(_adjustFocal)) calc_less_ptv(this, _adjustFocal); // override of the above, but we still want _focale...
 
-    double dMax=_surf[0]; for (int i=1; i<iNbZone; i++) if (_surf[1]>dMax) dMax= _surf[1];
+    double dMax=_surf[0]; for (int i=1; i<iNbZone; i++) if (_surf[i]>dMax) dMax= _surf[i];
     if (dMax!=0.) _Lambda=greenWave/2./dMax;
     else _Lambda=9999.;
 
@@ -686,27 +686,68 @@ struct TZoneData { // structure that does the counting and image modification...
   }
   void count(QImage *i, QPoint &c, double z1, double z2, int h, int type)
   {
-    memset(Z1, 0, sizeof(Z1));
-    memset(Z2, 0, sizeof(Z2));
-    for (int y=h; --y>=0;)
-    {
-      // x= sqrt(d²-h²)
-      int x1= 0;
-      if (z1>=y) x1= int(sqrt(z1*z1-y*y));
-      int x2= int(sqrt(z2*z2-y*y));
-      count2(i, c.x()-x2, c.x()-x1, c.y()-y, Z1, type);
-      count2(i, c.x()+x1, c.x()+x2, c.y()-y, Z2, type);
-      if (y==0) break; // no double counting!!!!
-      count2(i, c.x()-x2, c.x()-x1, c.y()+y, Z1, type);
-      count2(i, c.x()+x1, c.x()+x2, c.y()+y, Z2, type);
-    }
+      memset(Z1, 0, sizeof(Z1));
+      memset(Z2, 0, sizeof(Z2));
+      if (type<5)
+          for (int y=h; --y>=0;)
+          {
+              // x= sqrt(d²-h²)
+              int x1= 0;
+              if (z1>=y) x1= int(sqrt(z1*z1-y*y));
+              int x2= int(sqrt(z2*z2-y*y));
+              count2(i, c.x()-x2, c.x()-x1, c.y()-y, Z1, type);
+              count2(i, c.x()+x1, c.x()+x2, c.y()-y, Z2, type);
+              if (y==0) break; // no double counting!!!!
+              count2(i, c.x()-x2, c.x()-x1, c.y()+y, Z1, type);
+              count2(i, c.x()+x1, c.x()+x2, c.y()+y, Z2, type);
+          }
+      else {
+          for (int y=0; y<=c.y()-h; y++) count2(i, 0, 0, 0, 0, y);
+          for (int y=c.y()+h; y<i->height(); y++) count2(i, 0, 0, 0, 0, y);
+          for (int y=h; --y>=0;)
+          {
+              // x= sqrt(d²-h²)
+              int x1= 0;
+              if (z1>=y) x1= int(sqrt(z1*z1-y*y));
+              int x2= int(sqrt(z2*z2-y*y));
+              count2(i, c.x()-x2, c.x()-x1, c.x()+x1, c.x()+x2, c.y()-y);
+              if (y==0) break; // no double counting!!!!
+              count2(i, c.x()-x2, c.x()-x1, c.x()+x1, c.x()+x2, c.y()+y);
+          }
+      }
   }
+    void count2(QImage *i, int x1, int x2, int x3, int x4, int y)
+    {
+        if (y<0 || y>=i->height()) return;
+        uint32_t *s= (uint32_t *)(i->bits()+y*i->bytesPerLine());
+        int x= 0;
+        while (x<x1 && x<i->width()) { *s++= 0; x++; }
+        x+= x2-x1; s+= x2-x1;
+        while (x<x3 && x<i->width()) { *s++= 0; x++; }
+        x+= x4-x3; s+= x4-x3;
+        while (x<i->width()) { *s++= 0; x++; }
+    }
+    void hidezones(QImage *i, QPoint &c, double z1, double z2, int h)
+    {
+        for (int y=0; y<=c.y()-h; y++) count2(i, 0, 0, 0, 0, y);
+        for (int y=c.y()+h; y<i->height(); y++) count2(i, 0, 0, 0, 0, y);
+        for (int y=h; --y>=0;)
+        {
+            // x= sqrt(d²-h²)
+            int x1= 0;
+            if (z1>=y) x1= int(sqrt(z1*z1-y*y));
+            int x2= int(sqrt(z2*z2-y*y));
+            count2(i, c.x()-x2, c.x()-x1, c.x()+x1, c.x()+x2, c.y()-y);
+            if (y==0) break; // no double counting!!!!
+            count2(i, c.x()-x2, c.x()-x1, c.x()+x1, c.x()+x2, c.y()+y);
+        }
+    }
 };
 
 static void ronchiCalcWithAllowableDeviation(double mirrorDia, double radiusOfCurvature, double gratingFreq, double gratingOffset, double scalingFactor, 
 	uint32_t *imageData, int lineWidth, double allowableParabolicDeviation, bool includeDeviation, bool invertBands, double zoneSqrt);
 	
-void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c)
+void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_scope, double &dpi, QPoint &c, bool hide)
 {
 	if (_scope==nullptr) return;
 	TZoneData tt;
@@ -733,6 +774,7 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 		int type= _scope->getVirtualCouderType(); // type of filtering to do...
 		if (type<0 || type>4) _scope->setVirtualCouderType(type= 0); // more sanity check
         tt.count(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, int(bot*dpi), type); // count the pixels
+        if (hide) tt.hidezones(&tempImage, c, _scope->get_zones()->at(z)->getVal()*dpi, _scope->get_zones()->at(z+1)->getVal()*dpi, int(bot*dpi)); // count the pixels
         int maxz= 0;
 		for (int i=0; i<256/tt.bucket; i++) { if (tt.Z1[i]>maxz) maxz= tt.Z1[i]; if (tt.Z2[i]>maxz) maxz= tt.Z2[i]; } // max on each sides..
 		for (int i=0; i<256/tt.bucket; i++) // for each bucket fo ilumination counting...
@@ -746,7 +788,7 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 			x= x2; while (--x>=0) *s++= 0xff000000;
 			for (int j=16-x2; --j>=0;) *s++= 0xffffffff;
 		}
-	}
+    }
 
 	if (_scope->_ronchi)
 	{
@@ -825,12 +867,15 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
             int y= int((tempImage.height()-h)*filter->getScope()->_imgcoudery);
             tempImage= tempImage.copy(x, y, w, h);
         }
-        filter->vco.draw(tempImage, filter->getScope(), dpi, c);
-		if (filter->getScope()!=nullptr)
-		{
-            QPainter p(&tempImage);
-            filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
-		}
+        if (filter->_enabled)
+        {
+            filter->vco.draw(tempImage, filter->getScope(), dpi, c, filter->_hide_rest);
+		    if (filter->getScope()!=nullptr)
+		    {
+                QPainter p(&tempImage);
+                filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+		    }
+        }
 	}
     inputframe->unmap();
     QVideoFrame outputFrame= QVideoFrame(tempImage);
@@ -916,7 +961,7 @@ void CBScopeCouderOverlay::paint(QPainter *painter)
 	QPainter p(&i);
 	p.drawImage(QPoint(0,0), img);
 	double dpi; QPoint c;
-	vco.draw(i, _scope, dpi, c);
+	vco.draw(i, _scope, dpi, c, false);
 	if (_scope!=nullptr) _scope->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
 	painter->setBrush(QBrush(QColor(255,255,255)));
 	painter->setPen(QPen(QColor(255,255,255)));

@@ -492,11 +492,14 @@ ApplicationWindow {
 												  ListElement { name: qsTr("Red+Blue+Green") } 
 												  ListElement { name: qsTr("Blue") } 
 												  ListElement { name: qsTr("Green") } 
-												  ListElement { name: qsTr("Red") } }
+												  ListElement { name: qsTr("Red") }
+                                                  }
 								textRole: "name";
 								currentIndex: scopeView.model.virtualCouderType
 								onCurrentIndexChanged: scopeView.model.virtualCouderType= currentIndex; 
 					 }
+                     MyCheckBox { id: hideMask; text: qsTr("mask"); y: (parent.height-height)/2; }
+                     MyCheckBox { id: hide_rest; text: qsTr("zones"); y: (parent.height-height)/2; }
                      MyCheckBox { text: qsTr("Pause"); y: (parent.height-height)/2; checked: scopeView.model.pause; onCheckedChanged: scopeView.model.pause= checked }
                      MyCheckBox { text: qsTr("Ronchi"); id: ronchi; y: (parent.height-height)/2; checked: scopeView.model.ronchi; onCheckedChanged: scopeView.model.ronchi= checked }
                      // The next 2 ones are only visible in Ronchi mode...
@@ -511,7 +514,7 @@ ApplicationWindow {
 					Column {
 						clip: true;
 						x: parent.border.width; y: parent.border.width; width: parent.width-2*parent.border.width; height: parent.height-2*parent.border.width;
-						ListView {
+						ListView { id: currentMesureWebcam
 							model: parent.parent.mesure.mesures; orientation: Qt.Horizontal;
 							width: parent.width; height: nbZonesSuggest.height
                             delegate: MyText { text: val; onTextChanged: val= text; fontcol: error ? "Red" : "white"; }
@@ -555,9 +558,10 @@ ApplicationWindow {
 						return undefined;
 					}
                     CBScopeCouderOverlay { // This is used when the user drags/drop an image here....
-						visible: source!=""
+						visible: source!="" 
 						id: userImagecouder; scope: scopeView.model;
-						width: parent.width; height: parent.height;
+						width: videoOutput.width; height: videoOutput.height;
+                        x: videoOutput.x
 						MouseArea {
 							anchors.fill: parent
 							acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -566,10 +570,11 @@ ApplicationWindow {
 						}
 					}
                     VideoOutput { id: videoOutput // This is used for live video display
-						width: parent.width; height: parent.height;
+						width: parent.width*4/5; height: parent.height;
+                        x: parent.width/5;
 						source: camera
 						visible: cameras.currentIndex!=-1
-						filters: [ CBScopeVirtualCouder { id: vcouder; scope: scopeView.model; } ]
+						filters: [ CBScopeVirtualCouder { enabled: !hideMask.checked; hide_rest: hide_rest.checked; id: vcouder; scope: scopeView.model; } ]
 						MouseArea {
 							anchors.fill: parent
 							acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -577,7 +582,7 @@ ApplicationWindow {
 							onWheel: { wheel.accepted= true; if (wheel.angleDelta.y>0) scopeView.model.couderz+= 0.05; if (wheel.angleDelta.y<0) scopeView.model.couderz-= 0.05; }
 						}
 					}
-                    Column {
+                    Column { width: parent.width/5;
                         MyJoystick {
                             x:0; width:100; height:80; caption: qsTr("mirror");
                             onXposChanged: scopeView.model.couderx= xpos;
@@ -597,29 +602,66 @@ ApplicationWindow {
                             zpos: scopeView.model.imgcouderz;
                         }
                         Button { text: qsTr("Save"); onPressed: scopeView.model.takePicture(); visible: videoOutput.visible; }
-                        Row { visible: camera.imageProcessing.isAvailable
+                        MyCheckBox { id: camSet; text: qsTr("Camera Settings"); }
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "brightness" }
                             Slider { from: -1; to: 1; value: camera.imageProcessing.brightness; onValueChanged: camera.imageProcessing.brightness= value; }
                         }
-                        Row { visible: camera.imageProcessing.isAvailable
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "contrast" }
                             Slider { from: -1; to: 1; value: camera.imageProcessing.contrast; onValueChanged: camera.imageProcessing.contrast= value; }
                         }
-                        Row { visible: camera.imageProcessing.isAvailable
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "saturation" }
                             Slider { from: -1; to: 1; value: camera.imageProcessing.saturation; onValueChanged: camera.imageProcessing.saturation= value; }
                         }
-                        Row {
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "exposureCompensation" }
                             Slider { from: -1; to: 1; value: camera.exposure.exposureCompensation; onValueChanged: camera.exposure.exposureCompensation= value; }
                         }
-                        Row {
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "manualShutterSpeed" }
                             Slider { from: 0.01; to: 1; value: camera.exposure.manualShutterSpeed; onValueChanged: camera.exposure.manualShutterSpeed= value; }
                         }
-                        Row {
+                        Row { visible: camSet.checked
                             Text { color: "white"; text: "manualIso" }
                             Slider { from: 100; to: 1600; stepSize: 100; value: camera.exposure.manualIso; onValueChanged: camera.exposure.manualIso= value; }
+                        }
+                        MyCheckBox { id: table; text: qsTr("table Settings"); }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            MyText { width: 70; caption: qsTr("X"); text: CBSModel.tableX; onEnter: CBSModel.tableX= Number(text); }
+                            MyText { width: 70; caption: qsTr("Y"); text: CBSModel.tableY; onEnter: CBSModel.tableY= Number(text); }
+                        }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            MyText { caption: qsTr("steps/mm X"); text: CBSModel.tableXSteps; onTextChanged: CBSModel.tableXSteps= Number(text); }
+                            MyText { caption: qsTr("Y"); text: CBSModel.tableYSteps; onTextChanged: CBSModel.tableYSteps= Number(text); }
+                        }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            MyText { caption: qsTr("slack(mm) X"); text: CBSModel.tableXSlack; onTextChanged: CBSModel.tableXSlack= Number(text); }
+                            MyText { caption: qsTr("Y");           text: CBSModel.tableYSlack; onTextChanged: CBSModel.tableYSlack= Number(text); }
+                        }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            MyText { width: 100; id: xytableBtnGoX2; caption: qsTr("go X"); text: CBSModel.tableX; onEnter: CBSModel.goTable(Number(xytableBtnGoX2.text), Number(xytableBtnGoY2.text)); }
+                            MyText { width: 70; id: xytableBtnGoY2; caption: qsTr("Y"); text: CBSModel.tableY; onEnter: CBSModel.goTable(Number(xytableBtnGoX2.text), Number(xytableBtnGoY2.text)); }
+                            Button { width: 50; text: qsTr("Go"); onPressed: CBSModel.goTable(Number(xytableBtnGoX2.text), Number(xytableBtnGoY2.text)); }
+                        }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            Text { text: "LED1"; color: "White" }
+                            Slider { from: 0; to: 255; value: CBSModel.tableLed1; onValueChanged: CBSModel.tableLed1= value; stepSize: 3; }
+                        }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            Text { text: "LED2"; color: "White" }
+                            Slider { from: 0; to: 255; value: CBSModel.tableLed2; onValueChanged: CBSModel.tableLed2= value; stepSize: 3; }
+                        }
+                        ComboBox { visible: table.checked; textRole: "val"; model: CBSModel.coms; currentIndex: 0; onCurrentIndexChanged: CBSModel.setCom(currentIndex); }
+                        Flow { visible: table.checked; spacing: 10; width: parent.width;
+                            function updatePos() { CBSModel.goTable2(xybx12.pressed?100:(xybx22.pressed?-100:0), xyby12.pressed?100:(xyby22.pressed?-100:0)); }
+                            Button { width: 60; id: xybx12; text: "+X"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                            Button { width: 60; id: xybx22; text: "-X"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                            Button { width: 60; id: xyby12; text: "+Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                            Button { width: 60; id: xyby22; text: "-Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                            MyText { caption: qsTr("mm/s");  text: CBSModel.tableSpd; onTextChanged: CBSModel.tableSpd= Number(text); }
+                            Button { text: "mesureX"; onPressed: currentMesureWebcam.model.get(scopeView.model.zone).val= CBSModel.tableX; } 
                         }
                     }
                 }
@@ -756,38 +798,38 @@ ApplicationWindow {
         //********************************
         Column { spacing: 10; width: parent.width; height: parent.height;
             Flow { spacing: 10; width: parent.width;
-                MyText { caption: qsTr("X"); text: CBSModel.tableX; onTextChanged: CBSModel.setTableX(Number(text)); }
-                MyText { caption: qsTr("Y"); text: CBSModel.tableY; onTextChanged: CBSModel.setTableY(Number(text)); }
-                MyText { caption: qsTr("Z"); text: CBSModel.tableZ; onTextChanged: CBSModel.setTableZ(Number(text)); }
-                MyText { caption: qsTr("X steps/mm"); text: CBSModel.tableXSteps; onTextChanged: CBSModel.tableXSteps= Number(text); }
-                MyText { caption: qsTr("Y steps/mm"); text: CBSModel.tableYSteps; onTextChanged: CBSModel.tableYSteps= Number(text); }
-                MyText { caption: qsTr("Z steps/mm"); text: CBSModel.tableZSteps; onTextChanged: CBSModel.tableZSteps= Number(text); }
+                MyText { caption: qsTr("X"); text: CBSModel.tableX; onEnter: CBSModel.tableX= Number(text); }
+                MyText { caption: qsTr("Y"); text: CBSModel.tableY; onEnter: CBSModel.tableY= Number(text); }
             }
             Flow { spacing: 10; width: parent.width;
-                MyText { id: xytableBtnGoX; caption: qsTr("go X"); text: CBSModel.tableX; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
-                MyText { id: xytableBtnGoY; caption: qsTr("go Y"); text: CBSModel.tableY; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
-                MyText { id: xytableBtnGoZ; caption: qsTr("go Z"); text: CBSModel.tableZ; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
-                Button { text: qsTr("Go"); onPressed: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text), Number(xytableBtnGoZ.text)); }
+                MyText { caption: qsTr("steps/mm X"); text: CBSModel.tableXSteps; onTextChanged: CBSModel.tableXSteps= Number(text); }
+                MyText { caption: qsTr("Y"); text: CBSModel.tableYSteps; onTextChanged: CBSModel.tableYSteps= Number(text); }
+            }
+            Flow { spacing: 10; width: parent.width;
+                MyText { caption: qsTr("slack(mm) X"); text: CBSModel.tableXSlack; onTextChanged: CBSModel.tableXSlack= Number(text); }
+                MyText { caption: qsTr("Y");           text: CBSModel.tableYSlack; onTextChanged: CBSModel.tableYSlack= Number(text); }
+            }
+            Flow { spacing: 10; width: parent.width;
+                MyText { id: xytableBtnGoX; caption: qsTr("go X"); text: CBSModel.tableX; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text)); }
+                MyText { id: xytableBtnGoY; caption: qsTr("go Y"); text: CBSModel.tableY; onEnter: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text)); }
+                Button { text: qsTr("Go"); onPressed: CBSModel.goTable(Number(xytableBtnGoX.text), Number(xytableBtnGoY.text)); }
+            }
+            Flow { spacing: 10; width: parent.width;
+                Text { text: "LED1"; color: "White" }
+                Slider { from: 0; to: 255; value: CBSModel.tableLed1; onValueChanged: CBSModel.tableLed1= value; stepSize: 3; }
+            }
+            Flow { spacing: 10; width: parent.width;
+                Text { text: "LED2"; color: "White" }
+                Slider { from: 0; to: 255; value: CBSModel.tableLed2; onValueChanged: CBSModel.tableLed2= value; stepSize: 3; }
             }
             ComboBox { textRole: "val"; model: CBSModel.coms; currentIndex: 0; onCurrentIndexChanged: CBSModel.setCom(currentIndex); }
             Flow { spacing: 10; width: parent.width;
-                Button { id: xybx1; text: "+X"; } Button { id: xybx2; text: "-X"; }
-                Button { id: xyby1; text: "+Y"; } Button { id: xyby2; text: "-Y"; }
-                Button { id: xybz1; text: "+Z"; } Button { id: xybz2; text: "-Z"; }
-            }
-            Timer { 
-                function move() 
-                {
-                    CBSModel.comMove(100, xybx1.pressed ? 0.025 : (xybx2.pressed ? -0.025 : 0), xyby1.pressed ? 0.025 : (xyby2.pressed ? -0.025 : 0), xybz1.pressed ? 0.025 : (xybz2.pressed ? -0.025 : 0))
-                }
-				running: xybx1.pressed || xybx2.pressed || xyby1.pressed || xyby2.pressed || xybz1.pressed || xybz2.pressed
-                onRunningChanged: 
-                {
-                    console.log(running);
-                    if (running) move() // when running is turned on, do a first move as the trigger will only come 100ms after!
-                }
-                interval: 100; repeat: true;
-                onTriggered: move()
+                function updatePos() { CBSModel.goTable2(xybx1.pressed?100:(xybx2.pressed?-100:0), xyby1.pressed?100:(xyby2.pressed?-100:0)); }
+                Button { id: xybx1; text: "+X"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                Button { id: xybx2; text: "-X"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                Button { id: xyby1; text: "+Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                Button { id: xyby2; text: "-Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
+                MyText { caption: qsTr("mm/s");  text: CBSModel.tableSpd; onTextChanged: CBSModel.tableSpd= Number(text); }
             }
         }
     }

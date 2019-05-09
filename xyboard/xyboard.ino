@@ -9,11 +9,16 @@
 // id's bit 7 is ALWAYS high...
 // once the move is completed, will reply by sending id back
 
+
+// Led1, Led2, dx(3), dy(3)
+// -> x, y
+
 unsigned int MotorPos[3]= {0, 0, 0};
 
 void setup() 
 {
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  Serial.begin(115200);
   // Pins 2 to 13 are output low
   for (int i= 2; i<=19; i++) { pinMode(i, OUTPUT); digitalWrite(i, LOW); }
   Serial.println("Awake");
@@ -40,6 +45,8 @@ void loop()
   int y= data[4]+(((int)data[5])<<7); if ((y&0x2000)!=0) y|= 0xc000; // sign extend
   int z= data[6]+(((int)data[7])<<7); if ((z&0x2000)!=0) z|= 0xc000; // sign extend
 
+  //analogWrite(PWM_Pin, PWM_Value);
+
   // move x, y, z in t micro seconds
   unsigned long dtx= (x==0) ? t+1 : t/abs(x);
   unsigned long dty= (y==0) ? t+1 : t/abs(y);
@@ -48,13 +55,13 @@ void loop()
   unsigned long nexty= (y==0) ? t+1 : 0;
   unsigned long nextz= (z==0) ? t+1 : 0;
 
-  Serial.print("t:"); Serial.print(t);
-  Serial.print(" x:"); Serial.print(x);
-  Serial.print(" y:"); Serial.print(y);
-  Serial.print(" z:"); Serial.print(z);
-  Serial.print(" dx:"); Serial.print(dtx);
-  Serial.print(" dy:"); Serial.print(dty);
-  Serial.print(" dz:"); Serial.println(dtz);
+  //Serial.print("t:"); Serial.print(t);
+  //Serial.print(" x:"); Serial.print(x);
+  //Serial.print(" y:"); Serial.print(y);
+  //Serial.print(" z:"); Serial.print(z);
+  //Serial.print(" dx:"); Serial.print(dtx);
+  //Serial.print(" dy:"); Serial.print(dty);
+  //Serial.print(" dz:"); Serial.println(dtz);
 
   unsigned long now= 0;
   while (now<t)
