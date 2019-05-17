@@ -385,8 +385,13 @@ ApplicationWindow {
                 height: parent.height-y
                 border.width: 3; radius: 4; border.color: "White";
                 color: "black";
-                Button { x: (parent.width-width)/2; id: addMesBut; y: parent.border.width; text: qsTr("add measure"); onPressed: scopeView.model.addParabolizing() }
-                ListView { 
+                Row { x: (parent.width-width)/2; spacing: 10;
+                    Button { id: addMesBut; y: parent.border.width; text: qsTr("add measure"); onPressed: scopeView.model.addParabolizing() }
+                    Button { text: qsTr("add foucaultless"); onPressed: scopeView.model.addParabolizing2() }
+                    MyText { id: parabtype1r1; caption: "pos";     visible: parabolizingWorks.model.get(parabolizingWorks.currentIndex).type===1; onEnter: parabolizingWorks.model.get(parabolizingWorks.currentIndex).addReading(Number(parabtype1r1.text), Number(parabtype1r2.text)); }
+                    MyText { id: parabtype1r2; caption: "reading"; visible: parabolizingWorks.model.get(parabolizingWorks.currentIndex).type===1; onEnter: parabolizingWorks.model.get(parabolizingWorks.currentIndex).addReading(Number(parabtype1r1.text), Number(parabtype1r2.text)); }
+                }
+                ListView { id: parabolizingWorks
                     clip: true;
                     model: scopeView.model.parabolizings;
                     x: parent.border.width; y: parent.border.width+addMesBut.height;
@@ -420,6 +425,17 @@ ApplicationWindow {
                             }
                             Connections { target: couderDisplay.mesure; onMesuresChanged: couderDisplay.update(); } // redraw when mesure change...
                         }
+						MouseArea {
+							anchors.fill: parent
+							acceptedButtons: Qt.LeftButton | Qt.RightButton
+							onClicked: { mouse.accepted= false; }
+                            propagateComposedEvents: true
+                            onPressed:         { mouse.accepted = false; console.log("change focus", index); parabolizingWorks.currentIndex= index; }
+                            onReleased:        { mouse.accepted = false; }
+                            onDoubleClicked:   { mouse.accepted = false; }
+                            onPressAndHold:    { mouse.accepted = false; }
+                            onPositionChanged: { mouse.accepted = false; }
+						}
                     }
                 }
             }
@@ -509,6 +525,7 @@ ApplicationWindow {
 				Rectangle { visible: !ronchi.checked;
 					width: parent.width; height: 180; 
                     color: "black";
+                    id: webcamedParabolizing
 					property CBSModelParabolizingWork mesure: scopeView.model.parabolizings.get(scopeView.model.parabolizings.count-1)
 					border.width: 3; radius: 4; border.color: "Blue";
 					Column {
@@ -662,6 +679,7 @@ ApplicationWindow {
                             Button { width: 60; id: xyby22; text: "-Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
                             MyText { caption: qsTr("mm/s");  text: CBSModel.tableSpd; onTextChanged: CBSModel.tableSpd= Number(text); }
                             Button { text: "mesureX"; onPressed: currentMesureWebcam.model.get(scopeView.model.zone).val= CBSModel.tableX; } 
+                            Button { text: "new measure"; onPressed: webcamedParabolizing.mesure.addReading(vcouder.getLastRadius(), CBSModel.tableX); } 
                         }
                     }
                 }

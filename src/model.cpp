@@ -873,7 +873,18 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
 		    if (filter->getScope()!=nullptr)
 		    {
                 QPainter p(&tempImage);
-                filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+                if (filter->getScope()->get_parabolizings()->last()->getType()==0)
+                    filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
+                else {
+                    QBrush brush(QColor(0, 0, 0, 0));
+                    p.setBrush(brush);
+                    // Paint in black the circles that correspond to the zone edges and full mirror (which should match zone(n)...)
+#define circle(r) p.drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
+                    p.setPen(QPen(QColor(0, 0, 0)));
+                    circle(filter->getScope()->getDiametre()/2.0); // full mirror, if needed
+                    circle(filter->vco.lastRadiusClick); // full mirror, if needed
+#undef circle
+                }
 		    }
         }
 	}

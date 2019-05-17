@@ -344,6 +344,7 @@ class CBSModelParabolizingWork : public CBSSaveLoadObject {
 public:
     CBSProp(double, time, Time)
 	CBSProp(QString, comments, Comments)
+	CBSProp(int, type, Type)
 	Q_PROPERTY(double adjustFocal READ getAdjustFocal WRITE setAdjustFocal NOTIFY adjustFocalChanged) // if non nan, then this will be the focal adjustment used in drawing and calcs...
 	double _adjustFocal; double getAdjustFocal() { return _adjustFocal; }
 	QML_OBJMODEL_PROPERTY(CBSQString, mesures) // The mesured positions for the zones.
@@ -360,6 +361,7 @@ public:
 Q_SIGNALS:
     void commentsChanged();
     void timeChanged();
+    void typeChanged();
     void mesuresChanged();
     void scopeChanged();
     void scopeFocaleChanged();
@@ -368,7 +370,7 @@ Q_SIGNALS:
     void scopeSlitIsMovingChanged();
 	void adjustFocalChanged();
 public:
-    CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _adjustFocal(std::nan("")),
+    CBSModelParabolizingWork(QObject *parent=nullptr): CBSSaveLoadObject(parent), _time(0.0), _type(0), _adjustFocal(std::nan("")),
       _scopeFocale(0.0), _scopeDiametre(0.0), _scopeConical(-1.0), _scopeSlitIsMoving(1),
       _lf1000(nullptr), _mesc(nullptr), _Hm4F(nullptr), _RelativeSurface(nullptr),
       _surf(nullptr), _profil(nullptr), _Hz(nullptr), _idealReadings(nullptr),
@@ -414,6 +416,37 @@ public:
         return ret1&&ret2;
     }
     bool subSave(QJsonObject *o) const { saveList(m_mesures, "mesures", o); saveList(m_zones, "zones", o); return true; }
+    void rezone()
+    {
+        m_mesures->clear();
+        m_zones->clear();
+        CBSDouble *s2= new CBSDouble(m_zones); s2->setVal(0); m_zones->append(s2); // Copy my zones to the parabolizing work.
+        for (int i=0; i<readings.count()-1; i++)
+        {
+            s2= new CBSDouble(m_zones); s2->setVal((readings[i].first+readings[i+1].first)/2.0); m_zones->append(s2);
+        }
+        s2= new CBSDouble(m_zones); s2->setVal(_scopeDiametre/2.0); m_zones->append(s2);
+        for (int i=0; i<readings.count(); i++) 
+        { 
+            CBSQString *s2= new CBSQString(m_mesures); s2->setVal(QString::number(readings[i].second)); m_mesures->append(s2); 
+            connect(s2, SIGNAL(valChanged()), this, SLOT(doCalculations()));
+        }
+        doCalculations();
+    }
+    QList<QPair<double, double>> readings;
+    Q_INVOKABLE void addReading(double pos, double focaldelta)
+    {
+        int insert= readings.count();
+        for (int i=0; i<readings.count(); i++)
+            if (abs(pos-readings[i].first)<0.01) { readings[i].second= focaldelta; goto done; }
+            else if (readings[i].first>pos) { insert= i; break; }
+        readings.insert(insert, QPair<double, double>(pos, focaldelta));
+    done:;
+        rezone();
+    }
+    void delZone(int i)
+    {
+    }
 public slots:
     void doCalculations();
 private:
@@ -732,13 +765,21 @@ public:
 	}
     Q_INVOKABLE int addParabolizing() // create new parabolizing work
     {
-      CBSModelParabolizingWork *p= new CBSModelParabolizingWork(m_parabolizings);
-      p->setScopeConical(_conical); p->setScopeDiametre(_diametre); p->setScopeFocale(_focal); p->setScopeSlitIsMoving(_slitIsMoving);
-      QList<CBSDouble*> l;
-      for (int i=0; i<m_zones->count(); i++) { CBSDouble *s2= new CBSDouble(p->get_zones()); s2->setVal(m_zones->at(i)->getVal()); l.append(s2); } // Copy my zones to the parabolizing work.
-      p->get_zones()->append(l); 
-      m_parabolizings->append(p); p->doCalculations(); // force calcs. Might not even be needed...
-      return m_parabolizings->count()-1;
+        CBSModelParabolizingWork *p= new CBSModelParabolizingWork(m_parabolizings);
+        p->setScopeConical(_conical); p->setScopeDiametre(_diametre); p->setScopeFocale(_focal); p->setScopeSlitIsMoving(_slitIsMoving);
+        QList<CBSDouble*> l;
+        for (int i=0; i<m_zones->count(); i++) { CBSDouble *s2= new CBSDouble(p->get_zones()); s2->setVal(m_zones->at(i)->getVal()); l.append(s2); } // Copy my zones to the parabolizing work.
+        p->get_zones()->append(l); 
+        m_parabolizings->append(p); p->doCalculations(); // force calcs. Might not even be needed...
+        return m_parabolizings->count()-1;
+    }
+    Q_INVOKABLE int addParabolizing2() // create new parabolizing work
+    {
+        CBSModelParabolizingWork *p= new CBSModelParabolizingWork(m_parabolizings);
+        p->setScopeConical(_conical); p->setScopeDiametre(_diametre); p->setScopeFocale(_focal); p->setScopeSlitIsMoving(_slitIsMoving);
+        p->setType(1);
+        m_parabolizings->append(p); p->doCalculations(); // force calcs. Might not even be needed...
+        return m_parabolizings->count()-1;
     }
 
 
@@ -1263,14 +1304,15 @@ public:
 	  QPoint center;
   public:
       bool inverted;
-      CBVirtualCouderOverlayInternal(bool inverted): ronchi(nullptr), ronchisize(0), imagew(-1), imageh(-1), inverted(inverted) {}
+      double lastRadiusClick;
+      CBVirtualCouderOverlayInternal(bool inverted): ronchi(nullptr), ronchisize(0), imagew(-1), imageh(-1), inverted(inverted), lastRadiusClick(0) {}
 	  ~CBVirtualCouderOverlayInternal() { if (ronchi!=nullptr) delete[] ronchi; }
 	  void userclick(CBSModelScope *_scope, double x, double y) // find which zone the used clicked in and select it...
 	  {
 		  if (_scope==nullptr || imagew==-1 || imageh==-1) return;
 		  QPoint p1(int(imagew*x),int(imageh*(1.0-y)));
 		  QPoint c= center-p1; double r= sqrt(c.x()*c.x()+c.y()*c.y());
-		  r= r/dpi;
+		  lastRadiusClick= r= r/dpi;
 		  for (int i=0; i<_scope->get_zones()->count(); i++)
 			  if (r<=_scope->get_zones()->at(i)->_val) { _scope->setZone(i-1); return; }
 	  }
@@ -1301,6 +1343,7 @@ public:
 	QImage *pausedFrame; // non null if we are paused...
 	CBVirtualCouderOverlayInternal vco;
 	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); }
+    Q_INVOKABLE double getLastRadius() { return vco.lastRadiusClick; }
 };
 
 class CBScopeCouderOverlay : public QQuickPaintedItem
