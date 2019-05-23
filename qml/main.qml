@@ -255,6 +255,7 @@ ApplicationWindow {
             Flow { spacing: 10; width: parent.width;
                 MyText { caption: qsTr("possible Secondaries"); text: scopeView.model.secondariesToConcider; onTextChanged: scopeView.model.secondariesToConcider= text; }
                 MyCheckBox { text: qsTr("2\" focusser");  checked: scopeIlumination.twoInches; onCheckedChanged: scopeIlumination.twoInches= checked;  }
+                MyText { caption: qsTr("secondary to focal plane"); text: scopeView.model.secondaryToFocal; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
             }
             CBScopeIlumination { id: scopeIlumination
                 width: parent.width; height: parent.height-y;
@@ -678,8 +679,8 @@ ApplicationWindow {
                             Button { width: 60; id: xyby12; text: "+Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
                             Button { width: 60; id: xyby22; text: "-Y"; onPressed: parent.updatePos(); onReleased: parent.updatePos(); } 
                             MyText { caption: qsTr("mm/s");  text: CBSModel.tableSpd; onTextChanged: CBSModel.tableSpd= Number(text); }
-                            Button { text: "mesureX"; onPressed: currentMesureWebcam.model.get(scopeView.model.zone).val= CBSModel.tableX; } 
-                            Button { text: "new measure"; onPressed: webcamedParabolizing.mesure.addReading(vcouder.getLastRadius(), CBSModel.tableX); } 
+                            Button { text: "mesureX"; onPressed: currentMesureWebcam.model.get(scopeView.model.zone).val= -CBSModel.tableX; } 
+                            Button { text: "new measure"; onPressed: webcamedParabolizing.mesure.addReading(vcouder.getLastRadius(), -CBSModel.tableX); } 
                         }
                     }
                 }
@@ -852,6 +853,30 @@ ApplicationWindow {
         }
     }
 
+        //********************************
+        // ring page
+        //********************************
+        Column {
+            width: window.width; height: parent.height;
+            Flow { spacing: 10; width: parent.width;
+                property double na: 180/nnb;
+                property double nnb: Number(nb.text);
+                property double ndis: Number(dis.text);
+                property double ndos: Number(dos.text);
+                property double nli: ndis/2*2*Math.tan(Math.PI/2/nnb);
+                property double nlo: ndos/2*2*Math.tan(Math.PI/2/nnb);
+                MyText { id:nb;  caption: qsTr("nb");       text: "12"; }
+                MyText { id:dis; caption: qsTr("di-small"); text: "50"; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
+                MyText { id:dos; caption: qsTr("do-small"); text: "70"; onTextChanged: scopeView.model.secondaryToFocal= Number(text); }
+                MyText { id:dib; caption: qsTr("di-big");   text: 2*Math.sqrt((parent.ndis/2)*(parent.ndis/2)+(parent.nli/2)*(parent.nli/2)); }
+                MyText { id:dob; caption: qsTr("do-big");   text: 2*Math.sqrt((parent.ndos/2)*(parent.ndos/2)+(parent.nlo/2)*(parent.nlo/2)); }
+                MyText { id:li;  caption: qsTr("li");       text: parent.nli*2; }
+                MyText { id:lo;  caption: qsTr("lo");       text: parent.nlo*2; }
+                MyText { id:ep;  caption: qsTr("ep");       text: (parent.ndos-parent.ndis)/2; }
+                MyText { id:a;   caption: qsTr("a");        text: parent.na; }
+            }
+        }
+
     //********************************
     // footer page
     //********************************
@@ -872,6 +897,7 @@ ApplicationWindow {
                 TabButton {  width: implicitWidth; text: qsTr("COG") }
                 TabButton {  width: implicitWidth; text: qsTr("Notes") }
                 TabButton {  width: implicitWidth; text: qsTr("Coms") }
+                TabButton {  width: implicitWidth; text: qsTr("rings") }
             }
     }
 }

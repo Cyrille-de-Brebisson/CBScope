@@ -1013,6 +1013,7 @@ public:
         m_coms= new QQmlObjectListModel<CBSQString>(this);
         QList<QSerialPortInfo> ports= QSerialPortInfo::availablePorts();
         for (int i=0; i<ports.count(); i++) { CBSQString *s= new CBSQString(m_coms); s->data= new QSerialPortInfo(ports.at(i)); s->setVal(ports.at(i).portName()); m_coms->append(s); }
+        CBSQString *s= new CBSQString(m_coms); s->setVal("none"); m_coms->append(s);
         loadFile(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/CBScopes.scopes"); // load file
         qDebug() << "end of load";
         if (m_scopes->count()==0) // If nothing, create default scope
@@ -1089,6 +1090,7 @@ public:
     Q_INVOKABLE void setCom(int port)
     {
         if (serial.isOpen()) serial.close();
+        if (port>=m_coms->count()-1) return;
         serial.setPort(*reinterpret_cast<QSerialPortInfo*>(m_coms->at(port)->data));
         //serial.setBaudRate(9600);
         serial.setBaudRate(115200);
