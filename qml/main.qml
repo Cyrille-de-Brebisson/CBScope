@@ -851,7 +851,6 @@ ApplicationWindow {
                 MyText { caption: qsTr("mm/s");  text: CBSModel.tableSpd; onTextChanged: CBSModel.tableSpd= Number(text); }
             }
         }
-    }
 
         //********************************
         // ring page
@@ -876,6 +875,7 @@ ApplicationWindow {
                 MyText { id:a;   caption: qsTr("a");        text: parent.na; }
             }
         }
+    }
 
     //********************************
     // footer page
