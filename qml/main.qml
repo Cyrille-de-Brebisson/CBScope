@@ -20,8 +20,8 @@ import CBScopeCouderOverlay 1.0
 ApplicationWindow {
     id: window
     visible: true
-    width: 800
-    height: 600
+    width: 1000
+    height: 800
     minimumWidth: 300
     minimumHeight: 500
     property int fontSize: CBSModel.windowsFont
@@ -544,7 +544,7 @@ ApplicationWindow {
                             Text   { color: "white"; y: (parent.height-height)/2; text: qsTr("Comments"); }
 							MyText { y: (parent.height-height)/2; text: parent.parent.parent.mesure.comments; onTextChanged: parent.parent.parent.mesure.comments= text; }
 						}
-                        CBScopeMesure { // couder mesure display in couder mode (not Ronchi)
+            CBScopeMesure { // couder mesure display in couder mode (not Ronchi)
 							id: couderDisplay2
 							mesure: parent.parent.mesure
 							width: parent.width; height: parent.height-y;
@@ -592,7 +592,8 @@ ApplicationWindow {
                         x: parent.width/5;
 						source: camera
 						visible: cameras.currentIndex!=-1
-						filters: [ CBScopeVirtualCouder { enabled: !hideMask.checked; hide_rest: hide_rest.checked; id: vcouder; scope: scopeView.model; } ]
+						filters: [ CBScopeVirtualCouder { enabled: !hideMask.checked; hide_rest: hide_rest.checked; id: vcouder; scope: scopeView.model; 
+                                              onLastRadiusChanged: { console.log("last radius changed"); couderDisplay2.setIndicatedRadius(lastRadius); couderDisplay2.update(); } } ]
 						MouseArea {
 							anchors.fill: parent
 							acceptedButtons: Qt.LeftButton | Qt.RightButton

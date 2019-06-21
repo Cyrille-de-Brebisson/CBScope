@@ -1162,10 +1162,12 @@ class CBScopeMesure : public QQuickPaintedItem
     Q_OBJECT
 public:
     CBSProp(CBSModelParabolizingWork*, mesure, Mesure)
+    Q_INVOKABLE void setIndicatedRadius(double r) { indicatedRadius= r; }
 Q_SIGNALS:
     void mesureChanged();
 public:
-    CBScopeMesure(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _mesure(nullptr) { }
+    double indicatedRadius;
+    CBScopeMesure(QQuickItem *parent = nullptr): QQuickPaintedItem(parent), _mesure(nullptr), indicatedRadius(0.0) { }
     void paint(QPainter *painter);
     // members needed by the get functions that will be filled at paint time
         int w, h, addx, addy;
@@ -1334,17 +1336,19 @@ class CBScopeVirtualCouder : public QAbstractVideoFilter
     CBSProp(CBSModelScope*, scope, Scope)
     CBSProp(bool, enabled, Enabled)
     CBSProp(bool, hide_rest, Hide_rest)
+    Q_PROPERTY(double lastRadius READ getLastRadius NOTIFY lastRadiusChanged)
 Q_SIGNALS:
 	void scopeChanged();
     void enabledChanged();
     void hide_restChanged();
 	void finished(QObject *result);
+  void lastRadiusChanged();
 public:
     CBScopeVirtualCouder(QObject *p= nullptr): QAbstractVideoFilter(p), _scope(nullptr), pausedFrame(nullptr), vco(false), _enabled(true), _hide_rest(false) { }
     QVideoFilterRunnable *createFilterRunnable() { return new CBScopeVirtualCouderRunnable(this); }
 	QImage *pausedFrame; // non null if we are paused...
 	CBVirtualCouderOverlayInternal vco;
-	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); }
+	Q_INVOKABLE void userclick(double x, double y) { vco.userclick(_scope, x, y); emit lastRadiusChanged(); }
     Q_INVOKABLE double getLastRadius() { return vco.lastRadiusClick; }
 };
 

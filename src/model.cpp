@@ -425,6 +425,24 @@ void CBScopeMesure::paint(QPainter *painter)
         pts[iZ]= getP(_mesure->_Hz[iZ], _mesure->_surf[iZ]);
         painter->drawLine(pts[iZ].x(), addy, pts[iZ].x(), h-addy);
     }
+    if (_mesure->_type!=0)
+    {
+      QPen p(QColor(255, 0, 255)); p.setWidth(2); painter->setPen(p);
+      int t= addy, b= h-addy;
+      QPoint pp= getP(indicatedRadius, 0); painter->drawLine(pp.x(), t, pp.x(), b);
+      int r= (b-t)/4; t+=r; b-=r;
+      pp= getP(0, 0); painter->drawLine(pp.x(), t, pp.x(), b);
+      double *rds= new double[_mesure->readings.count()+1]; int pos= 0; bool used= false;
+      for (int i= 0; i<_mesure->readings.count(); i++)
+      {
+        if (!used && indicatedRadius<_mesure->readings[i].first) { used= true; rds[pos++]= indicatedRadius; }
+        rds[pos++]= _mesure->readings[i].first;
+      }
+      if (!used) rds[pos++]= indicatedRadius;
+      for (int i= 0; i<pos-1; i++) { pp= getP((rds[i]+rds[i+1])/2, 0); painter->drawLine(pp.x(), t, pp.x(), b); }
+      delete[] rds;
+      pp= getP(rw, 0); painter->drawLine(pp.x(), t, pp.x(), b);
+    }
     QPen p(QColor(0, 0, 0)); p.setWidth(2); painter->setPen(p);
     painter->drawPolyline(pts, iNbZone+1);
     delete[] pts;
@@ -439,7 +457,7 @@ void CBScopeMesure::paint(QPainter *painter)
 
     QString s(" diametre:"+QString::number(_mesure->_scopeDiametre, 'f', 2)+" focale:"+QString::number(_mesure->_scopeFocale, 'f', 2)+((_mesure->_scopeSlitIsMoving!=0)?" mobile slit":" fixed slit")+" zones: ");
     for (int i=0; i<iNbZone; i++) s+= QString::number(_mesure->_Hz[i], 'f', 2)+" ("+QString::number(_mesure->_idealReadings[i], 'f', 2)+") "; s+= QString::number(_mesure->_Hz[iNbZone], 'f', 2);
-	painter->drawText(0, h-4, s);
+	  painter->drawText(0, h-4, s);
 
 }
 
@@ -869,7 +887,7 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
         }
         if (filter->_enabled)
         {
-            filter->vco.draw(tempImage, filter->getScope(), dpi, c, filter->_hide_rest);
+            filter->vco.draw(tempImage, filter->getScope(), dpi, c, filter->_hide_rest || filter->getScope()->get_parabolizings()->last()->getType()!=0);
 		    if (filter->getScope()!=nullptr)
 		    {
                 QPainter p(&tempImage);
