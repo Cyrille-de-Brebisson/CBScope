@@ -782,7 +782,7 @@ void CBVirtualCouderOverlayInternal::draw(QImage &tempImage, CBSModelScope *_sco
 	center= c= QPoint(int(imagew*_scope->_couderx),int(imageh*((!inverted) ? _scope->_coudery : (1.0-_scope->_coudery)))); // center....
     this->dpi= dpi= (_scope->_couderz*1.4+0.1)*imageh/(_scope->_diametre);
 
-    if (_scope->get_zones()->count()!=0 && !_scope->_ronchi && imageh>256/tt.bucket) // no zones, no work....
+    if (_scope->get_zones()->count()!=0 && !_scope->_ronchi && imageh>256/tt.bucket && !hide) // no zones, no work....
 	{
 		double bot= 10; // find the "horizontal" cut line for the zones...
 		if (_scope->get_zones()->at(0)->_val<1) bot= _scope->get_zones()->at(1)->_val*0.7;
@@ -885,19 +885,27 @@ QVideoFrame CBScopeVirtualCouderRunnable::run(QVideoFrame *inputframe, const QVi
             int y= int((tempImage.height()-h)*filter->getScope()->_imgcoudery);
             tempImage= tempImage.copy(x, y, w, h);
         }
+#define circle(r) p.drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
         if (filter->_enabled)
         {
-            filter->vco.draw(tempImage, filter->getScope(), dpi, c, filter->_hide_rest || filter->getScope()->get_parabolizings()->last()->getType()!=0);
+            bool typenonull= false;
+            if (filter->getScope()->get_parabolizings()->count()!=0 && filter->getScope()->get_parabolizings()->last()->getType()!=0) typenonull= true;
+            filter->vco.draw(tempImage, filter->getScope(), dpi, c, filter->_hide_rest || typenonull);
+            QPainter p(&tempImage);
+            if (typenonull)
+            {
+                p.setPen(QPen(QColor(255, 0, 0)));
+                for (int i=0; i<filter->getScope()->get_parabolizings()->last()->readings.count(); i++)
+                    circle(filter->getScope()->get_parabolizings()->last()->readings.at(i).first); // full mirror, if needed
+            }
 		    if (filter->getScope()!=nullptr)
 		    {
-                QPainter p(&tempImage);
                 if (filter->getScope()->get_parabolizings()->last()->getType()==0)
                     filter->getScope()->paintCouder(&p, c, dpi, false, false, false); // Paint couder screen (ie: circles for each zones)
                 else {
                     QBrush brush(QColor(0, 0, 0, 0));
                     p.setBrush(brush);
                     // Paint in black the circles that correspond to the zone edges and full mirror (which should match zone(n)...)
-#define circle(r) p.drawEllipse(c.x()-int(r/25.4*dpi), c.y()-int(r/25.4*dpi), int(2.0*r/25.4*dpi), int(2.0*r/25.4*dpi))
                     p.setPen(QPen(QColor(0, 0, 0)));
                     circle(filter->getScope()->getDiametre()/2.0); // full mirror, if needed
                     circle(filter->vco.lastRadiusClick); // full mirror, if needed
